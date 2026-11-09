@@ -11,8 +11,8 @@ const FONT_FILES = [
   'NunitoSans_700Bold.ttf',
 ].map((f) => path.join(process.cwd(), 'assets', 'fonts', f));
 
-export function renderPrintPng(t: DesignTemplate, values: FieldValues, palette: Palette, width: number, height: number): Buffer {
-  const svg = printFileSvg(t, values, palette, width, height);
+export function renderPrintPng(t: DesignTemplate, values: FieldValues, palette: Palette, width: number, height: number, dpi = 150): Buffer {
+  const svg = printFileSvg(t, values, palette, width, height, dpi);
   const resvg = new Resvg(svg, {
     font: { fontFiles: FONT_FILES, loadSystemFonts: false, defaultFontFamily: 'Nunito Sans' },
     fitTo: { mode: 'original' },

@@ -10,6 +10,7 @@ goes to Printful automatically. Printful prints in its EU facilities and ships t
 
 | Area | What it does |
 |---|---|
+| **Real product photos** | The sync pulls Printful's real garment photos for every colour, and the live preview puts the customer's design onto them. With `--photos` it also asks Printful's mockup generator for model and flat-lay photos of each product, which then appear in a gallery on the product page and on the homepage. Until the first sync, the shop shows drawn shirts. |
 | **Live personaliser** | Three designs (grandparents with grandkids' names, family Christmas, "Jahrgang" birthday). The preview runs on the same code and fonts as the print file, so what the customer sees is what gets printed. On phones the preview stays visible while they type. |
 | **Print files** | `/api/print-file` renders a print-ready PNG at the exact size Printful needs. The URLs are signed, so only real orders can render one. |
 | **Checkout** | Stripe Checkout in German, EU shipping countries only. Prices are checked on the server, flat shipping with free shipping from €60, delivery estimate shown. |
@@ -41,7 +42,8 @@ npm run build:demo             # static export of all pages (no checkout) into d
 ## Go-live steps
 
 1. **Printful**: create an account and a "Manual order / API" store. Under Settings → API, create a private token with order + product + webhook scopes. Put it in `.env.local` as `PRINTFUL_API_TOKEN`.
-2. Run the sync: either `npm run printful:sync` locally, or with no local setup: add `PRINTFUL_API_TOKEN` as a GitHub repo secret, then GitHub → Actions → **Printful sync** → Run workflow (it commits the result, and Vercel redeploys). It prints the cost per colour and size and the net margin for each, and flags any colour that's missing or not printable in the EU. If a colour name doesn't match, fix `printfulColor` in `lib/catalog.ts` and run it again. Commit the generated `data/printful-variants.json`.
+2. Run the sync: either `npm run printful:sync` locally, or with no local setup: add `PRINTFUL_API_TOKEN` as a GitHub repo secret, then GitHub → Actions → **Printful sync** → Run workflow. It commits the product data and garment photos, and Vercel redeploys. It prints the cost per colour and size and the net margin for each, and flags any colour that's missing or not printable in the EU. If a colour name doesn't match, fix `printfulColor` in `lib/catalog.ts` and run it again. Commit the generated `data/printful-variants.json`.
+   **Product photos**: once the site is live with `PRINT_FILE_SECRET` set in Vercel, add the same value as GitHub secret `PRINT_FILE_SECRET` and your live address as GitHub variable `SITE_URL`, then run the action again with "Also make product photos" ticked. Printful downloads each example design from your site and returns its photos.
 3. **Stripe**: create an account and turn on the payment methods German buyers expect (PayPal, Klarna, SEPA, cards, Apple/Google Pay) under Settings → Payment methods. Copy the secret key into `STRIPE_SECRET_KEY`.
 4. **Deploy on Vercel**: import the repo, add every variable from `.env.example` (generate `PRINT_FILE_SECRET` and `PRINTFUL_WEBHOOK_SECRET` with `openssl rand -hex 32`), and set `NEXT_PUBLIC_SITE_URL` to your domain.
 5. **Stripe webhook**: Developers → Webhooks → add `https://YOUR-DOMAIN/api/webhooks/stripe` with the events `checkout.session.completed`, `checkout.session.async_payment_succeeded` and `checkout.session.async_payment_failed`. Copy the signing secret into `STRIPE_WEBHOOK_SECRET` and redeploy.
@@ -67,7 +69,8 @@ legal-text service (IT-Recht Kanzlei, Händlerbund, Trusted Shops) check everyth
 ## Changing things
 
 - **Brand, prices, shipping, delivery time**: `lib/config.ts` and `GARMENTS[...].priceCents` in `lib/catalog.ts`.
-- **Colours / garments**: `lib/catalog.ts`, then run `npm run printful:sync` again.
+- **Colours / garments**: `lib/catalog.ts`, then run `npm run printful:sync` again (it also refreshes the photos).
+- **Print size**: Printful moved many DTG tees to a 15″ × 18″ area (`front_large`) in 2025. The sync detects the placement per garment, and the design is capped at 12″ wide (`MAX_PRINT_WIDTH_IN` in `lib/design/svg.ts`) so it stays chest-sized.
 - **New design**: add a template in `lib/design/templates.ts`. It's a function that returns SVG in a 1200 × 1600 space, using `svgText`, `fitSize` and the shapes helpers. Then add a product in `PRODUCTS`. Run `npm run test:print` to check it renders, including umlauts and long names.
 - **New font**: add the TTF to `assets/fonts` and `public/fonts`, register it in `scripts/font-metrics.mjs`, `lib/design/text.ts`, `lib/print/render.ts` and `app/globals.css`, then run `npm run fonts:metrics`.
 - **Wording / translations**: interface text is in `lib/i18n/messages.ts` (German and English side by side). Product, garment and design-field texts are next to them in `lib/catalog.ts` and `lib/design/templates.ts` as `{ de, en }`. Legal texts are in `lib/legal-texts.ts`.

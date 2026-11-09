@@ -1,9 +1,14 @@
 // Garment mockup + the real design markup. Pure component: works on server and client.
 import { getTemplate } from '@/lib/design/templates';
+import { designRect } from '@/lib/design/svg';
 import { PALETTES, type FieldValues, type InkTheme } from '@/lib/design/types';
+import { printfileSize } from '@/lib/catalog';
+import { garmentPhoto, type MockupColor } from '@/lib/mockups';
 
 type Props = {
   garment: 'tee' | 'hoodie';
+  /** Colour key from the catalog – used to find the real Printful photo of this garment */
+  colorKey?: string;
   colorHex: string;
   ink: InkTheme;
   templateId: string;
@@ -27,9 +32,11 @@ const AREA = {
 
 const ZOOM = { tee: '190 100 620 600', hoodie: '190 200 620 600' };
 
-export default function ShirtPreview({ garment, colorHex, ink, templateId, values, label, className, zoom }: Props) {
+export default function ShirtPreview({ garment, colorKey, colorHex, ink, templateId, values, label, className, zoom }: Props) {
   const t = getTemplate(templateId);
   const design = t.render(values, PALETTES[ink]);
+  const photo = colorKey ? garmentPhoto(garment, colorKey) : null;
+  if (photo) return <PhotoPreview photo={photo} garment={garment} design={design} label={label} className={className} zoom={zoom} />;
   const light = ink === 'dark'; // light garment
   const area = AREA[garment];
   const outline = light ? '#C9D1E3' : 'rgba(0,0,0,0.25)';
@@ -75,6 +82,51 @@ export default function ShirtPreview({ garment, colorHex, ink, templateId, value
       <svg x={area.x} y={area.y} width={area.w} height={area.h} viewBox="0 0 1200 1600">
         <g dangerouslySetInnerHTML={{ __html: design }} />
       </svg>
+    </svg>
+  );
+}
+
+/** The design on Printful's real garment photo: background → design → shadow/fold overlay. */
+function PhotoPreview({
+  photo,
+  garment,
+  design,
+  label,
+  className,
+  zoom,
+}: {
+  photo: MockupColor;
+  garment: 'tee' | 'hoodie';
+  design: string;
+  label: string;
+  className?: string;
+  zoom?: boolean;
+}) {
+  const { area, w, h } = photo;
+  // Same placement as the print file: the design's spot inside Printful's print area
+  const pf = printfileSize(garment);
+  const r = designRect(pf.width, pf.height, pf.dpi);
+  const k = area.width / pf.width;
+  const d = { x: area.left + r.x * k, y: area.top + r.y * k, w: r.w * k, h: r.h * k };
+
+  let viewBox = `0 0 ${w} ${h}`;
+  if (zoom) {
+    const size = Math.min(w, h, d.w * 1.7);
+    const vx = Math.max(0, Math.min(w - size, d.x + d.w / 2 - size / 2));
+    const vy = Math.max(0, Math.min(h - size, d.y - size * 0.12));
+    viewBox = `${vx} ${vy} ${size} ${size}`;
+  }
+  const overlay = photo.overlay ? <image href={photo.overlay} x="0" y="0" width={w} height={h} /> : null;
+
+  return (
+    <svg viewBox={viewBox} role="img" aria-label={label} className={className} xmlns="http://www.w3.org/2000/svg">
+      {photo.bgColor && <rect x="0" y="0" width={w} height={h} fill={photo.bgColor} />}
+      {photo.bg && <image href={photo.bg} x="0" y="0" width={w} height={h} />}
+      {!photo.overlayOnTop && overlay}
+      <svg x={d.x} y={d.y} width={d.w} height={d.h} viewBox="0 0 1200 1600">
+        <g dangerouslySetInnerHTML={{ __html: design }} />
+      </svg>
+      {photo.overlayOnTop && overlay}
     </svg>
   );
 }

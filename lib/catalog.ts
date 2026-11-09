@@ -215,7 +215,16 @@ type VariantInfo = { id: number; cost: number | null; eu: boolean | null };
 type VariantFile = {
   generatedAt: string | null;
   garments: Partial<
-    Record<Garment['key'], { productId: number; productName: string; printfile: { width: number; height: number; dpi: number }; variants: Record<string, Record<string, VariantInfo>> }>
+    Record<
+      Garment['key'],
+      {
+        productId: number;
+        productName: string;
+        placement?: string;
+        printfile: { width: number; height: number; dpi: number };
+        variants: Record<string, Record<string, VariantInfo>>;
+      }
+    >
   >;
 };
 const variants = variantData as VariantFile;
@@ -227,6 +236,11 @@ export function printfulVariant(garment: Garment['key'], color: string, size: st
 export function printfileSize(garment: Garment['key']) {
   // Defaults match Printful's 12" × 16" (tee) front area at 150 DPI until the sync script runs.
   return variants.garments[garment]?.printfile ?? { width: 1800, height: 2400, dpi: 150 };
+}
+
+/** Printful placement name for the chest print ('front_large' on newer DTG products). */
+export function printPlacement(garment: Garment['key']) {
+  return variants.garments[garment]?.placement ?? 'front';
 }
 
 export const variantsSynced = Boolean(variants.generatedAt);

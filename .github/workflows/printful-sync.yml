@@ -1,11 +1,16 @@
-# Pulls variant IDs, costs and print sizes from Printful and commits data/printful-variants.json.
+# Pulls variant IDs, costs, print sizes and real garment photos from Printful and commits them.
 # Run it from GitHub → Actions → "Printful sync" → Run workflow. No computer setup needed.
 # Needs repo secrets PRINTFUL_API_TOKEN (and PRINTFUL_STORE_ID if your token asks for it).
+# Product photos need the live site: variable SITE_URL + secret PRINT_FILE_SECRET (same value as in Vercel).
 # For the shipping-email webhook also set secret PRINTFUL_WEBHOOK_SECRET and variable SITE_URL.
 name: Printful sync
 on:
   workflow_dispatch:
     inputs:
+      photos:
+        description: Also make product photos with Printful's mockup generator (site must be live)
+        type: boolean
+        default: false
       webhook:
         description: Also register the shipping-email webhook
         type: boolean
@@ -23,17 +28,18 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Sync from Printful
-        run: npm run printful:sync -- ${{ inputs.webhook && '--webhook' || '' }}
+        run: npm run printful:sync -- ${{ inputs.photos && '--photos' || '' }} ${{ inputs.webhook && '--webhook' || '' }}
         env:
           PRINTFUL_API_TOKEN: ${{ secrets.PRINTFUL_API_TOKEN }}
           PRINTFUL_STORE_ID: ${{ secrets.PRINTFUL_STORE_ID }}
           PRINTFUL_WEBHOOK_SECRET: ${{ secrets.PRINTFUL_WEBHOOK_SECRET }}
+          PRINT_FILE_SECRET: ${{ secrets.PRINT_FILE_SECRET }}
           NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL }}
-      - name: Commit updated variants
+      - name: Commit updated data and photos
         run: |
-          if git diff --quiet data/printful-variants.json; then echo "No changes"; exit 0; fi
+          git add data/printful-variants.json data/printful-mockups.json public/mockups
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/printful-variants.json
-          git commit -m "Update Printful variants"
+          git commit -m "Update Printful variants and photos"
           git push

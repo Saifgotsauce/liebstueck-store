@@ -7,12 +7,15 @@ import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import Stripe from 'stripe';
+import { Resvg } from '@resvg/resvg-js';
 
 const ROOT = process.cwd();
 const MOCK_PORT = 4010;
 const APP_PORT = 3100;
 const WEBHOOK_SECRET = 'whsec_test_secret';
 const VARIANTS = path.join(ROOT, 'data', 'printful-variants.json');
+const MOCKUPS = path.join(ROOT, 'data', 'printful-mockups.json');
+const MOCKUP_DIR = path.join(ROOT, 'public', 'mockups');
 
 let failures = 0;
 const ok = (cond: unknown, msg: string) => {
@@ -26,7 +29,18 @@ const state = {
   printfulOrders: [] as Record<string, unknown>[],
   createOrderCalls: 0,
   emails: [] as { to: string[]; subject: string; html: string }[],
+  mockupTasks: [] as { body: Record<string, unknown>; printFileStatus: number }[],
 };
+
+// Fake "photos" for the mock Printful: a garment on grey (background) and a soft shadow layer (overlay).
+const COLOR_HEX: Record<string, string> = { Navy: '#1F2A44', White: '#FFFFFF', Black: '#1B1B1D', Maroon: '#5A1E2A', Forest: '#253B2F', 'Forest Green': '#253B2F', 'Athletic Heather': '#BDBCB8', 'Sport Grey': '#B7B7B3' };
+function png(svg: string) {
+  return new Resvg(svg).render().asPng();
+}
+const TEE_PATH = 'M380 120 C420 175 580 175 620 120 L790 160 L950 340 L860 430 L770 370 L775 960 L225 960 L230 370 L140 430 L50 340 L210 160 Z';
+const fakeBg = (hex: string) => png(`<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000"><rect width="1000" height="1000" fill="#EDEDED"/><path d="${TEE_PATH}" fill="${hex}"/></svg>`);
+const fakeOverlay = png(`<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000"><path d="M300 200 Q330 600 290 950" stroke="#000" stroke-opacity="0.12" stroke-width="40" fill="none"/><path d="M700 200 Q670 600 710 950" stroke="#000" stroke-opacity="0.12" stroke-width="40" fill="none"/></svg>`);
+const fakePhoto = png(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200"><rect width="1200" height="1200" fill="#D8CFC4"/><circle cx="600" cy="600" r="300" fill="#1F2A44"/></svg>`);
 const sessionParams = (id: string) => state.sessions[Number(id.replace('cs_test_s', '')) - 1];
 
 const pfColors: Record<number, string[]> = {
@@ -109,9 +123,71 @@ const mock = http.createServer(async (req, res) => {
   if (prod) return send(res, 200, { result: pfProduct(Number(prod[1])) });
   const pfile = url.pathname.match(/^\/mockup-generator\/printfiles\/(\d+)$/);
   if (pfile) {
+    // Tee uses the newer 15″ × 18″ "front_large" placement, hoodie the classic "front"
     const id = Number(pfile[1]);
-    const dims = id === 71 ? { width: 1800, height: 2400 } : { width: 1800, height: 1500 };
-    return send(res, 200, { result: { printfiles: [{ printfile_id: id, ...dims, dpi: 150 }], variant_printfiles: [{ variant_id: id * 1000 + 1, placements: { front: id } }] } });
+    const placement = id === 71 ? 'front_large' : 'front';
+    const dims = id === 71 ? { width: 2250, height: 2700 } : { width: 1800, height: 1500 };
+    return send(res, 200, {
+      result: {
+        available_placements: { [placement]: 'Front print', back: 'Back print' },
+        printfiles: [{ printfile_id: id, ...dims, dpi: 150 }],
+        variant_printfiles: [{ variant_id: id * 1000 + 1, placements: { [placement]: id, back: id + 1 } }],
+      },
+    });
+  }
+  const tpls = url.pathname.match(/^\/mockup-generator\/templates\/(\d+)$/);
+  if (tpls) {
+    const id = Number(tpls[1]);
+    const placement = id === 71 ? 'front_large' : 'front';
+    const prod = pfProduct(id);
+    const colors = pfColors[id];
+    const templates = colors.map((c, i) => ({
+      template_id: id * 100 + i,
+      image_url: `http://localhost:${MOCK_PORT}/img/overlay.png`,
+      background_url: `http://localhost:${MOCK_PORT}/img/bg-${encodeURIComponent(c)}.png`,
+      background_color: null,
+      printfile_id: id,
+      template_width: 1000,
+      template_height: 1000,
+      print_area_width: 400,
+      print_area_height: id === 71 ? 480 : 333,
+      print_area_top: 230,
+      print_area_left: 300,
+      is_template_on_front: true,
+    }));
+    const variant_mapping = prod.variants.map((v) => ({ variant_id: v.id, templates: [{ placement, template_id: id * 100 + colors.indexOf(v.color) }] }));
+    return send(res, 200, { result: { version: 1, min_dpi: 150, variant_mapping, templates } });
+  }
+  if (url.pathname.startsWith('/mockup-generator/create-task/') && req.method === 'POST') {
+    const body = JSON.parse(raw);
+    // Like Printful, download the print file from the shop
+    const f = await fetch(body.files[0].image_url).catch(() => null);
+    state.mockupTasks.push({ body, printFileStatus: f?.status ?? 0 });
+    return send(res, 200, { result: { task_key: `tk_${state.mockupTasks.length}`, status: 'pending' } });
+  }
+  if (url.pathname === '/mockup-generator/task') {
+    const n = url.searchParams.get('task_key')!.replace('tk_', '');
+    return send(res, 200, {
+      result: {
+        task_key: `tk_${n}`,
+        status: 'completed',
+        mockups: [
+          {
+            placement: 'front',
+            variant_ids: [1],
+            mockup_url: `http://localhost:${MOCK_PORT}/img/photo-${n}-main.png`,
+            extra: [{ title: 'Lifestyle', option: 'Lifestyle', url: `http://localhost:${MOCK_PORT}/img/photo-${n}-life.png` }],
+          },
+        ],
+      },
+    });
+  }
+  const img = url.pathname.match(/^\/img\/(.+)\.png$/);
+  if (img) {
+    const name = decodeURIComponent(img[1]);
+    const buf = name === 'overlay' ? fakeOverlay : name.startsWith('bg-') ? fakeBg(COLOR_HEX[name.slice(3)] ?? '#888') : fakePhoto;
+    res.writeHead(200, { 'Content-Type': 'image/png' });
+    return res.end(buf);
   }
   const find = url.pathname.match(/^\/orders\/@(.+)$/);
   if (find && req.method === 'GET') {
@@ -126,6 +202,11 @@ const mock = http.createServer(async (req, res) => {
   }
   send(res, 404, { error: { message: `mock: ${req.method} ${url.pathname}` } });
 });
+
+function listFiles(dir: string): string[] {
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? listFiles(path.join(dir, e.name)) : [path.join(dir, e.name)]));
+}
 
 function run(cmd: string, args: string[], env: Record<string, string>) {
   return new Promise<void>((resolve, reject) => {
@@ -149,6 +230,8 @@ async function waitFor(url: string, ms = 30000) {
 
 async function main() {
   const backup = fs.readFileSync(VARIANTS, 'utf8');
+  const backupMockups = fs.readFileSync(MOCKUPS, 'utf8');
+  const mockupFilesBefore = new Set(listFiles(MOCKUP_DIR));
   const env = {
     NEXT_TELEMETRY_DISABLED: '1',
     NEXT_PUBLIC_SITE_URL: `http://localhost:${APP_PORT}`,
@@ -174,12 +257,25 @@ async function main() {
     ok(synced.garments.tee.variants.navy.L.id === 71003, 'tee navy L → variant 71003');
     ok(synced.garments.hoodie.variants.waldgruen.XL.id > 146000, 'hoodie colour mapping (Forest Green)');
     ok(synced.garments.hoodie.printfile.height === 1500, 'hoodie print-file size from Printful');
+    ok(synced.garments.tee.placement === 'front_large' && synced.garments.hoodie.placement === 'front', 'detects front_large vs front placement');
+    const mockData = JSON.parse(fs.readFileSync(MOCKUPS, 'utf8'));
+    const teeNavy = mockData.garments.tee?.colors?.navy;
+    ok(teeNavy && teeNavy.bg && fs.existsSync(path.join(ROOT, 'public', teeNavy.bg)), `garment photo saved (${teeNavy?.bg})`);
+    ok(Object.keys(mockData.garments.hoodie?.colors ?? {}).length === 6, 'photos for all 6 hoodie colours');
 
     console.log('\n2) Build');
     execSync('npx next build', { cwd: ROOT, env: { ...process.env, ...env }, stdio: 'ignore' });
     app = spawn(path.join(ROOT, 'node_modules/.bin/next'), ['start', '-p', String(APP_PORT)], { cwd: ROOT, env: { ...process.env, ...env }, stdio: 'ignore' });
     await waitFor(`http://localhost:${APP_PORT}/`);
     const A = `http://localhost:${APP_PORT}`;
+
+    console.log('\n2b) Product photos (mockup generator)');
+    await run('npx', ['tsx', 'scripts/printful-sync.ts', '--photos'], env);
+    ok(state.mockupTasks.length === 3, 'one mockup task per product');
+    ok(state.mockupTasks.every((t) => t.printFileStatus === 200), 'Printful could download every example print file');
+    ok((state.mockupTasks[0].body as { files: { placement: string }[] }).files[0].placement === 'front_large', 'mockup task uses front_large');
+    const photos = JSON.parse(fs.readFileSync(MOCKUPS, 'utf8')).products;
+    ok(photos['opa-oma-namen']?.length === 2 && fs.existsSync(path.join(ROOT, 'public', photos['opa-oma-namen'][0].src)), 'product photos saved');
 
     console.log('\n3) Checkout');
     const bad = await fetch(`${A}/api/checkout`, {
@@ -231,7 +327,8 @@ async function main() {
     ok(order?.items[1].variant_id === hoodieVariant, 'hoodie: right variant');
 
     console.log('\n5) Print files');
-    for (const [i, expected] of [[0, [1800, 2400]], [1, [1800, 1500]]] as const) {
+    ok(order.items[0].files[0].type === 'front_large' && order.items[1].files[0].type === 'front', 'order uses each garment\'s placement');
+    for (const [i, expected] of [[0, [2250, 2700]], [1, [1800, 1500]]] as const) {
       const fileUrl = order.items[i].files[0].url;
       const r = await fetch(fileUrl);
       const buf = Buffer.from(await r.arrayBuffer());
@@ -242,6 +339,11 @@ async function main() {
       fs.mkdirSync(path.join(ROOT, 'test-output'), { recursive: true });
       fs.writeFileSync(path.join(ROOT, 'test-output', `e2e-printfile-${i + 1}.png`), buf);
     }
+    // Design must stay ≤ 12″ wide on the 15″ area: check the outermost opaque pixels of the tee print
+    const { data: px, info } = await (await import('sharp')).default(path.join(ROOT, 'test-output', 'e2e-printfile-1.png')).raw().toBuffer({ resolveWithObject: true });
+    let minX = info.width, maxX = 0;
+    for (let y = 0; y < info.height; y += 4) for (let x = 0; x < info.width; x += 2) if (px[(y * info.width + x) * info.channels + 3] > 0) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); }
+    ok(maxX - minX <= 1800, `print stays within 12″ on front_large (${((maxX - minX) / 150).toFixed(1)}″ wide)`);
     const tampered = order.items[0].files[0].url.replace(/s=[^&]+/, 's=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
     ok((await fetch(tampered)).status === 403, 'tampered print-file URL is refused');
 
@@ -298,7 +400,11 @@ async function main() {
   } finally {
     app?.kill();
     mock.close();
-    fs.writeFileSync(VARIANTS, backup);
+    if (!process.env.KEEP_TEST_DATA) {
+      fs.writeFileSync(VARIANTS, backup);
+      fs.writeFileSync(MOCKUPS, backupMockups);
+      for (const f of listFiles(MOCKUP_DIR)) if (!mockupFilesBefore.has(f)) fs.rmSync(f);
+    }
   }
   console.log(failures ? `\n${failures} test(s) failed` : '\nAll tests passed');
   process.exit(failures ? 1 : 0);

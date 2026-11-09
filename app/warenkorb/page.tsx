@@ -79,7 +79,7 @@ export default function CartPage() {
             return (
               <li key={item.id} className="grid grid-cols-[6.5rem_1fr] gap-4 py-5 sm:grid-cols-[8.5rem_1fr]">
                 <div className="rounded-xl bg-blau-hell p-1.5">
-                  <ShirtPreview garment={item.garment} colorHex={c.hex} ink={c.ink} templateId={product.template} values={item.values} label={`${loc(product.name, locale)}: ${tpl.summarize(item.values, locale)}`} className="w-full" />
+                  <ShirtPreview garment={item.garment} colorKey={c.key} colorHex={c.hex} ink={c.ink} templateId={product.template} values={item.values} label={`${loc(product.name, locale)}: ${tpl.summarize(item.values, locale)}`} className="w-full" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-start justify-between gap-3">

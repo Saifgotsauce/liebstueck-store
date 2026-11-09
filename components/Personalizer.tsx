@@ -7,6 +7,7 @@ import { GARMENTS, getColor, type Product } from '@/lib/catalog';
 import { legal, shop } from '@/lib/config';
 import { loc } from '@/lib/i18n';
 import { useLocale } from '@/lib/i18n/context';
+import { productPhotos } from '@/lib/mockups';
 import { useCart } from '@/lib/cart';
 import { defaultValues, getTemplate } from '@/lib/design/templates';
 import { validateValues } from '@/lib/design/validate';
@@ -111,6 +112,7 @@ export default function Personalizer({ product, prefill }: Props) {
           {/* Phones: close-up of the print, so the names stay readable while typing */}
           <ShirtPreview
             garment={garmentKey}
+            colorKey={color.key}
             colorHex={color.hex}
             ink={color.ink}
             templateId={product.template}
@@ -121,6 +123,7 @@ export default function Personalizer({ product, prefill }: Props) {
           />
           <ShirtPreview
             garment={garmentKey}
+            colorKey={color.key}
             colorHex={color.hex}
             ink={color.ink}
             templateId={product.template}
@@ -351,6 +354,24 @@ export default function Personalizer({ product, prefill }: Props) {
         </div>
       </div>
     </div>
+    {productPhotos(product.slug).length > 0 && (
+      <section className="mt-16">
+        <h2 className="text-[1.8rem] md:text-[2.2rem]">{t('product.photos')}</h2>
+        <p className="mt-2 text-ink-soft">{t('product.photosNote')}</p>
+        <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
+          {productPhotos(product.slug).map((ph, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={ph.src}
+              src={ph.src}
+              alt={t('product.photoAlt', { product: loc(product.name, locale), n: i + 1 })}
+              loading="lazy"
+              className="aspect-square w-full rounded-2xl bg-blau-hell object-cover"
+            />
+          ))}
+        </div>
+      </section>
+    )}
     </>
   );
 }

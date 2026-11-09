@@ -43,6 +43,7 @@ export default function HeroDemo() {
           {/* Phones: close-up between text and input, so the change is visible while typing */}
           <ShirtPreview
             garment="tee"
+            colorKey={color.key}
             colorHex={color.hex}
             ink={color.ink}
             templateId={product.template}
@@ -80,6 +81,7 @@ export default function HeroDemo() {
         <div className="hidden md:block">
           <ShirtPreview
             garment="tee"
+            colorKey={color.key}
             colorHex={color.hex}
             ink={color.ink}
             templateId={product.template}

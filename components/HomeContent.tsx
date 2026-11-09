@@ -8,6 +8,7 @@ import { defaultValues, getTemplate } from '@/lib/design/templates';
 import { shop } from '@/lib/config';
 import { loc, type MsgKey } from '@/lib/i18n';
 import { useLocale } from '@/lib/i18n/context';
+import { productPhotos } from '@/lib/mockups';
 
 const TILE_BG = ['bg-blau-hell', 'bg-rose-hell', 'bg-gelb-hell'];
 const FAQ: [MsgKey, MsgKey][] = [
@@ -40,9 +41,18 @@ export default function HomeContent() {
             const tpl = getTemplate(p.template);
             return (
               <Link key={p.slug} href={`/produkt/${p.slug}/`} className="group flex flex-col no-underline">
+                {productPhotos(p.slug)[0] ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={productPhotos(p.slug)[0].src}
+                    alt={t('home.example', { name: loc(p.name, locale) })}
+                    className="aspect-square w-full rounded-2xl object-cover transition-transform duration-200 group-hover:-translate-y-1"
+                  />
+                ) : (
                 <div className={`${TILE_BG[i % 3]} rounded-2xl px-6 pb-2 pt-6`}>
                   <ShirtPreview
                     garment={p.defaultGarment}
+                    colorKey={c.key}
                     colorHex={c.hex}
                     ink={c.ink}
                     templateId={p.template}
@@ -51,6 +61,7 @@ export default function HomeContent() {
                     className="mx-auto w-full max-w-[19rem] transition-transform duration-200 group-hover:-translate-y-1"
                   />
                 </div>
+                )}
                 <h3 className="mt-4 text-[1.45rem] group-hover:text-blau">{loc(p.occasion, locale)}</h3>
                 <p className="mt-1 text-ink-soft">{loc(p.short, locale)}</p>
                 <p className="mt-2 font-bold">{t('home.from', { price: price(GARMENTS.tee.priceCents) })}</p>

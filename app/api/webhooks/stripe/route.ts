@@ -4,6 +4,7 @@ import type Stripe from 'stripe';
 import { brand, siteUrl } from '@/lib/config';
 import { formatPrice, isLocale, loc, type Locale } from '@/lib/i18n';
 import { withdrawalNoticeHtml } from '@/lib/legal-texts';
+import { printPlacement } from '@/lib/catalog';
 import { emailLayout, escapeHtml, sendEmail } from '@/lib/server/email';
 import { env, requireEnv } from '@/lib/server/env';
 import { sendPurchaseEvent } from '@/lib/server/meta-capi';
@@ -90,7 +91,7 @@ async function fulfill(sessionId: string) {
       quantity: clean.qty,
       retail_price: (unitCents / 100).toFixed(2),
       name: `${clean.product.name.en} – ${clean.template.summarize(clean.values, 'en')}`.slice(0, 200),
-      files: [{ type: 'front', url: printFileUrl({ p: clean.product.slug, g: clean.garment.key, c: clean.color.key, v: clean.values }) }],
+      files: [{ type: printPlacement(clean.garment.key), url: printFileUrl({ p: clean.product.slug, g: clean.garment.key, c: clean.color.key, v: clean.values }) }],
     })),
     retailCosts: {
       currency: 'EUR',

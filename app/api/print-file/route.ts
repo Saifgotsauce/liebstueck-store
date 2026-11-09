@@ -24,8 +24,8 @@ export async function GET(req: Request) {
   const v = validateValues(template, data.v);
   if (!v.ok) return new Response('Invalid design data', { status: 422 });
 
-  const { width, height } = printfileSize(garment.key);
-  const png = renderPrintPng(template, v.values, PALETTES[color.ink], width, height);
+  const { width, height, dpi } = printfileSize(garment.key);
+  const png = renderPrintPng(template, v.values, PALETTES[color.ink], width, height, dpi);
   return new Response(new Uint8Array(png), {
     headers: {
       'Content-Type': 'image/png',

@@ -19,6 +19,21 @@ async function main() {
     target: 'es2020',
     jsx: 'automatic',
     alias: { 'next/link': path.join(root, 'preview/next-link-shim.tsx') },
+    plugins: [
+      {
+        // A one-file page can't load /mockups/… files, so Printful photos are embedded as data URIs.
+        name: 'inline-mockups',
+        setup(b) {
+          b.onLoad({ filter: /printful-mockups\.json$/ }, (args) => {
+            const json = fs.readFileSync(args.path, 'utf8').replace(/"\/mockups\/([^"]+)"/g, (_, rel) => {
+              const file = path.join(root, 'public', 'mockups', rel);
+              return fs.existsSync(file) ? `"data:image/webp;base64,${fs.readFileSync(file).toString('base64')}"` : 'null';
+            });
+            return { contents: json, loader: 'json' };
+          });
+        },
+      },
+    ],
     define: {
       'process.env.NODE_ENV': '"production"',
       'process.env.NEXT_PUBLIC_DEMO': '"1"',
