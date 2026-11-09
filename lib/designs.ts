@@ -200,7 +200,7 @@ export const DESIGNS: Design[] = [
     title: 'Peaked? Honey, I’m Just Getting Started',
     vibe: 'aging',
     accent: 'red',
-    color: 'mauve',
+    color: 'heather',
     blurb: 'For the woman who took one look at “slowing down” and politely declined.',
     spec: {
       layout: 'stack',

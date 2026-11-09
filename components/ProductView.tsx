@@ -20,6 +20,7 @@ import { validateValues } from '@/lib/design/validate';
 import type { FieldDef, FieldValues } from '@/lib/design/types';
 import { track } from '@/lib/pixel';
 import { productPhotos } from '@/lib/mockups';
+import { modelPhotos } from '@/lib/model-photos';
 import ShirtPreview from './ShirtPreview';
 import { IconBrush, IconCalendar, IconCheck, IconFeather, IconLock, IconShield, IconShirt, IconTruck, IconWash, Stars } from './Icons';
 
@@ -69,7 +70,9 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const ctaRef = useRef<HTMLButtonElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const g = GARMENTS[garment];
-  const photos = productPhotos(slug);
+  // Model photos first, then Printful photos; slides refer to them by index.
+  const model = modelPhotos(slug);
+  const photos = [...model, ...productPhotos(slug)];
   const companions = useMemo(() => companionsFor(design, locale), [design, locale]);
 
   // Prefill personalization from the link (e.g. ?nickname=Nana from the home page demo)
@@ -105,7 +108,9 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const pluralLower = T.plural(garment);
   const altName = T.single(altGarment);
 
-  const slides: SlideKey[] = ['hero', 'front', 'zoom', 'alt', ...photos.map((_, i) => i)];
+  // A model photo leads when there is one; the headline slide follows.
+  const extra = photos.map((_, i) => i).filter((i) => i > 0 || !model.length);
+  const slides: SlideKey[] = [...(model.length ? [0] : []), 'hero', 'front', 'zoom', 'alt', ...extra];
 
   function goTo(i: number) {
     const el = trackRef.current;
@@ -226,14 +231,14 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
                       type="button"
                       onClick={() => {
                         pickGarment(altGarment);
-                        goTo(0);
+                        goTo(slides.indexOf('hero'));
                       }} className="absolute bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-violet px-5 py-2.5 font-bold text-white shadow-lg hover:bg-violet-deep">
                       {T.alsoAs(altName)} · {fmt(unitPriceCents(altGarment, undefined, locale))}
                     </button>
                   </div>
                 ) : photos[s] ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={photos[s].src} alt={T.examplePhoto(design.title)} className="block aspect-square w-full object-cover" loading="lazy" />
+                  <img src={photos[s].src} alt={T.examplePhoto(design.title)} className="block aspect-square w-full object-cover" loading={i === 0 ? 'eager' : 'lazy'} fetchPriority={i === 0 ? 'high' : undefined} />
                 ) : null}
               </div>
             ))}
