@@ -1,5 +1,415 @@
 {
-  "generatedAt": null,
-  "note": "Run `npm run printful:sync` with PRINTFUL_API_TOKEN set to fill this file with real Printful variant IDs.",
-  "garments": {}
+  "generatedAt": "2026-11-09T03:26:24.323Z",
+  "garments": {
+    "tee": {
+      "productId": 71,
+      "productName": "Unisex Staple T-Shirt | Bella + Canvas 3001",
+      "currency": "CAD",
+      "placement": "front_large",
+      "printfile": {
+        "width": 2250,
+        "height": 2700,
+        "dpi": 150
+      },
+      "variants": {
+        "navy": {
+          "S": {
+            "id": 4111,
+            "cost": 17.25,
+            "eu": true
+          },
+          "M": {
+            "id": 4112,
+            "cost": 17.25,
+            "eu": true
+          },
+          "L": {
+            "id": 4113,
+            "cost": 17.25,
+            "eu": true
+          },
+          "XL": {
+            "id": 4114,
+            "cost": 17.25,
+            "eu": true
+          },
+          "2XL": {
+            "id": 4115,
+            "cost": 19.95,
+            "eu": true
+          },
+          "3XL": {
+            "id": 12874,
+            "cost": 22.75,
+            "eu": false
+          }
+        },
+        "weiss": {
+          "S": {
+            "id": 4011,
+            "cost": 17.25,
+            "eu": true
+          },
+          "M": {
+            "id": 4012,
+            "cost": 17.25,
+            "eu": true
+          },
+          "L": {
+            "id": 4013,
+            "cost": 17.25,
+            "eu": true
+          },
+          "XL": {
+            "id": 4014,
+            "cost": 17.25,
+            "eu": true
+          },
+          "2XL": {
+            "id": 4015,
+            "cost": 19.95,
+            "eu": true
+          },
+          "3XL": {
+            "id": 5294,
+            "cost": 22.75,
+            "eu": true
+          }
+        },
+        "schwarz": {
+          "S": {
+            "id": 4016,
+            "cost": 17.25,
+            "eu": true
+          },
+          "M": {
+            "id": 4017,
+            "cost": 17.25,
+            "eu": true
+          },
+          "L": {
+            "id": 4018,
+            "cost": 17.25,
+            "eu": true
+          },
+          "XL": {
+            "id": 4019,
+            "cost": 17.25,
+            "eu": true
+          },
+          "2XL": {
+            "id": 4020,
+            "cost": 19.95,
+            "eu": true
+          },
+          "3XL": {
+            "id": 5295,
+            "cost": 22.75,
+            "eu": true
+          }
+        },
+        "bordeaux": {
+          "S": {
+            "id": 4106,
+            "cost": 17.25,
+            "eu": true
+          },
+          "M": {
+            "id": 4107,
+            "cost": 17.25,
+            "eu": true
+          },
+          "L": {
+            "id": 4108,
+            "cost": 17.25,
+            "eu": true
+          },
+          "XL": {
+            "id": 4109,
+            "cost": 17.25,
+            "eu": true
+          },
+          "2XL": {
+            "id": 4110,
+            "cost": 19.95,
+            "eu": true
+          },
+          "3XL": {
+            "id": 15792,
+            "cost": 22.75,
+            "eu": false
+          }
+        },
+        "waldgruen": {
+          "S": {
+            "id": 8451,
+            "cost": 17.25,
+            "eu": true
+          },
+          "M": {
+            "id": 8452,
+            "cost": 17.25,
+            "eu": true
+          },
+          "L": {
+            "id": 8453,
+            "cost": 17.25,
+            "eu": true
+          },
+          "XL": {
+            "id": 8454,
+            "cost": 17.25,
+            "eu": true
+          },
+          "2XL": {
+            "id": 8455,
+            "cost": 19.95,
+            "eu": true
+          },
+          "3XL": {
+            "id": 8456,
+            "cost": 22.75,
+            "eu": false
+          }
+        },
+        "grau": {
+          "S": {
+            "id": 6948,
+            "cost": 17.25,
+            "eu": true
+          },
+          "M": {
+            "id": 6949,
+            "cost": 17.25,
+            "eu": true
+          },
+          "L": {
+            "id": 6950,
+            "cost": 17.25,
+            "eu": true
+          },
+          "XL": {
+            "id": 6951,
+            "cost": 17.25,
+            "eu": true
+          },
+          "2XL": {
+            "id": 6952,
+            "cost": 19.95,
+            "eu": true
+          },
+          "3XL": {
+            "id": 6953,
+            "cost": 22.75,
+            "eu": true
+          }
+        }
+      }
+    },
+    "hoodie": {
+      "productId": 146,
+      "productName": "Unisex Heavy Blend Hoodie | Gildan 18500",
+      "currency": "CAD",
+      "placement": "front",
+      "printfile": {
+        "width": 2100,
+        "height": 2100,
+        "dpi": 150
+      },
+      "variants": {
+        "navy": {
+          "S": {
+            "id": 5594,
+            "cost": 32.5,
+            "eu": true
+          },
+          "M": {
+            "id": 5595,
+            "cost": 32.5,
+            "eu": true
+          },
+          "L": {
+            "id": 5596,
+            "cost": 32.5,
+            "eu": true
+          },
+          "XL": {
+            "id": 5597,
+            "cost": 32.5,
+            "eu": true
+          },
+          "2XL": {
+            "id": 5598,
+            "cost": 35.25,
+            "eu": true
+          },
+          "3XL": {
+            "id": 5599,
+            "cost": 38.25,
+            "eu": true
+          }
+        },
+        "schwarz": {
+          "S": {
+            "id": 5530,
+            "cost": 32.5,
+            "eu": true
+          },
+          "M": {
+            "id": 5531,
+            "cost": 32.5,
+            "eu": true
+          },
+          "L": {
+            "id": 5532,
+            "cost": 32.5,
+            "eu": true
+          },
+          "XL": {
+            "id": 5533,
+            "cost": 32.5,
+            "eu": true
+          },
+          "2XL": {
+            "id": 5534,
+            "cost": 35.25,
+            "eu": true
+          },
+          "3XL": {
+            "id": 5535,
+            "cost": 38.25,
+            "eu": true
+          }
+        },
+        "bordeaux": {
+          "S": {
+            "id": 5586,
+            "cost": 32.5,
+            "eu": true
+          },
+          "M": {
+            "id": 5587,
+            "cost": 32.5,
+            "eu": true
+          },
+          "L": {
+            "id": 5588,
+            "cost": 32.5,
+            "eu": true
+          },
+          "XL": {
+            "id": 5589,
+            "cost": 32.5,
+            "eu": true
+          },
+          "2XL": {
+            "id": 5590,
+            "cost": 35.25,
+            "eu": true
+          },
+          "3XL": {
+            "id": 5591,
+            "cost": 38.25,
+            "eu": true
+          }
+        },
+        "waldgruen": {
+          "S": {
+            "id": 20570,
+            "cost": 32.5,
+            "eu": false
+          },
+          "M": {
+            "id": 20571,
+            "cost": 32.5,
+            "eu": false
+          },
+          "L": {
+            "id": 20572,
+            "cost": 32.5,
+            "eu": false
+          },
+          "XL": {
+            "id": 20573,
+            "cost": 32.5,
+            "eu": false
+          },
+          "2XL": {
+            "id": 20574,
+            "cost": 35.25,
+            "eu": false
+          },
+          "3XL": {
+            "id": 20575,
+            "cost": 38.25,
+            "eu": false
+          }
+        },
+        "grau": {
+          "S": {
+            "id": 5610,
+            "cost": 32.5,
+            "eu": true
+          },
+          "M": {
+            "id": 5611,
+            "cost": 32.5,
+            "eu": true
+          },
+          "L": {
+            "id": 5612,
+            "cost": 32.5,
+            "eu": true
+          },
+          "XL": {
+            "id": 5613,
+            "cost": 32.5,
+            "eu": true
+          },
+          "2XL": {
+            "id": 5614,
+            "cost": 35.25,
+            "eu": true
+          },
+          "3XL": {
+            "id": 5615,
+            "cost": 38.25,
+            "eu": true
+          }
+        },
+        "weiss": {
+          "S": {
+            "id": 5522,
+            "cost": 32.5,
+            "eu": true
+          },
+          "M": {
+            "id": 5523,
+            "cost": 32.5,
+            "eu": true
+          },
+          "L": {
+            "id": 5524,
+            "cost": 32.5,
+            "eu": true
+          },
+          "XL": {
+            "id": 5525,
+            "cost": 32.5,
+            "eu": true
+          },
+          "2XL": {
+            "id": 5526,
+            "cost": 35.25,
+            "eu": true
+          },
+          "3XL": {
+            "id": 5527,
+            "cost": 38.25,
+            "eu": true
+          }
+        }
+      }
+    }
+  }
 }

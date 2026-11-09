@@ -1,5 +1,184 @@
 {
-  "generatedAt": null,
-  "garments": {},
+  "generatedAt": "2026-11-09T03:26:24.324Z",
+  "garments": {
+    "tee": {
+      "placement": "front_large",
+      "colors": {
+        "navy": {
+          "w": 3000,
+          "h": 3000,
+          "area": {
+            "left": 878,
+            "top": 530,
+            "width": 1264,
+            "height": 1516
+          },
+          "bg": null,
+          "bgColor": "#212642",
+          "overlay": "/mockups/tee/150954-overlay.webp",
+          "overlayOnTop": true
+        },
+        "weiss": {
+          "w": 3000,
+          "h": 3000,
+          "area": {
+            "left": 878,
+            "top": 530,
+            "width": 1264,
+            "height": 1516
+          },
+          "bg": null,
+          "bgColor": "#ffffff",
+          "overlay": "/mockups/tee/150954-overlay.webp",
+          "overlayOnTop": true
+        },
+        "schwarz": {
+          "w": 3000,
+          "h": 3000,
+          "area": {
+            "left": 878,
+            "top": 530,
+            "width": 1264,
+            "height": 1516
+          },
+          "bg": null,
+          "bgColor": "#0c0c0c",
+          "overlay": "/mockups/tee/150954-overlay.webp",
+          "overlayOnTop": true
+        },
+        "bordeaux": {
+          "w": 3000,
+          "h": 3000,
+          "area": {
+            "left": 878,
+            "top": 530,
+            "width": 1264,
+            "height": 1516
+          },
+          "bg": null,
+          "bgColor": "#721d37",
+          "overlay": "/mockups/tee/150954-overlay.webp",
+          "overlayOnTop": true
+        },
+        "waldgruen": {
+          "w": 3000,
+          "h": 3000,
+          "area": {
+            "left": 878,
+            "top": 530,
+            "width": 1264,
+            "height": 1516
+          },
+          "bg": null,
+          "bgColor": "#223e25",
+          "overlay": "/mockups/tee/150954-overlay.webp",
+          "overlayOnTop": true
+        },
+        "grau": {
+          "w": 3000,
+          "h": 3000,
+          "area": {
+            "left": 878,
+            "top": 530,
+            "width": 1264,
+            "height": 1516
+          },
+          "bg": "/mockups/tee/150915-bg.webp",
+          "bgColor": "#cececc",
+          "overlay": "/mockups/tee/150954-overlay.webp",
+          "overlayOnTop": true
+        }
+      }
+    },
+    "hoodie": {
+      "placement": "front",
+      "colors": {
+        "navy": {
+          "w": 3000,
+          "h": 3000,
+          "area": {
+            "left": 927,
+            "top": 651,
+            "width": 1136,
+            "height": 1136
+          },
+          "bg": null,
+          "bgColor": "#131928",
+          "overlay": "/mockups/hoodie/149888-overlay.webp",
+          "overlayOnTop": true
+        },
+        "schwarz": {
+          "w": 3000,
+          "h": 3000,
+          "area": {
+            "left": 927,
+            "top": 651,
+            "width": 1136,
+            "height": 1136
+          },
+          "bg": null,
+          "bgColor": "#0b0b0b",
+          "overlay": "/mockups/hoodie/149888-overlay.webp",
+          "overlayOnTop": true
+        },
+        "bordeaux": {
+          "w": 3000,
+          "h": 3000,
+          "area": {
+            "left": 927,
+            "top": 651,
+            "width": 1136,
+            "height": 1136
+          },
+          "bg": null,
+          "bgColor": "#47171c",
+          "overlay": "/mockups/hoodie/149888-overlay.webp",
+          "overlayOnTop": true
+        },
+        "waldgruen": {
+          "w": 3000,
+          "h": 3000,
+          "area": {
+            "left": 927,
+            "top": 651,
+            "width": 1136,
+            "height": 1136
+          },
+          "bg": null,
+          "bgColor": "#222E1F",
+          "overlay": "/mockups/hoodie/149888-overlay.webp",
+          "overlayOnTop": true
+        },
+        "grau": {
+          "w": 3000,
+          "h": 3000,
+          "area": {
+            "left": 927,
+            "top": 651,
+            "width": 1136,
+            "height": 1136
+          },
+          "bg": "/mockups/hoodie/149891-bg.webp",
+          "bgColor": "#9b969c",
+          "overlay": "/mockups/hoodie/149888-overlay.webp",
+          "overlayOnTop": true
+        },
+        "weiss": {
+          "w": 3000,
+          "h": 3000,
+          "area": {
+            "left": 927,
+            "top": 651,
+            "width": 1136,
+            "height": 1136
+          },
+          "bg": null,
+          "bgColor": "#ffffff",
+          "overlay": "/mockups/hoodie/149888-overlay.webp",
+          "overlayOnTop": true
+        }
+      }
+    }
+  },
   "products": {}
 }
