@@ -79,6 +79,10 @@
   .chip[aria-pressed="true"], .chip[aria-checked="true"] { border-color: var(--color-violet); background: var(--color-violet); color: #fff; }
   .chip:disabled { opacity: .35; cursor: not-allowed; text-decoration: line-through; }
 
+  /* Swipeable photo strip */
+  .no-scrollbar { scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+
   /* Long-form text on policy pages */
   .prose-s { max-width: 42rem; }
   .prose-s h2 { font-size: 1.6rem; margin: 2.2rem 0 .7rem; }

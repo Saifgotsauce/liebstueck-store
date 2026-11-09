@@ -103,9 +103,16 @@ export function getColor(g: Garment, key: string) {
   return g.colors.find((c) => c.key === key);
 }
 
-export function unitPriceCents(garment: GarmentKey, size?: string) {
+/** The everyday price, before any store-wide sale. */
+export function regularPriceCents(garment: GarmentKey, size?: string) {
   const g = GARMENTS[garment];
   return g.priceCents + (size ? g.sizeExtraCents[size] ?? 0 : 0);
+}
+
+/** What the shopper pays per item (before bundle savings). Includes the store-wide sale when one is on. */
+export function unitPriceCents(garment: GarmentKey, size?: string) {
+  const regular = regularPriceCents(garment, size);
+  return shop.sale ? Math.round((regular * (100 - shop.sale.percent)) / 100) : regular;
 }
 
 // ── Printful variant lookup (written by scripts/printful-sync.ts) ─────────────

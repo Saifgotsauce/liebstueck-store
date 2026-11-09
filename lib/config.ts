@@ -36,6 +36,13 @@ export const shop = {
   // Seasonal deadline shown in the top bar and on product pages until `orderBy` passes.
   // Printful's US-to-US apparel cutoff for standard shipping – re-check printful.com/holiday-order-deadlines each year.
   holiday: { name: 'Christmas', orderBy: '2026-12-11' },
+  /**
+   * Store-wide sale. Off (null) until you run a real one, e.g. { percent: 20, label: 'Black Friday', ends: 'Monday' }.
+   * When on, every price drops by `percent` at checkout too, and the regular price shows crossed out.
+   * US law (FTC 16 CFR 233): only cross out a price you really charged for a good while before the sale,
+   * and end the sale when you say it ends.
+   */
+  sale: null as null | { percent: number; label: string; ends?: string },
 };
 
 // Shown on the policy pages. No street address is shown publicly unless you add one here.

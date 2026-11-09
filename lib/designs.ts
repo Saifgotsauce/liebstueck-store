@@ -17,15 +17,45 @@ export type Vibe = {
   blurb: string;
   /** How people search for this kind of shirt – used in page titles and descriptions. */
   searchTerm: string;
+  /** Big headline on the first product photo. */
+  hook: string;
+  /** Red line under the product title: who it is for. */
+  tagline: string;
+  /** "Perfect for …" line in the benefits list. */
+  occasion: string;
 };
 
 export const VIBES: Vibe[] = [
-  { key: 'aging', name: 'Aging, Unbothered', blurb: 'Getting older? Getting louder.', searchTerm: 'funny shirts for women over 50' },
-  { key: 'grandma', name: 'Grandma Era', blurb: 'Spoiling is a sport. These are the uniforms.', searchTerm: 'funny grandma shirts' },
-  { key: 'retired', name: 'Retired & Loving It', blurb: 'Out of office. Permanently.', searchTerm: 'funny retirement shirts' },
-  { key: 'birthday', name: 'Milestone Birthdays', blurb: '50, 60, 70 and fabulously unbothered.', searchTerm: 'funny 50th, 60th and 70th birthday shirts' },
-  { key: 'for-him', name: 'Gifts for Him', blurb: 'For grandpas, husbands and professional nappers.', searchTerm: 'funny gifts for grandpa and dad' },
-  { key: 'holiday', name: 'Holiday Shop', blurb: 'Family Christmas shirts and festive sass.', searchTerm: 'funny family Christmas shirts' },
+  {
+    key: 'aging', name: 'Aging, Unbothered', blurb: 'Getting older? Getting louder.', searchTerm: 'funny shirts for women over 50',
+    hook: 'Getting older? Getting louder.', tagline: 'For women who refuse to act their age.',
+    occasion: 'Perfect for birthdays, Mother’s Day or just because',
+  },
+  {
+    key: 'grandma', name: 'Grandma Era', blurb: 'Spoiling is a sport. These are the uniforms.', searchTerm: 'funny grandma shirts',
+    hook: 'Spoil them. Brag about it.', tagline: 'For grandmas with a sense of humor.',
+    occasion: 'Perfect for Mother’s Day, birthdays and new-grandma news',
+  },
+  {
+    key: 'retired', name: 'Retired & Loving It', blurb: 'Out of office. Permanently.', searchTerm: 'funny retirement shirts',
+    hook: 'Off the clock. Forever.', tagline: 'For the newly retired and gloriously unbothered.',
+    occasion: 'Perfect for retirement parties and the first Monday off',
+  },
+  {
+    key: 'birthday', name: 'Milestone Birthdays', blurb: '50, 60, 70 and fabulously unbothered.', searchTerm: 'funny 50th, 60th and 70th birthday shirts',
+    hook: 'Make the big number look good.', tagline: 'For the milestone birthday girl.',
+    occasion: 'Perfect for 50th, 60th and 70th birthdays',
+  },
+  {
+    key: 'for-him', name: 'Gifts for Him', blurb: 'For grandpas, husbands and professional nappers.', searchTerm: 'funny gifts for grandpa and dad',
+    hook: 'The gift he’ll actually wear.', tagline: 'For grandpas, husbands and nap champions.',
+    occasion: 'Perfect for Father’s Day, birthdays and Christmas',
+  },
+  {
+    key: 'holiday', name: 'Holiday Shop', blurb: 'Family Christmas shirts and festive sass.', searchTerm: 'funny family Christmas shirts',
+    hook: 'Matching shirts. Unmatched chaos.', tagline: 'For the whole family photo.',
+    occasion: 'Get one for everyone – bundle savings apply automatically',
+  },
 ];
 
 export type Design = {
