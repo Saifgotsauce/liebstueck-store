@@ -1,0 +1,5 @@
+{
+  "generatedAt": null,
+  "note": "Run `npm run printful:sync` with PRINTFUL_API_TOKEN set to fill this file with real Printful variant IDs.",
+  "garments": {}
+}

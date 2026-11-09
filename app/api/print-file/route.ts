@@ -1,0 +1,36 @@
+import { GARMENTS, getColor, getProduct, printfileSize } from '@/lib/catalog';
+import { getTemplate } from '@/lib/design/templates';
+import { PALETTES } from '@/lib/design/types';
+import { validateValues } from '@/lib/design/validate';
+import { renderPrintPng } from '@/lib/print/render';
+import { verifyPrintParams } from '@/lib/server/print-url';
+
+export const runtime = 'nodejs';
+
+// Renders the print-ready PNG for one order item. Printful downloads it from here
+// when the order is created. Only signed URLs (made by the webhook) are accepted.
+
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const data = verifyPrintParams(url.searchParams.get('d') ?? '', url.searchParams.get('s') ?? '');
+  if (!data) return new Response('Forbidden', { status: 403 });
+
+  const product = getProduct(data.p);
+  const garment = GARMENTS[data.g];
+  const color = garment && getColor(garment, data.c);
+  if (!product || !garment || !color) return new Response('Not found', { status: 404 });
+
+  const template = getTemplate(product.template);
+  const v = validateValues(template, data.v);
+  if (!v.ok) return new Response('Invalid design data', { status: 422 });
+
+  const { width, height } = printfileSize(garment.key);
+  const png = renderPrintPng(template, v.values, PALETTES[color.ink], width, height);
+  return new Response(new Uint8Array(png), {
+    headers: {
+      'Content-Type': 'image/png',
+      'Cache-Control': 'public, max-age=31536000, immutable',
+      'Content-Disposition': `inline; filename="${product.slug}-${color.key}.png"`,
+    },
+  });
+}

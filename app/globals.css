@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+/* ── Fonts ───────────────────────────────────────────────────────────────────
+   Site: Young Serif (headings) + Nunito Sans (text).
+   Print designs (live preview): Bebas Neue, Dancing Script, Playfair Display, Nunito Sans.
+   The preview uses the exact files the print renderer uses. */
+@font-face { font-family: "Young Serif"; src: url("/fonts/YoungSerif_400Regular.ttf") format("truetype"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Nunito Sans"; src: url("/fonts/NunitoSans_400Regular.ttf") format("truetype"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Nunito Sans"; src: url("/fonts/NunitoSans_700Bold.ttf") format("truetype"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Bebas Neue"; src: url("/fonts/BebasNeue_400Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
+@font-face { font-family: "Dancing Script"; src: url("/fonts/DancingScript_700Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
+@font-face { font-family: "Playfair Display"; src: url("/fonts/PlayfairDisplay_700Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
+
+@theme {
+  --color-ink: #16213A;
+  --color-ink-soft: #4E5870;
+  --color-blau: #23408E;      /* Kornblumenblau – brand, buttons, links */
+  --color-blau-dunkel: #18306E;
+  --color-blau-hell: #E9EEFA; /* panels behind shirts */
+  --color-gelb: #F6C445;      /* the one loud colour: main call to action */
+  --color-gelb-hell: #FBF1D3;
+  --color-rot: #C8382D;       /* hearts, errors */
+  --color-rose-hell: #F8E7E4;
+  --color-linie: #D5DCEC;
+
+  --font-serif: "Young Serif", Georgia, serif;
+  --font-sans: "Nunito Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-script: "Dancing Script", cursive;
+}
+
+/* Element defaults and component classes live in layers so Tailwind utilities can override them. */
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    color: var(--color-ink);
+    background: #fff;
+    font-size: 106.25%; /* 17px base – larger than usual for an older audience */
+    -webkit-text-size-adjust: 100%;
+  }
+  @media (min-width: 768px) { html { font-size: 112.5%; } } /* 18px */
+
+  body { line-height: 1.6; }
+  h1, h2, h3 { font-family: var(--font-serif); font-weight: 400; line-height: 1.15; letter-spacing: -0.005em; }
+
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--color-gelb); outline-offset: 2px; border-radius: 4px; }
+}
+
+@layer components {
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 3.25rem; padding: .75rem 1.5rem; border-radius: 999px; font-weight: 700; text-decoration: none; transition: background-color .15s, color .15s, transform .1s; cursor: pointer; }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-primary { background: var(--color-gelb); color: var(--color-ink); }
+  .btn-primary:hover { background: #F2B623; }
+  .btn-blue { background: var(--color-blau); color: #fff; }
+  .btn-blue:hover { background: var(--color-blau-dunkel); }
+  .btn-ghost { background: transparent; color: var(--color-blau); box-shadow: inset 0 0 0 2px var(--color-blau); }
+  .btn-ghost:hover { background: var(--color-blau-hell); }
+
+  .link { color: var(--color-blau); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
+  .link:hover { color: var(--color-blau-dunkel); }
+
+  /* Form controls */
+  .field-input { width: 100%; min-height: 3.1rem; padding: .6rem .9rem; border: 2px solid var(--color-linie); border-radius: 10px; background: #fff; font-size: 1.05rem; color: var(--color-ink); }
+  .field-input:focus { outline: none; border-color: var(--color-blau); box-shadow: 0 0 0 3px rgba(35,64,142,.18); }
+  .field-input[aria-invalid="true"] { border-color: var(--color-rot); }
+
+  .chip { min-height: 2.75rem; padding: .45rem 1rem; border-radius: 999px; border: 2px solid var(--color-linie); background: #fff; font-weight: 700; cursor: pointer; }
+  .chip[aria-checked="true"], .chip[aria-pressed="true"] { border-color: var(--color-blau); background: var(--color-blau); color: #fff; }
+  .chip:hover:not([aria-checked="true"]):not([aria-pressed="true"]) { border-color: var(--color-blau); }
+
+  /* Disclosure panels on product page */
+  details.info { border-top: 1px solid var(--color-linie); }
+  details.info summary { list-style: none; cursor: pointer; padding: 1rem 0; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+  details.info summary::-webkit-details-marker { display: none; }
+  details.info summary::after { content: "+"; font-size: 1.5rem; line-height: 1; color: var(--color-blau); }
+  details.info[open] summary::after { content: "–"; }
+
+  /* Legal pages */
+  .prose-legal h2 { font-size: 1.4rem; margin: 2rem 0 .5rem; }
+  .prose-legal h3 { font-family: var(--font-sans); font-weight: 700; font-size: 1.05rem; margin: 1.25rem 0 .25rem; }
+  .prose-legal p, .prose-legal ul { margin: .5rem 0; max-width: 70ch; }
+  .prose-legal ul { list-style: disc; padding-left: 1.25rem; }
+  .prose-legal .todo { background: var(--color-gelb-hell); padding: 0 .25rem; border-radius: 3px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
