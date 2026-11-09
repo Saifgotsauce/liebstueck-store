@@ -1,9 +1,7 @@
 import crypto from 'node:crypto';
 import { NextResponse } from 'next/server';
 import type Stripe from 'stripe';
-import { brand, siteUrl } from '@/lib/config';
-import { formatPrice, isLocale, loc, type Locale } from '@/lib/i18n';
-import { withdrawalNoticeHtml } from '@/lib/legal-texts';
+import { brand, formatPrice, siteUrl } from '@/lib/config';
 import { printPlacement } from '@/lib/catalog';
 import { emailLayout, escapeHtml, sendEmail } from '@/lib/server/email';
 import { env, requireEnv } from '@/lib/server/env';
@@ -40,9 +38,9 @@ export async function POST(req: Request) {
     }
     return NextResponse.json({ received: true });
   } catch (e) {
-    console.error('Fulfilment error', e);
+    console.error('Fulfillment error', e);
     await notifyOwner('Order could not be sent to Printful', `Error: ${escapeHtml(String((e as Error).message))}<br>Event: ${event.id}. Stripe will retry automatically.`);
-    return NextResponse.json({ error: 'fulfilment failed' }, { status: 500 });
+    return NextResponse.json({ error: 'fulfillment failed' }, { status: 500 });
   }
 }
 
@@ -68,11 +66,16 @@ async function fulfill(sessionId: string) {
     if (!storedJson) throw new Error(`Line item ${li.id} has no design metadata`);
     const clean = fromStored(JSON.parse(storedJson) as StoredItem, li.quantity ?? 1);
     if (!clean) throw new Error(`Line item ${li.id} no longer matches the catalog`);
-    items.push({ clean, unitCents: Math.round((li.amount_total ?? 0) / Math.max(1, li.quantity ?? 1)) });
+    // amount_subtotal = before discounts; Printful wants the price the customer paid per piece
+    const paid = (li.amount_subtotal ?? 0) - (li.amount_discount ?? 0);
+    items.push({ clean, unitCents: Math.round(paid / Math.max(1, li.quantity ?? 1)) });
   }
 
   const total = session.amount_total ?? 0;
   const shippingCents = session.shipping_cost?.amount_total ?? 0;
+  const discount = session.total_details?.amount_discount ?? 0;
+  const tax = session.total_details?.amount_tax ?? 0;
+  const subtotal = session.amount_subtotal ?? 0;
   await createOrder({
     externalId,
     recipient: {
@@ -90,56 +93,56 @@ async function fulfill(sessionId: string) {
       variant_id: clean.variantId,
       quantity: clean.qty,
       retail_price: (unitCents / 100).toFixed(2),
-      name: `${clean.product.name.en} – ${clean.template.summarize(clean.values, 'en')}`.slice(0, 200),
-      files: [{ type: printPlacement(clean.garment.key), url: printFileUrl({ p: clean.product.slug, g: clean.garment.key, c: clean.color.key, v: clean.values }) }],
+      name: [clean.design.title, clean.template.summarize(clean.values)].filter(Boolean).join(' – ').slice(0, 200),
+      files: [{ type: printPlacement(clean.garment.key), url: printFileUrl({ p: clean.design.slug, g: clean.garment.key, c: clean.color.key, v: clean.values }) }],
     })),
     retailCosts: {
-      currency: 'EUR',
-      subtotal: ((total - shippingCents) / 100).toFixed(2),
+      currency: 'USD',
+      subtotal: (subtotal / 100).toFixed(2),
+      discount: (discount / 100).toFixed(2),
       shipping: (shippingCents / 100).toFixed(2),
+      tax: (tax / 100).toFixed(2),
       total: (total / 100).toFixed(2),
     },
   });
 
   const ref = orderRef(sessionId);
-  const lang: Locale = isLocale(session.metadata?.lang) ? session.metadata.lang : 'de';
-  const c = COPY[lang];
-  const money = (cents: number) => formatPrice(cents, lang);
   if (email) {
+    const row = (left: string, right: string, bold = false) =>
+      `<tr><td style="padding:6px 0;${bold ? 'font-weight:bold' : ''}">${left}</td><td style="padding:6px 0;text-align:right;white-space:nowrap;${bold ? 'font-weight:bold' : ''}">${right}</td></tr>`;
     const rows = items
-      .map(
-        ({ clean, unitCents }) =>
-          `<tr><td style="padding:8px 0;border-bottom:1px solid #D5DCEC">${clean.qty} × ${escapeHtml(loc(clean.product.name, lang))}<br><span style="color:#4E5870">${escapeHtml(
-            `${loc(clean.garment.label, lang)}, ${loc(clean.color.label, lang)}, ${c.size} ${clean.size}`,
-          )}<br>${c.personalisation}: ${escapeHtml(clean.template.summarize(clean.values, lang))}</span></td><td style="padding:8px 0;border-bottom:1px solid #D5DCEC;text-align:right;white-space:nowrap">${money(
-            unitCents * clean.qty,
-          )}</td></tr>`,
-      )
+      .map(({ clean, unitCents }) => {
+        const personal = clean.template.summarize(clean.values);
+        return `<tr><td style="padding:10px 0;border-bottom:1px solid #E7DFD2">${clean.qty} × ${escapeHtml(clean.design.title)}<br><span style="color:#6B635B">${escapeHtml(
+          `${clean.garment.label}, ${clean.color.label}, size ${clean.size}`,
+        )}${personal ? `<br>${escapeHtml(personal)}` : ''}</span></td><td style="padding:10px 0;border-bottom:1px solid #E7DFD2;text-align:right;white-space:nowrap">${formatPrice(unitCents * clean.qty)}</td></tr>`;
+      })
       .join('');
     const html = emailLayout(
-      c.title,
-      `<p>${c.orderNumber}: <strong>${ref}</strong></p>
+      'Thanks for your order!',
+      `<p>Order number: <strong>${ref}</strong></p>
 <table style="width:100%;border-collapse:collapse">${rows}
-<tr><td style="padding:8px 0">${c.shipping}</td><td style="text-align:right">${shippingCents ? money(shippingCents) : c.free}</td></tr>
-<tr><td style="padding:8px 0;font-weight:bold">${c.total}</td><td style="text-align:right;font-weight:bold">${money(total)}</td></tr></table>
-<p>${c.address}: ${escapeHtml([shipping.name, a.line1, a.line2, `${a.postal_code ?? ''} ${a.city ?? ''}`, a.country].filter(Boolean).join(', '))}</p>
-<p>${c.next}</p>
-<hr style="border:none;border-top:1px solid #D5DCEC;margin:20px 0">
-<p style="font-size:13px;color:#4E5870">${c.legal.replace('{terms}', `<a href="${siteUrl}/agb/">${c.terms}</a>`)}</p>
-<div style="font-size:13px;color:#4E5870">${withdrawalNoticeHtml[lang]}</div>`,
-      lang,
+${discount ? row('Bundle savings', `−${formatPrice(discount)}`) : ''}
+${row('Shipping', shippingCents ? formatPrice(shippingCents) : 'Free')}
+${tax ? row('Sales tax', formatPrice(tax)) : ''}
+${row('Total', formatPrice(total), true)}</table>
+<p>Shipping to: ${escapeHtml([shipping.name, a.line1, a.line2, `${a.city ?? ''}, ${a.state ?? ''} ${a.postal_code ?? ''}`].filter(Boolean).join(', '))}</p>
+<p>Your order is printed just for you and usually ships within 2–5 business days. We’ll email you the tracking link as soon as it’s on its way.</p>
+<p style="font-size:13px;color:#6B635B">Something not right when it arrives? Reply to this email within 30 days and we’ll make it right. <a href="${siteUrl}/returns/">Return policy</a> · <a href="${siteUrl}/terms/">Terms</a></p>`,
     );
-    await sendEmail(email, c.subject.replace('{ref}', ref).replace('{brand}', brand.name), html);
+    await sendEmail(email, `Your ${brand.name} order ${ref}`, html);
   }
   if (env.ownerEmail) {
-    const lines = items.map(({ clean }) => `${clean.qty} × ${escapeHtml(clean.product.name.en)} (${clean.garment.label.en}, ${clean.color.label.en}, ${clean.size}) – ${escapeHtml(clean.template.summarize(clean.values, 'en'))}`);
+    const lines = items.map(
+      ({ clean }) =>
+        `${clean.qty} × ${escapeHtml(clean.design.title)} (${clean.garment.label}, ${clean.color.label}, ${clean.size})${clean.template.summarize(clean.values) ? ` – ${escapeHtml(clean.template.summarize(clean.values))}` : ''}`,
+    );
     await sendEmail(
       env.ownerEmail,
-      `New order ${ref} (${formatPrice(total, 'en')})`,
+      `New order ${ref} (${formatPrice(total)})`,
       emailLayout(
         'New order',
-        `<p>${ref}: ${formatPrice(total, 'en')}, customer language: ${lang.toUpperCase()}.</p><ul>${lines.map((l) => `<li>${l}</li>`).join('')}</ul><p>The print order is in Printful${env.printfulAutoConfirm ? ' and confirmed' : ' as a draft – please check and confirm it'}.</p>`,
-        'en',
+        `<p>${ref}: ${formatPrice(total)}${discount ? ` (bundle savings ${formatPrice(discount)})` : ''}.</p><ul>${lines.map((l) => `<li>${l}</li>`).join('')}</ul><p>The print order is in Printful${env.printfulAutoConfirm ? ' and confirmed' : ' as a draft – please check and confirm it'}.</p>`,
       ),
     );
   }
@@ -158,44 +161,12 @@ async function fulfill(sessionId: string) {
       country: a.country ?? undefined,
       fbp: session.metadata?.fbp,
       fbc: session.metadata?.fbc,
-      contentIds: items.map((i) => i.clean.product.slug),
+      contentIds: items.map((i) => i.clean.design.slug),
     }).catch((e) => console.error('CAPI failed', e));
   }
 }
 
-// Owner alerts are always in English.
 async function notifyOwner(subject: string, html: string) {
   if (!env.ownerEmail) return;
-  await sendEmail(env.ownerEmail, `[${brand.name}] ${subject}`, emailLayout(subject, `<p>${html}</p>`, 'en')).catch(() => {});
+  await sendEmail(env.ownerEmail, `[${brand.name}] ${subject}`, emailLayout(subject, `<p>${html}</p>`)).catch(() => {});
 }
-
-const COPY: Record<Locale, Record<string, string>> = {
-  de: {
-    subject: 'Deine Bestellung {ref} bei {brand}',
-    title: 'Danke für deine Bestellung!',
-    orderNumber: 'Bestellnummer',
-    size: 'Größe',
-    personalisation: 'Personalisierung',
-    shipping: 'Versand',
-    free: 'kostenlos',
-    total: 'Gesamt (inkl. MwSt.)',
-    address: 'Lieferadresse',
-    next: 'Wir drucken jetzt dein Shirt in der EU. Sobald es unterwegs ist, bekommst du eine E-Mail mit der Sendungsverfolgung.',
-    terms: 'AGB',
-    legal: 'Es gelten unsere {terms}. Hinweis: Personalisierte Artikel werden nach deinen Angaben angefertigt und sind vom Widerrufsrecht ausgeschlossen (§ 312g Abs. 2 Nr. 1 BGB).',
-  },
-  en: {
-    subject: 'Your order {ref} from {brand}',
-    title: 'Thank you for your order!',
-    orderNumber: 'Order number',
-    size: 'size',
-    personalisation: 'Personalisation',
-    shipping: 'Shipping',
-    free: 'free',
-    total: 'Total (incl. VAT)',
-    address: 'Delivery address',
-    next: 'We’re now printing your shirt in the EU. Once it’s on its way, you’ll get an email with tracking.',
-    terms: 'terms and conditions',
-    legal: 'Our {terms} apply. Note: personalised items are made to your specifications and are excluded from the right of withdrawal (§ 312g para. 2 no. 1 BGB).',
-  },
-};

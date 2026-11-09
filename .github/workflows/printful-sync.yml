@@ -2,6 +2,7 @@
 # Run it from GitHub → Actions → "Printful sync" → Run workflow. No computer setup needed.
 # Needs repo secrets PRINTFUL_API_TOKEN (and PRINTFUL_STORE_ID if your token asks for it).
 # Product photos need the live site: variable SITE_URL + secret PRINT_FILE_SECRET (same value as in Vercel).
+# Also run it after adding colors or sizes in lib/catalog.ts.
 # For the shipping-email webhook also set secret PRINTFUL_WEBHOOK_SECRET and variable SITE_URL.
 name: Printful sync
 on:

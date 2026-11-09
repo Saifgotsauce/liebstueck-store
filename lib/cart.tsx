@@ -1,15 +1,16 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { GARMENTS, getProduct } from './catalog';
+import { GARMENTS, type GarmentKey } from './catalog';
 import { shop } from './config';
-import { itemPriceCents, shippingFor } from './cart-math';
+import { getDesign } from './designs';
+import { cartTotals } from './cart-math';
 import type { FieldValues } from './design/types';
 
 export type CartItem = {
   id: string;
-  productSlug: string;
-  garment: 'tee' | 'hoodie';
+  design: string;
+  garment: GarmentKey;
   color: string;
   size: string;
   values: FieldValues;
@@ -19,33 +20,32 @@ export type CartItem = {
 type CartCtx = {
   items: CartItem[];
   ready: boolean;
-  count: number;
-  subtotalCents: number;
-  shippingCents: number;
+  totals: ReturnType<typeof cartTotals>;
+  open: boolean;
+  setOpen: (o: boolean) => void;
   add: (item: Omit<CartItem, 'id'>) => void;
   setQty: (id: string, qty: number) => void;
   remove: (id: string) => void;
   clear: () => void;
 };
 
-const KEY = 'liebstueck-cart-v1';
+const KEY = 'seasoned-cart-v1';
 const Ctx = createContext<CartCtx | null>(null);
-
-export { itemPriceCents, shippingFor };
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [ready, setReady] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as CartItem[];
-        setItems(parsed.filter((i) => getProduct(i.productSlug) && GARMENTS[i.garment]));
+        setItems(parsed.filter((i) => getDesign(i.design) && GARMENTS[i.garment]));
       }
     } catch {
-      /* storage unavailable – cart lives in memory only */
+      /* storage unavailable – the cart lives in memory only */
     }
     setReady(true);
   }, []);
@@ -61,30 +61,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const add = useCallback((item: Omit<CartItem, 'id'>) => {
     const id = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : String(Date.now() + Math.random());
-    setItems((prev) => [...prev, { ...item, id }].slice(0, shop.maxItemsPerOrder));
+    setItems((prev) => {
+      // same design + options → just bump the quantity
+      const same = prev.find(
+        (p) => p.design === item.design && p.garment === item.garment && p.color === item.color && p.size === item.size && JSON.stringify(p.values) === JSON.stringify(item.values),
+      );
+      if (same) return prev.map((p) => (p === same ? { ...p, qty: Math.min(shop.maxQuantityPerItem, p.qty + item.qty) } : p));
+      return [...prev, { ...item, id }].slice(0, shop.maxItemsPerOrder);
+    });
   }, []);
   const setQty = useCallback(
-    (id: string, qty: number) =>
-      setItems((prev) => prev.map((i) => (i.id === id ? { ...i, qty: Math.max(1, Math.min(shop.maxQuantityPerItem, qty)) } : i))),
+    (id: string, qty: number) => setItems((prev) => prev.map((i) => (i.id === id ? { ...i, qty: Math.max(1, Math.min(shop.maxQuantityPerItem, qty)) } : i))),
     [],
   );
   const remove = useCallback((id: string) => setItems((prev) => prev.filter((i) => i.id !== id)), []);
   const clear = useCallback(() => setItems([]), []);
 
-  const value = useMemo(() => {
-    const subtotalCents = items.reduce((s, i) => s + itemPriceCents(i) * i.qty, 0);
-    return {
-      items,
-      ready,
-      count: items.reduce((s, i) => s + i.qty, 0),
-      subtotalCents,
-      shippingCents: shippingFor(subtotalCents),
-      add,
-      setQty,
-      remove,
-      clear,
-    };
-  }, [items, ready, add, setQty, remove, clear]);
+  const value = useMemo(
+    () => ({ items, ready, totals: cartTotals(items), open, setOpen, add, setQty, remove, clear }),
+    [items, ready, open, add, setQty, remove, clear],
+  );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

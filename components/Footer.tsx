@@ -1,66 +1,46 @@
 'use client';
 
 import Link from 'next/link';
-import { brand, shop } from '@/lib/config';
-import { PRODUCTS } from '@/lib/catalog';
-import { useConsent } from '@/lib/consent';
-import { useLocale } from '@/lib/i18n/context';
-import { loc } from '@/lib/i18n';
-import { Logo } from './Header';
+import { brand } from '@/lib/config';
+import { VIBES } from '@/lib/designs';
+import { Logo } from './Logo';
 
 export default function Footer() {
-  const { openSettings } = useConsent();
-  const { t, locale, price } = useLocale();
   return (
-    <footer className="mt-24 bg-ink text-white">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 md:grid-cols-[1.4fr_1fr_1fr_1fr] md:px-6">
+    <footer className="mt-24 bg-violet text-white">
+      <div className="wrap grid gap-10 py-14 md:grid-cols-[1.5fr_1fr_1fr]">
         <div>
           <Logo className="text-white" />
-          <p className="mt-3 max-w-xs text-white/75">{loc(brand.tagline, locale)}</p>
-          {/* Withdrawal button – required for EU online shops since 19 June 2026 */}
-          <Link href="/widerruf/" className="btn mt-6 bg-white text-ink hover:bg-blau-hell">
-            {t('footer.withdraw')}
-          </Link>
+          <p className="mt-4 max-w-sm text-white/80">Funny shirts for women who are getting older out loud, and the people who love them. Printed to order, one at a time.</p>
+          <p className="mt-4 text-white/80">
+            Questions? <a href={`mailto:${brand.email}`} className="font-bold text-white">{brand.email}</a>
+          </p>
         </div>
         <div>
-          <h2 className="font-sans text-base font-bold">{t('footer.shirts')}</h2>
+          <h2 className="font-sans text-base font-bold tracking-normal text-white">Shop</h2>
           <ul className="mt-3 space-y-2 text-white/80">
-            {PRODUCTS.map((p) => (
-              <li key={p.slug}>
-                <Link href={`/produkt/${p.slug}/`} className="hover:text-white">
-                  {loc(p.occasion, locale)}
-                </Link>
+            <li><Link href="/shop/" className="no-underline hover:text-white">All shirts</Link></li>
+            {VIBES.map((v) => (
+              <li key={v.key}>
+                <Link href={`/shop/${v.key}/`} className="no-underline hover:text-white">{v.name}</Link>
               </li>
             ))}
           </ul>
         </div>
         <div>
-          <h2 className="font-sans text-base font-bold">{t('footer.help')}</h2>
+          <h2 className="font-sans text-base font-bold tracking-normal text-white">Help</h2>
           <ul className="mt-3 space-y-2 text-white/80">
-            <li><Link href="/versand-zahlung/" className="hover:text-white">{t('footer.shipping')}</Link></li>
-            <li><Link href="/widerrufsbelehrung/" className="hover:text-white">{t('footer.withdrawalNotice')}</Link></li>
-            <li><a href={`mailto:${brand.email}`} className="hover:text-white">{brand.email}</a></li>
-          </ul>
-        </div>
-        <div>
-          <h2 className="font-sans text-base font-bold">{t('footer.legal')}</h2>
-          <ul className="mt-3 space-y-2 text-white/80">
-            <li><Link href="/impressum/" className="hover:text-white">{t('footer.imprint')}</Link></li>
-            <li><Link href="/datenschutz/" className="hover:text-white">{t('footer.privacy')}</Link></li>
-            <li><Link href="/agb/" className="hover:text-white">{t('footer.terms')}</Link></li>
-            <li>
-              <button type="button" onClick={openSettings} className="text-left hover:text-white">
-                {t('footer.cookies')}
-              </button>
-            </li>
+            <li><Link href="/faq/" className="no-underline hover:text-white">FAQ</Link></li>
+            <li><Link href="/shipping/" className="no-underline hover:text-white">Shipping</Link></li>
+            <li><Link href="/returns/" className="no-underline hover:text-white">Returns & replacements</Link></li>
+            <li><Link href="/privacy/" className="no-underline hover:text-white">Privacy policy</Link></li>
+            <li><Link href="/terms/" className="no-underline hover:text-white">Terms of service</Link></li>
+            <li><Link href="/privacy-choices/" className="no-underline hover:text-white">Your privacy choices</Link></li>
           </ul>
         </div>
       </div>
-      <div className="border-t border-white/15">
-        <p className="mx-auto max-w-6xl px-4 py-5 text-sm text-white/65 md:px-6">
-          {t('footer.note', { free: price(shop.freeShippingFromCents) })} ©{' '}
-          {new Date().getFullYear()} {brand.name}
-        </p>
+      <div className="border-t border-white/20">
+        <p className="wrap py-5 text-sm text-white/70">© {new Date().getFullYear()} {brand.name}. Secure checkout by Stripe.</p>
       </div>
     </footer>
   );

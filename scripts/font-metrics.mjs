@@ -12,10 +12,15 @@ const fonts = {
   script: 'DancingScript_700Bold.ttf',
   serif: 'PlayfairDisplay_700Bold.ttf',
   sans: 'NunitoSans_700Bold.ttf',
+  retro: 'Fraunces_900Black.ttf',
+  retroItalic: 'Fraunces_900Black_Italic.ttf',
+  heavy: 'ArchivoBlack_400Regular.ttf',
+  marker: 'PermanentMarker_400Regular.ttf',
+  type: 'CourierPrime_700Bold.ttf',
 };
 
-// Latin, Latin-1 Supplement and Latin Extended-A cover German, French, Dutch, Polish, Nordic, etc.
-const ranges = [[0x20, 0x7e], [0xa0, 0xff], [0x100, 0x17f], [0x1e9e, 0x1e9e], [0x2019, 0x2019], [0x2013, 0x2014], [0xb7, 0xb7]];
+// Latin, Latin-1 Supplement and Latin Extended-A, plus curly quotes, dashes, bullet and ellipsis.
+const ranges = [[0x20, 0x7e], [0xa0, 0xff], [0x100, 0x17f], [0x1e9e, 0x1e9e], [0x2018, 0x201d], [0x2013, 0x2014], [0x2022, 0x2022], [0x2026, 0x2026], [0xb7, 0xb7], [0x2605, 0x2605]];
 
 const out = {};
 for (const [key, file] of Object.entries(fonts)) {

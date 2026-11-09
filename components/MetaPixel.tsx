@@ -6,7 +6,7 @@ import { useConsent } from '@/lib/consent';
 
 const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID;
 
-/** Loads the Meta Pixel only after marketing consent, then tracks page views. */
+/** Loads the Meta Pixel unless the visitor opted out of ad tracking, then tracks page views. */
 export default function MetaPixel() {
   const { marketing } = useConsent();
   const pathname = usePathname();

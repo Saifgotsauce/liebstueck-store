@@ -4,7 +4,7 @@ import { siteUrl } from '../config';
 import { env } from './env';
 
 // Meta Conversions API: sends the Purchase server-side so ads can optimise even when the
-// browser pixel is blocked. Only used when the customer gave marketing consent.
+// browser pixel is blocked. Skipped when the customer opted out of ad tracking.
 
 const hash = (v?: string | null) => (v ? crypto.createHash('sha256').update(v.trim().toLowerCase()).digest('hex') : undefined);
 
@@ -41,10 +41,10 @@ export async function sendPurchaseEvent(input: {
         event_time: Math.floor(Date.now() / 1000),
         event_id: input.eventId, // same ID as the browser pixel → Meta de-duplicates
         action_source: 'website',
-        event_source_url: `${siteUrl}/danke/`,
+        event_source_url: `${siteUrl}/thanks/`,
         user_data,
         custom_data: {
-          currency: 'EUR',
+          currency: 'USD',
           value: input.valueCents / 100,
           content_type: 'product',
           content_ids: input.contentIds,

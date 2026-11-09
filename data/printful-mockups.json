@@ -18,7 +18,7 @@
           "overlay": "/mockups/tee/150954-overlay.webp",
           "overlayOnTop": true
         },
-        "weiss": {
+        "white": {
           "w": 3000,
           "h": 3000,
           "area": {
@@ -32,7 +32,7 @@
           "overlay": "/mockups/tee/150954-overlay.webp",
           "overlayOnTop": true
         },
-        "schwarz": {
+        "black": {
           "w": 3000,
           "h": 3000,
           "area": {
@@ -46,7 +46,7 @@
           "overlay": "/mockups/tee/150954-overlay.webp",
           "overlayOnTop": true
         },
-        "bordeaux": {
+        "maroon": {
           "w": 3000,
           "h": 3000,
           "area": {
@@ -60,7 +60,7 @@
           "overlay": "/mockups/tee/150954-overlay.webp",
           "overlayOnTop": true
         },
-        "waldgruen": {
+        "forest": {
           "w": 3000,
           "h": 3000,
           "area": {
@@ -74,7 +74,7 @@
           "overlay": "/mockups/tee/150954-overlay.webp",
           "overlayOnTop": true
         },
-        "grau": {
+        "heather": {
           "w": 3000,
           "h": 3000,
           "area": {
@@ -85,6 +85,20 @@
           },
           "bg": "/mockups/tee/150915-bg.webp",
           "bgColor": "#cececc",
+          "overlay": "/mockups/tee/150954-overlay.webp",
+          "overlayOnTop": true
+        },
+        "mauve": {
+          "w": 3000,
+          "h": 3000,
+          "area": {
+            "left": 878,
+            "top": 530,
+            "width": 1264,
+            "height": 1516
+          },
+          "bg": null,
+          "bgColor": "#bf9aa0",
           "overlay": "/mockups/tee/150954-overlay.webp",
           "overlayOnTop": true
         }
@@ -107,7 +121,7 @@
           "overlay": "/mockups/hoodie/149888-overlay.webp",
           "overlayOnTop": true
         },
-        "schwarz": {
+        "black": {
           "w": 3000,
           "h": 3000,
           "area": {
@@ -121,7 +135,7 @@
           "overlay": "/mockups/hoodie/149888-overlay.webp",
           "overlayOnTop": true
         },
-        "bordeaux": {
+        "maroon": {
           "w": 3000,
           "h": 3000,
           "area": {
@@ -135,7 +149,7 @@
           "overlay": "/mockups/hoodie/149888-overlay.webp",
           "overlayOnTop": true
         },
-        "waldgruen": {
+        "forest": {
           "w": 3000,
           "h": 3000,
           "area": {
@@ -149,7 +163,7 @@
           "overlay": "/mockups/hoodie/149888-overlay.webp",
           "overlayOnTop": true
         },
-        "grau": {
+        "heather": {
           "w": 3000,
           "h": 3000,
           "area": {
@@ -163,7 +177,7 @@
           "overlay": "/mockups/hoodie/149888-overlay.webp",
           "overlayOnTop": true
         },
-        "weiss": {
+        "white": {
           "w": 3000,
           "h": 3000,
           "area": {
@@ -174,6 +188,20 @@
           },
           "bg": null,
           "bgColor": "#ffffff",
+          "overlay": "/mockups/hoodie/149888-overlay.webp",
+          "overlayOnTop": true
+        },
+        "pink": {
+          "w": 3000,
+          "h": 3000,
+          "area": {
+            "left": 927,
+            "top": 651,
+            "width": 1136,
+            "height": 1136
+          },
+          "bg": null,
+          "bgColor": "#f2cbd3",
           "overlay": "/mockups/hoodie/149888-overlay.webp",
           "overlayOnTop": true
         }

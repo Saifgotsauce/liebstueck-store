@@ -5,8 +5,8 @@ export function designMarkup(t: DesignTemplate, values: FieldValues, palette: Pa
   return t.render(values, palette);
 }
 
-/** Widest the design may print, in inches – keeps it chest-sized on Printful's larger 15″ × 18″ areas. */
-export const MAX_PRINT_WIDTH_IN = 12;
+/** Widest the design may print, in inches – keeps slogans chest-sized on Printful's 15″ × 18″ area. */
+export const MAX_PRINT_WIDTH_IN = 11;
 
 /**
  * Where the 3:4 design sits inside a print file of the given size: as large as fits

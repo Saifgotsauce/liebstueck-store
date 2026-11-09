@@ -7,7 +7,7 @@ import { env } from '@/lib/server/env';
 export const runtime = 'nodejs';
 
 // Printful → "package_shipped" → branded shipping email with tracking link.
-// Register this URL (with ?token=PRINTFUL_WEBHOOK_SECRET) via `npm run printful:sync -- --webhook`.
+// Registered by the Printful sync Action (tick "webhook") with ?token=PRINTFUL_WEBHOOK_SECRET.
 
 type ShippedPayload = {
   type: string;
@@ -31,31 +31,23 @@ export async function POST(req: Request) {
     const r = body.data?.order?.recipient;
     const sh = body.data?.shipment;
     if (r?.email && sh) {
-      // Printful doesn't know the shop language, so German-speaking countries get German, everyone else English.
-      const de = ['DE', 'AT', 'LI', 'CH'].includes((r.country_code ?? '').toUpperCase());
       const first = escapeHtml((r.name ?? '').split(' ')[0]);
-      const carrier = escapeHtml(sh.carrier ?? (de ? 'den Versanddienstleister' : 'the carrier'));
+      const carrier = escapeHtml(sh.carrier ?? 'the carrier');
       const button = sh.tracking_url
-        ? `<p><a href="${escapeHtml(sh.tracking_url)}" style="display:inline-block;background:#F6C445;color:#16213A;padding:12px 20px;border-radius:999px;font-weight:bold;text-decoration:none">${de ? 'Sendung verfolgen' : 'Track your parcel'}</a></p>`
+        ? `<p><a href="${escapeHtml(sh.tracking_url)}" style="display:inline-block;background:#D2452B;color:#fff;padding:12px 22px;border-radius:999px;font-weight:bold;text-decoration:none">Track your package</a></p>`
         : '';
-      const number = sh.tracking_number ? `<p style="color:#4E5870">${de ? 'Sendungsnummer' : 'Tracking number'}: ${escapeHtml(sh.tracking_number)}</p>` : '';
+      const number = sh.tracking_number ? `<p style="color:#6B635B">Tracking number: ${escapeHtml(sh.tracking_number)}</p>` : '';
       await sendEmail(
         r.email,
-        de ? 'Dein Shirt ist unterwegs' : 'Your shirt is on its way',
-        emailLayout(
-          de ? `${first ? `${first}, dein` : 'Dein'} Shirt ist unterwegs!` : `${first ? `${first}, your` : 'Your'} shirt is on its way!`,
-          de
-            ? `<p>Es wurde gerade an ${carrier} übergeben.</p>${button}${number}<p>Viel Freude damit!</p>`
-            : `<p>It has just been handed to ${carrier}.</p>${button}${number}<p>Enjoy it!</p>`,
-          de ? 'de' : 'en',
-        ),
+        'Your order is on its way',
+        emailLayout(`${first ? `${first}, your` : 'Your'} order is on its way!`, `<p>It was just handed to ${carrier}.</p>${button}${number}<p>Wear it loud.</p>`),
       );
     }
   } else if ((body.type === 'order_failed' || body.type === 'order_put_hold') && env.ownerEmail) {
     await sendEmail(
       env.ownerEmail,
       `[${brand.name}] Printful: ${body.type}`,
-      emailLayout('Printful reported a problem', `<p>Order ${escapeHtml(body.data?.order?.external_id ?? '')}: ${escapeHtml(body.data?.reason ?? body.type)}. Please check the Printful dashboard.</p>`, 'en'),
+      emailLayout('Printful reported a problem', `<p>Order ${escapeHtml(body.data?.order?.external_id ?? '')}: ${escapeHtml(body.data?.reason ?? body.type)}. Please check the Printful dashboard.</p>`),
     );
   }
   return NextResponse.json({ ok: true });

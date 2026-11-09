@@ -15,193 +15,157 @@
         "navy": {
           "S": {
             "id": 4111,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "M": {
             "id": 4112,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "L": {
             "id": 4113,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "XL": {
             "id": 4114,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "2XL": {
             "id": 4115,
-            "cost": 19.95,
-            "eu": true
+            "cost": 19.95
           },
           "3XL": {
             "id": 12874,
-            "cost": 22.75,
-            "eu": false
+            "cost": 22.75
           }
         },
-        "weiss": {
+        "white": {
           "S": {
             "id": 4011,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "M": {
             "id": 4012,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "L": {
             "id": 4013,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "XL": {
             "id": 4014,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "2XL": {
             "id": 4015,
-            "cost": 19.95,
-            "eu": true
+            "cost": 19.95
           },
           "3XL": {
             "id": 5294,
-            "cost": 22.75,
-            "eu": true
+            "cost": 22.75
           }
         },
-        "schwarz": {
+        "black": {
           "S": {
             "id": 4016,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "M": {
             "id": 4017,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "L": {
             "id": 4018,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "XL": {
             "id": 4019,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "2XL": {
             "id": 4020,
-            "cost": 19.95,
-            "eu": true
+            "cost": 19.95
           },
           "3XL": {
             "id": 5295,
-            "cost": 22.75,
-            "eu": true
+            "cost": 22.75
           }
         },
-        "bordeaux": {
+        "maroon": {
           "S": {
             "id": 4106,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "M": {
             "id": 4107,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "L": {
             "id": 4108,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "XL": {
             "id": 4109,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "2XL": {
             "id": 4110,
-            "cost": 19.95,
-            "eu": true
+            "cost": 19.95
           },
           "3XL": {
             "id": 15792,
-            "cost": 22.75,
-            "eu": false
+            "cost": 22.75
           }
         },
-        "waldgruen": {
+        "forest": {
           "S": {
             "id": 8451,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "M": {
             "id": 8452,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "L": {
             "id": 8453,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "XL": {
             "id": 8454,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "2XL": {
             "id": 8455,
-            "cost": 19.95,
-            "eu": true
+            "cost": 19.95
           },
           "3XL": {
             "id": 8456,
-            "cost": 22.75,
-            "eu": false
+            "cost": 22.75
           }
         },
-        "grau": {
+        "heather": {
           "S": {
             "id": 6948,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "M": {
             "id": 6949,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "L": {
             "id": 6950,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "XL": {
             "id": 6951,
-            "cost": 17.25,
-            "eu": true
+            "cost": 17.25
           },
           "2XL": {
             "id": 6952,
-            "cost": 19.95,
-            "eu": true
+            "cost": 19.95
           },
           "3XL": {
             "id": 6953,
-            "cost": 22.75,
-            "eu": true
+            "cost": 22.75
           }
         }
       }
@@ -220,193 +184,157 @@
         "navy": {
           "S": {
             "id": 5594,
-            "cost": 32.5,
-            "eu": true
+            "cost": 32.5
           },
           "M": {
             "id": 5595,
-            "cost": 32.5,
-            "eu": true
+            "cost": 32.5
           },
           "L": {
             "id": 5596,
-            "cost": 32.5,
-            "eu": true
+            "cost": 32.5
           },
           "XL": {
             "id": 5597,
-            "cost": 32.5,
-            "eu": true
+            "cost": 32.5
           },
           "2XL": {
             "id": 5598,
-            "cost": 35.25,
-            "eu": true
+            "cost": 35.25
           },
           "3XL": {
             "id": 5599,
-            "cost": 38.25,
-            "eu": true
+            "cost": 38.25
           }
         },
-        "schwarz": {
+        "black": {
           "S": {
             "id": 5530,
-            "cost": 32.5,
-            "eu": true
+            "cost": 32.5
           },
           "M": {
             "id": 5531,
-            "cost": 32.5,
-            "eu": true
+            "cost": 32.5
           },
           "L": {
             "id": 5532,
-            "cost": 32.5,
-            "eu": true
+            "cost": 32.5
           },
           "XL": {
             "id": 5533,
-            "cost": 32.5,
-            "eu": true
+            "cost": 32.5
           },
           "2XL": {
             "id": 5534,
-            "cost": 35.25,
-            "eu": true
+            "cost": 35.25
           },
           "3XL": {
             "id": 5535,
-            "cost": 38.25,
-            "eu": true
+            "cost": 38.25
           }
         },
-        "bordeaux": {
+        "maroon": {
           "S": {
             "id": 5586,
-            "cost": 32.5,
-            "eu": true
+            "cost": 32.5
           },
           "M": {
             "id": 5587,
-            "cost": 32.5,
-            "eu": true
+            "cost": 32.5
           },
           "L": {
             "id": 5588,
-            "cost": 32.5,
-            "eu": true
+            "cost": 32.5
           },
           "XL": {
             "id": 5589,
-            "cost": 32.5,
-            "eu": true
+            "cost": 32.5
           },
           "2XL": {
             "id": 5590,
-            "cost": 35.25,
-            "eu": true
+            "cost": 35.25
           },
           "3XL": {
             "id": 5591,
-            "cost": 38.25,
-            "eu": true
+            "cost": 38.25
           }
         },
-        "waldgruen": {
+        "forest": {
           "S": {
             "id": 20570,
-            "cost": 32.5,
-            "eu": false
+            "cost": 32.5
           },
           "M": {
             "id": 20571,
-            "cost": 32.5,
-            "eu": false
+            "cost": 32.5
           },
           "L": {
             "id": 20572,
-            "cost": 32.5,
-            "eu": false
+            "cost": 32.5
           },
           "XL": {
             "id": 20573,
-            "cost": 32.5,
-            "eu": false
+            "cost": 32.5
           },
           "2XL": {
             "id": 20574,
-            "cost": 35.25,
-            "eu": false
+            "cost": 35.25
           },
           "3XL": {
             "id": 20575,
-            "cost": 38.25,
-            "eu": false
+            "cost": 38.25
           }
         },
-        "grau": {
+        "heather": {
           "S": {
             "id": 5610,
-            "cost": 32.5,
-            "eu": true
+            "cost": 32.5
           },
           "M": {
             "id": 5611,
-            "cost": 32.5,
-            "eu": true
+            "cost": 32.5
           },
           "L": {
             "id": 5612,
-            "cost": 32.5,
-            "eu": true
+            "cost": 32.5
           },
           "XL": {
             "id": 5613,
-            "cost": 32.5,
-            "eu": true
+            "cost": 32.5
           },
           "2XL": {
             "id": 5614,
-            "cost": 35.25,
-            "eu": true
+            "cost": 35.25
           },
           "3XL": {
             "id": 5615,
-            "cost": 38.25,
-            "eu": true
+            "cost": 38.25
           }
         },
-        "weiss": {
+        "white": {
           "S": {
             "id": 5522,
-            "cost": 32.5,
-            "eu": true
+            "cost": 32.5
           },
           "M": {
             "id": 5523,
-            "cost": 32.5,
-            "eu": true
+            "cost": 32.5
           },
           "L": {
             "id": 5524,
-            "cost": 32.5,
-            "eu": true
+            "cost": 32.5
           },
           "XL": {
             "id": 5525,
-            "cost": 32.5,
-            "eu": true
+            "cost": 32.5
           },
           "2XL": {
             "id": 5526,
-            "cost": 35.25,
-            "eu": true
+            "cost": 35.25
           },
           "3XL": {
             "id": 5527,
-            "cost": 38.25,
-            "eu": true
+            "cost": 38.25
           }
         }
       }

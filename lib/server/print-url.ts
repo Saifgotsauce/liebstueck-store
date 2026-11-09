@@ -1,18 +1,21 @@
 import 'server-only';
 import crypto from 'node:crypto';
 import { siteUrl } from '../config';
-import { buildPrintFileUrl, signPrintData } from '../print-sign';
+import type { GarmentKey } from '../catalog';
+import { buildPrintFileUrl, signPrintData, type PrintPayload } from '../print-sign';
 import { requireEnv } from './env';
-import type { StoredItem } from './order-items';
 
 // Print files are rendered on demand at /api/print-file. The URL carries the design
 // data and an HMAC signature, so only URLs this server created can be rendered.
 
-export function printFileUrl(item: Omit<StoredItem, 's'>) {
+/** p = design slug, g = garment, c = colour key, v = personalisation values */
+export type PrintData = Omit<PrintPayload, 'g'> & { g: GarmentKey };
+
+export function printFileUrl(item: PrintData) {
   return buildPrintFileUrl(siteUrl, requireEnv('printFileSecret'), item);
 }
 
-export function verifyPrintParams(d: string, s: string): Omit<StoredItem, 's'> | null {
+export function verifyPrintParams(d: string, s: string): PrintData | null {
   const expected = signPrintData(d, requireEnv('printFileSecret'));
   const a = Buffer.from(expected);
   const b = Buffer.from(s);

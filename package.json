@@ -1,5 +1,5 @@
 {
-  "name": "liebstueck-store",
+  "name": "seasoned-store",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -12,7 +12,8 @@
     "test:print": "tsx scripts/test-print.ts",
     "test:e2e": "tsx scripts/test-e2e.ts",
     "build:demo": "bash scripts/build-demo.sh",
-    "build:preview": "tsx scripts/build-preview.ts"
+    "design:sheet": "tsx scripts/design-sheet.ts",
+    "render:mockups": "tsx scripts/render-mockups.ts"
   },
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",

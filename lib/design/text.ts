@@ -3,13 +3,20 @@
 // compute exactly the same font sizes and positions.
 import metrics from './font-metrics.json';
 
-export type FontKey = 'display' | 'script' | 'serif' | 'sans';
+export type FontKey = 'display' | 'script' | 'serif' | 'sans' | 'retro' | 'retroItalic' | 'heavy' | 'marker' | 'type';
 
+// Family names as the font files declare them, so resvg (print) and the browser (@font-face
+// in globals.css) resolve exactly the same file.
 export const FONT_FAMILY: Record<FontKey, string> = {
   display: 'Bebas Neue',
   script: 'Dancing Script',
   serif: 'Playfair Display',
   sans: 'Nunito Sans',
+  retro: 'Fraunces',
+  retroItalic: 'Fraunces',
+  heavy: 'Archivo Black',
+  marker: 'Permanent Marker',
+  type: 'Courier Prime',
 };
 
 export const FONT_WEIGHT: Record<FontKey, number> = {
@@ -17,7 +24,17 @@ export const FONT_WEIGHT: Record<FontKey, number> = {
   script: 700,
   serif: 700,
   sans: 700,
+  retro: 900,
+  retroItalic: 900,
+  heavy: 400,
+  marker: 400,
+  type: 700,
 };
+
+export const FONT_STYLE: Partial<Record<FontKey, 'italic'>> = { retroItalic: 'italic' };
+
+/** True for fonts whose lowercase letters dip below the baseline noticeably (script, marker). */
+export const LOOSE_FONTS: FontKey[] = ['script', 'marker', 'retroItalic'];
 
 type FontMetrics = {
   family: string;
@@ -51,11 +68,17 @@ export function capHeight(font: FontKey, size: number) {
   return (M[font].capHeight * size) / M[font].unitsPerEm;
 }
 
-/** Characters every print font can render. Used to validate customer input. */
-export function unsupportedChars(text: string): string[] {
+/** Ascender / descender of the font at this size (positive numbers, design units). */
+export function vertical(font: FontKey, size: number) {
+  const m = M[font];
+  return { asc: (m.ascender * size) / m.unitsPerEm, desc: (Math.abs(m.descender) * size) / m.unitsPerEm };
+}
+
+/** Characters the given print fonts (default: all) can't render. Used to validate customer input. */
+export function unsupportedChars(text: string, fonts: FontKey[] = Object.keys(M) as FontKey[]): string[] {
   const bad = new Set<string>();
   for (const ch of Array.from(text)) {
-    for (const key of Object.keys(M) as FontKey[]) {
+    for (const key of fonts) {
       if (M[key].widths[ch] === undefined) {
         bad.add(ch);
         break;
@@ -92,7 +115,8 @@ export function svgText(opts: {
   // SVG renderers add letter spacing after the last glyph too; shift by half of it so
   // tracked text stays optically centred.
   const dx = anchor === 'middle' ? ls / 2 : anchor === 'end' ? ls : 0;
-  return `<text x="${r(x + dx)}" y="${r(y)}" font-family="${FONT_FAMILY[font]}" font-weight="${FONT_WEIGHT[font]}" font-size="${r(size)}"${
+  const style = FONT_STYLE[font] ? ` font-style="${FONT_STYLE[font]}"` : '';
+  return `<text x="${r(x + dx)}" y="${r(y)}" font-family="${FONT_FAMILY[font]}" font-weight="${FONT_WEIGHT[font]}"${style} font-size="${r(size)}"${
     ls ? ` letter-spacing="${r(ls)}"` : ''
   } text-anchor="${anchor}" fill="${fill}"${opacity !== undefined ? ` fill-opacity="${opacity}"` : ''}>${esc(content)}</text>`;
 }

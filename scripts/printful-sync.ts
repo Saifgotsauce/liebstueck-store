@@ -1,7 +1,7 @@
 // Pulls everything the shop needs from Printful and saves it in the repo:
-//   • variant IDs, costs, EU availability, print placement + print-file size → data/printful-variants.json
-//   • real garment photos per colour (for the live preview)                 → public/mockups/<garment>/
-//   • product photos made by Printful's mockup generator (with --photos)    → public/mockups/products/
+//   • variant IDs, costs, in-stock regions, print placement + print-file size → data/printful-variants.json
+//   • real garment photos per colour (for the live preview)                   → public/mockups/<garment>/
+//   • product photos of the featured designs (with --photos)                  → public/mockups/products/
 //   data/printful-mockups.json lists the photos.
 //
 //   npm run printful:sync                        → variants + garment photos
@@ -14,7 +14,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
-import { GARMENTS, PRODUCTS, getColor, type Garment } from '../lib/catalog';
+import { GARMENTS, getColor } from '../lib/catalog';
+import { shop } from '../lib/config';
+import { DESIGNS } from '../lib/designs';
 import { defaultValues, getTemplate } from '../lib/design/templates';
 import { buildPrintFileUrl } from '../lib/print-sign';
 
@@ -90,7 +92,8 @@ export type MockupColor = {
   overlayOnTop: boolean;
 };
 
-const VAT = 1.19; // German VAT, for the margin overview only
+const REGION = shop.fulfilmentRegion;
+const inRegion = (r: string) => r === REGION || r.startsWith(`${REGION}_`);
 const MOCKUP_DIR = path.join(root, 'public', 'mockups');
 
 /** Downloads an image once and stores it as WebP (keeps transparency), max 1200 px. */
@@ -119,10 +122,10 @@ async function main() {
   for (const g of Object.values(GARMENTS)) {
     const data = await pf<PfProduct>('GET', `/products/${g.printfulProductId}`);
     const cur = data.product.currency ?? '(currency not stated by Printful)';
-    console.log(`\n${g.label.en}: Printful #${data.product.id} – ${data.product.title} – costs in ${cur}`);
+    console.log(`\n${g.label}: Printful #${data.product.id} – ${data.product.title} – costs in ${cur}${cur !== 'USD' ? ' (set your Printful billing currency to USD so costs and prices compare 1:1)' : ''}`);
     const colorsAvailable = [...new Set(data.variants.map((v) => v.color))];
 
-    const variants: Record<string, Record<string, { id: number; cost: number; eu: boolean | null }>> = {};
+    const variants: Record<string, Record<string, { id: number; cost: number; regions?: string[] }>> = {};
     for (const c of g.colors) {
       const matches = data.variants.filter((v) => v.color.toLowerCase() === c.printfulColor.toLowerCase());
       if (!matches.length) {
@@ -138,15 +141,16 @@ async function main() {
           row.push(`${size}: –`);
           continue;
         }
-        const eu = v.availability_status ? v.availability_status.some((a) => a.region.startsWith('EU') && a.status === 'in_stock') : null;
+        const regions = v.availability_status ? v.availability_status.filter((a) => a.status === 'in_stock').map((a) => a.region) : undefined;
         const cost = Number(v.price);
-        variants[c.key][size] = { id: v.id, cost, eu };
-        row.push(`${size}: ${cost.toFixed(2)}${eu === false ? ' (not printable in EU → hidden)' : ''}`);
+        variants[c.key][size] = { id: v.id, cost, ...(regions ? { regions } : {}) };
+        const out = regions && !regions.some(inRegion);
+        row.push(`${size}: ${cost.toFixed(2)}${out ? ` (not in stock in ${REGION} → hidden)` : ''}`);
       }
       const sample = variants[c.key]['L'] ?? Object.values(variants[c.key])[0];
-      const margin = sample ? g.priceCents / 100 / VAT - sample.cost : 0;
-      const allOut = Object.values(variants[c.key]).every((v) => v.eu === false);
-      console.log(`  ${allOut ? '✗' : '✓'} ${c.label.en.padEnd(13)} ${row.join('  ')}   → margin size L (price after 19% VAT minus cost, before shipping/ads): ${margin.toFixed(2)}${allOut ? '   COLOUR HIDDEN: not printable in the EU' : ''}`);
+      const margin = sample ? g.priceCents / 100 - sample.cost : 0;
+      const allOut = Object.values(variants[c.key]).every((v) => v.regions && !v.regions.some(inRegion));
+      console.log(`  ${allOut ? '✗' : '✓'} ${c.label.padEnd(14)} ${row.join('  ')}   → size L: price minus Printful cost (before shipping, fees, ads): ${margin.toFixed(2)}${allOut ? `   COLOR HIDDEN: not in stock in ${REGION}` : ''}`);
     }
 
     // Print placement + print-file size. Printful moved many DTG tees to "front_large" (15″ × 18″) in 2025.
@@ -177,7 +181,7 @@ async function main() {
         const ref = map?.templates.find((t) => t.placement === placement) ?? map?.templates.find((t) => t.placement.startsWith('front'));
         const t = ref && byId.get(ref.template_id);
         if (!t) {
-          console.log(`  ! No photo template for ${c.label.en}`);
+          console.log(`  ! No photo template for ${c.label}`);
           continue;
         }
         colors[c.key] = {
@@ -208,15 +212,16 @@ async function main() {
   }
   if (WANT_PHOTOS && photosReady && secret) {
     productPhotos = {};
-    for (const p of PRODUCTS) {
-      const g = GARMENTS[p.defaultGarment];
-      const color = getColor(g, p.defaultColor)!;
+    // Model/flat-lay photos for the featured designs (one mockup task each – Printful rate-limits these)
+    for (const p of DESIGNS.filter((d) => d.featured)) {
+      const g = GARMENTS.tee;
+      const color = getColor(g, p.color) ?? g.colors[0];
       const info = variantsOut[g.key] as { placement: string; printfile: { width: number; height: number }; variants: Record<string, Record<string, { id: number }>> };
       const variant = info.variants[color.key]?.['L'];
       if (!variant) continue;
-      const imageUrl = buildPrintFileUrl(SITE, secret, { p: p.slug, g: g.key, c: color.key, v: defaultValues(getTemplate(p.template)) });
+      const imageUrl = buildPrintFileUrl(SITE, secret, { p: p.slug, g: g.key, c: color.key, v: defaultValues(getTemplate(p.slug)) });
       const { width, height } = info.printfile;
-      console.log(`\nPhotos for ${p.slug} (${g.label.en}, ${color.label.en}) …`);
+      console.log(`\nPhotos for ${p.slug} (${g.label}, ${color.label}) …`);
       const task = await pf<{ task_key: string }>('POST', `/mockup-generator/create-task/${g.printfulProductId}`, {
         variant_ids: [variant.id],
         format: 'jpg',

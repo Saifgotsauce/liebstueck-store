@@ -1,91 +1,53 @@
-# Liebstück – personalised print-on-demand shop for EU customers
+# Seasoned – funny shirts for women who are aging out loud (US store)
 
-A custom Next.js store for name-personalised shirts and hoodies aimed at German-speaking
-customers. Customers type names, see a live preview, pay through Stripe, and the order
-goes to Printful automatically. Printful prints in its EU facilities and ships the order.
+Next.js shop in the style of Regular Mess: a big catalog of slogan tees and hoodies, shop by vibe,
+live personalization (names, years, ages), bundle savings, Stripe Checkout and automatic
+fulfilment through Printful. The German "Liebstück" version is kept at git tag `liebstueck-de-v1`.
 
-"Liebstück" is a working name. Change it in `lib/config.ts`.
+## How it works
 
-## What's built
+- **Designs** live in `lib/designs.ts` – the phrase bank. Each design is a phrase + a layout
+  (`lib/design/layouts.ts`: stack, badge, warning label, checklist, quote, vintage year, names)
+  + optional personalization fields. The same code draws the live preview in the browser and the
+  print file Printful downloads (`/api/print-file`), so the preview is exactly what gets printed.
+- **Garments, colors, sizes, prices** – `lib/catalog.ts`. **Brand, shipping, bundles, holiday
+  deadline** – `lib/config.ts`.
+- **Checkout** – `/api/checkout` re-validates everything, prices come from the catalog, bundle
+  savings become Stripe coupons (`BUNDLE10`, `BUNDLE15`, created automatically on first use).
+- **Fulfilment** – Stripe webhook → Printful order (idempotent) → confirmation email (Resend)
+  → Meta Conversions API. Printful's shipping webhook sends the tracking email.
 
-| Area | What it does |
+## Add a design (the "AI-run" loop)
+
+1. Write the phrase in `lib/designs.ts` (copy an entry, new slug).
+2. `npm run design:sheet -- <slug>` → check it in `out/designs/`.
+3. Check the phrase at tmsearch.uspto.gov (trademarks) before advertising it.
+4. `npm run render:mockups -- <slug>` → link-preview image (`public/og/`) and ad images
+   (`out/creatives/<slug>-feed.jpg`, `-story.jpg`).
+5. Commit and push – Vercel deploys.
+
+## Setup
+
+1. **Printful**: set your billing currency to USD (Settings → Billing) so costs compare 1:1.
+   Then GitHub → Actions → "Printful sync" → Run workflow (tick *photos* once the site is live).
+   This fills `data/printful-variants.json` with variant IDs, US stock and garment photos.
+2. **Vercel**: add the variables from `.env.example`.
+3. **Stripe**: add a webhook to `https://your-domain.com/api/webhooks/stripe` for
+   `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
+   `checkout.session.async_payment_failed`. Turn on Apple Pay / Google Pay / Link in
+   Settings → Payment methods.
+4. **Before launch**: fill the `[placeholders]` in `lib/config.ts` (business name, mailing
+   address, governing state) and the support email.
+
+## Commands
+
+| | |
 |---|---|
-| **Real product photos** | The sync pulls Printful's real garment photos for every colour, and the live preview puts the customer's design onto them. With `--photos` it also asks Printful's mockup generator for model and flat-lay photos of each product, which then appear in a gallery on the product page and on the homepage. Until the first sync, the shop shows drawn shirts. |
-| **Live personaliser** | Three designs (grandparents with grandkids' names, family Christmas, "Jahrgang" birthday). The preview runs on the same code and fonts as the print file, so what the customer sees is what gets printed. On phones the preview stays visible while they type. |
-| **Print files** | `/api/print-file` renders a print-ready PNG at the exact size Printful needs. The URLs are signed, so only real orders can render one. |
-| **Checkout** | Stripe Checkout in German, EU shipping countries only. Prices are checked on the server, flat shipping with free shipping from €60, delivery estimate shown. |
-| **Fulfilment** | The Stripe webhook creates the Printful order. It is safe to retry and never creates an order twice. Orders start as **drafts** so you can check them; flip `PRINTFUL_AUTO_CONFIRM=true` later. |
-| **Emails** (Resend) | Order confirmation with the full Widerrufsbelehrung, a shipping email with tracking (via Printful webhook), withdrawal receipt, and an owner alert when an order fails. |
-| **EU rules** | "Vertrag hier widerrufen" button and form (required since 19 June 2026), personalised-goods exemption shown on the product page, cart and checkout, GPSR product-safety block, fibre composition and care info, "inkl. MwSt." price notices, legal page templates. |
-| **Ads** | Meta Pixel (only after cookie consent) plus a server-side Purchase event via the Conversions API with the same event ID, so Meta counts each purchase once. |
-| **German / English** | A DE/EN switch in the header. German browsers start in German, all other browsers in English, and the visitor's choice is saved. Product texts, sizes, errors, legal pages, the Stripe payment page and customer emails follow the chosen language. Emails to you (new orders, problems, withdrawals) are always in English. The text printed on the shirts stays German. |
-| **Upsell** | After adding to cart: "Make a matching one for Oma" / "Next family member", plus a progress note toward free shipping. These push order value up, which you need because POD margins are thin. |
+| `npm run dev` | local shop |
+| `npm run test:e2e` | full flow against mock Stripe/Printful/Resend |
+| `npm run test:print` | stress-test personalization (longest names, most names, accents) |
+| `npm run design:sheet` | contact sheets of every design |
+| `npm run render:mockups` | link-preview + ad images for every design |
+| `npm run fonts:metrics` | rebuild font metrics after adding a print font |
 
-## Run it locally
-
-```bash
-npm install
-cp .env.example .env.local     # fill in what you have; the storefront works without keys
-npm run dev                    # http://localhost:3000
-```
-
-Other commands:
-
-```bash
-npm run printful:sync          # pull Printful variant IDs, costs, EU availability, print sizes
-npm run test:print             # render sample print files into test-output/
-npm run test:e2e               # full flow against mock Stripe + Printful (no accounts needed)
-npm run build:preview          # one-file click-through preview (no checkout): preview/liebstueck-preview.html
-npm run build:demo             # static export of all pages (no checkout) into demo-out/
-```
-
-## Go-live steps
-
-1. **Printful**: create an account and a "Manual order / API" store. Under Settings → API, create a private token with order + product + webhook scopes. Put it in `.env.local` as `PRINTFUL_API_TOKEN`.
-2. Run the sync: either `npm run printful:sync` locally, or with no local setup: add `PRINTFUL_API_TOKEN` as a GitHub repo secret, then GitHub → Actions → **Printful sync** → Run workflow. It commits the product data and garment photos, and Vercel redeploys. It prints the cost per colour and size and the net margin for each, and flags any colour that's missing or not printable in the EU. If a colour name doesn't match, fix `printfulColor` in `lib/catalog.ts` and run it again. Commit the generated `data/printful-variants.json`.
-   **Product photos**: once the site is live with `PRINT_FILE_SECRET` set in Vercel, add the same value as GitHub secret `PRINT_FILE_SECRET` and your live address as GitHub variable `SITE_URL`, then run the action again with "Also make product photos" ticked. Printful downloads each example design from your site and returns its photos.
-3. **Stripe**: create an account and turn on the payment methods German buyers expect (PayPal, Klarna, SEPA, cards, Apple/Google Pay) under Settings → Payment methods. Copy the secret key into `STRIPE_SECRET_KEY`.
-4. **Deploy on Vercel**: import the repo, add every variable from `.env.example` (generate `PRINT_FILE_SECRET` and `PRINTFUL_WEBHOOK_SECRET` with `openssl rand -hex 32`), and set `NEXT_PUBLIC_SITE_URL` to your domain.
-5. **Stripe webhook**: Developers → Webhooks → add `https://YOUR-DOMAIN/api/webhooks/stripe` with the events `checkout.session.completed`, `checkout.session.async_payment_succeeded` and `checkout.session.async_payment_failed`. Copy the signing secret into `STRIPE_WEBHOOK_SECRET` and redeploy.
-6. **Printful webhook** (shipping emails): `npm run printful:sync -- --webhook` with your live `NEXT_PUBLIC_SITE_URL` set, or run the **Printful sync** action with “Also register the shipping-email webhook” ticked (needs secret `PRINTFUL_WEBHOOK_SECRET` and variable `SITE_URL`).
-7. **Email**: verify your domain at resend.com, then set `RESEND_API_KEY`, `EMAIL_FROM` and `OWNER_EMAIL`.
-8. **Test order** in Stripe test mode with card 4242 4242 4242 4242. Check the draft in Printful: open the print file and check placement and colours. Then switch to live keys.
-9. **Meta (optional)**: set `NEXT_PUBLIC_META_PIXEL_ID`, and add `META_CAPI_TOKEN` from Events Manager → Settings → Conversions API.
-
-## Before taking real money (legal checklist)
-
-These are templates and placeholders, not legal advice. Have a German e-commerce lawyer or a
-legal-text service (IT-Recht Kanzlei, Händlerbund, Trusted Shops) check everything.
-
-- [ ] Fill in every `[placeholder]` in `lib/config.ts`. The **Impressum must show a real name or company and a postal address**. If you don't want your personal name and address on it, set up a company and/or use a registered business address.
-- [ ] **EU Responsible Person (GPSR)**: copy the representative details from Printful (Settings → GPSR) into `legal.euResponsiblePerson`.
-- [ ] **VAT**: as a non-EU seller shipping from EU stock you need EU VAT registration (OSS). Talk to an accountant or a VAT service. `STRIPE_AUTOMATIC_TAX=true` lets Stripe Tax calculate it.
-- [ ] **Textile EPR**: some EU countries (e.g. France) already require registration for textile sellers, and all must have a scheme by 2028. Ask Printful or a compliance service which ones apply to you.
-- [ ] Replace the AGB / Datenschutz / Widerrufsbelehrung templates in `lib/legal-texts.ts` with reviewed texts, in **both German and English** (the shop offers both, so the English versions need review too), and add the return address.
-- [ ] **Jahrgang design**: if a customer only enters a birth year and no name, have the lawyer confirm whether the personalised-goods exemption still applies.
-- [ ] Check the size charts in `lib/catalog.ts` against Printful's product pages.
-- [ ] Check that the order button wording on Stripe's page meets the German "Button-Lösung" rule (Stripe shows "Bezahlen" in German).
-
-## Changing things
-
-- **Brand, prices, shipping, delivery time**: `lib/config.ts` and `GARMENTS[...].priceCents` in `lib/catalog.ts`.
-- **Colours / garments**: `lib/catalog.ts`, then run `npm run printful:sync` again (it also refreshes the photos).
-- **Print size**: Printful moved many DTG tees to a 15″ × 18″ area (`front_large`) in 2025. The sync detects the placement per garment, and the design is capped at 12″ wide (`MAX_PRINT_WIDTH_IN` in `lib/design/svg.ts`) so it stays chest-sized.
-- **New design**: add a template in `lib/design/templates.ts`. It's a function that returns SVG in a 1200 × 1600 space, using `svgText`, `fitSize` and the shapes helpers. Then add a product in `PRODUCTS`. Run `npm run test:print` to check it renders, including umlauts and long names.
-- **New font**: add the TTF to `assets/fonts` and `public/fonts`, register it in `scripts/font-metrics.mjs`, `lib/design/text.ts`, `lib/print/render.ts` and `app/globals.css`, then run `npm run fonts:metrics`.
-- **Wording / translations**: interface text is in `lib/i18n/messages.ts` (German and English side by side). Product, garment and design-field texts are next to them in `lib/catalog.ts` and `lib/design/templates.ts` as `{ de, en }`. Legal texts are in `lib/legal-texts.ts`.
-- **Another language** (e.g. French): add `'fr'` to `Locale` in `lib/i18n/index.ts`. TypeScript will then point to every place that needs a French text.
-
-## Project map
-
-```
-app/                     pages (home, product, cart, thank-you, withdrawal, legal) + api/
-components/              ShirtPreview (mockup + live design), Personalizer, Header, Footer, cookie banner, pixel
-lib/design/              templates, text measuring, validation – shared by browser and server
-lib/print/render.ts      server PNG rendering (resvg)
-lib/server/              Stripe, Printful, email, Meta CAPI, signed print-file URLs
-lib/catalog.ts           garments, colours, sizes, products, Printful variant lookup
-lib/legal-texts.ts       German legal page templates
-data/printful-variants.json   generated by npm run printful:sync
-scripts/                 sync, tests, demo build, font metrics
-```
+Fonts are under the SIL Open Font License (Permanent Marker: Apache 2.0) – see `assets/fonts/FONT-LICENSES.md`.

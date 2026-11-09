@@ -54,7 +54,7 @@ export async function createOrder(input: {
   externalId: string;
   recipient: PrintfulRecipient;
   items: PrintfulOrderItem[];
-  retailCosts: { currency: string; subtotal: string; shipping: string; total: string };
+  retailCosts: { currency: string; subtotal: string; discount?: string; shipping: string; tax?: string; total: string };
 }) {
   const r = await call<PrintfulOrder>('POST', `/orders${env.printfulAutoConfirm ? '?confirm=true' : ''}`, {
     external_id: input.externalId,

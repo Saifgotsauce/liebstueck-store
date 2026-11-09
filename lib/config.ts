@@ -1,59 +1,61 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Brand + shop settings. Change the brand name, contact details, prices and
-// shipping here — everything on the site reads from this file.
-// Legal details (Impressum, EU Responsible Person) are placeholders: fill them
-// in before going live. Square brackets [like this] mark what still needs data.
+// Brand + shop settings. Change the brand name, contact details, prices, shipping
+// and offers here – everything on the site reads from this file.
+// Square brackets [like this] mark details to fill in before launch.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { L } from './i18n';
-
 export const brand = {
-  name: 'Liebstück',
-  tagline: { de: 'Persönliche Shirts für die Menschen, die zählen.', en: 'Personal shirts for the people who matter.' } as L,
-  // Short line shown in the browser tab and search results
+  name: 'Seasoned',
+  tagline: 'Not old. Seasoned.',
+  // Browser tab + search results
   description:
-    'Personalisierte Shirts und Hoodies mit Namen – für Opa, Oma, die ganze Familie und runde Geburtstage. In der EU gedruckt.',
-  email: 'hallo@example.com', // public support address (shown on the site)
+    'Funny shirts for women who are getting older out loud: aging, grandma life, retirement and milestone birthdays. Personalize with names and years. Printed to order.',
+  email: 'hello@example.com', // public support address (shown on the site)
 };
 
 export const shop = {
-  currency: 'EUR' as const,
-  // Flat shipping, free above the threshold (both in cents, VAT included)
+  currency: 'USD' as const,
+  locale: 'en-US',
+  // Flat shipping, free from the threshold (merchandise total after bundle savings)
   shippingCents: 495,
-  freeShippingFromCents: 6000,
-  deliveryText: { de: 'ca. 5–8 Werktage', en: '5–8 working days' } as L,
+  freeShippingFromCents: 5000,
+  // Multi-buy savings on the merchandise total – best tier wins
+  bundles: [
+    { minItems: 3, percent: 15 },
+    { minItems: 2, percent: 10 },
+  ],
+  // Printing (2–5 business days) + US standard shipping (3–4 business days)
   deliveryMinDays: 5,
-  deliveryMaxDays: 8,
-  // Countries Stripe Checkout accepts as shipping address (EU only → no customs).
-  shipToCountries: [
-    'DE', 'AT', 'NL', 'BE', 'LU', 'FR', 'IT', 'ES', 'PT', 'IE', 'DK', 'SE', 'FI', 'PL',
-    'CZ', 'SK', 'SI', 'HR', 'HU', 'RO', 'BG', 'GR', 'EE', 'LV', 'LT', 'CY', 'MT',
-  ] as const,
+  deliveryMaxDays: 9,
+  // Countries Stripe Checkout accepts as a shipping address
+  shipToCountries: ['US'] as const,
+  // Printful region a variant must be in stock in to be sold
+  fulfilmentRegion: 'US',
   maxQuantityPerItem: 10,
   maxItemsPerOrder: 20,
+  // Seasonal deadline shown in the top bar and on product pages until `orderBy` passes.
+  // Printful's US-to-US apparel cutoff for standard shipping – re-check printful.com/holiday-order-deadlines each year.
+  holiday: { name: 'Christmas', orderBy: '2026-12-11' },
 };
 
-// Seller / manufacturer details. Under the EU product safety rules (GPSR) the shop
-// owner selling under its own brand counts as the manufacturer, even with print-on-demand.
+// Shown on the policy pages. No street address is shown publicly unless you add one here.
 export const legal = {
-  companyName: '[Firmenname / Name des Inhabers]',
-  representative: '[Vertretungsberechtigte Person]',
-  street: '[Straße und Hausnummer]',
-  city: '[PLZ und Ort]',
-  country: '[Land]',
-  phone: '[Telefonnummer – optional, aber empfohlen]',
-  email: brand.email,
-  vatId: '[USt-IdNr., falls vorhanden]',
-  // EU Responsible Person (GPSR). If you use Printful's EU representative service,
-  // copy the details shown in your Printful dashboard (Settings → GPSR) here.
-  euResponsiblePerson: {
-    name: '[Name der EU-verantwortlichen Person]',
-    address: '[Anschrift in der EU]',
-    email: '[E-Mail]',
-  },
+  businessName: '[Legal business name]',
+  contactEmail: brand.email,
+  // Where returns or legal letters can be sent (optional; leave the brackets to hide it)
+  mailingAddress: '[Mailing address]',
+  governingLaw: '[State], United States',
+  lastUpdated: 'November 9, 2026',
 };
 
 export const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
 export const isDemo = process.env.NEXT_PUBLIC_DEMO === '1';
 
-export { formatPrice } from './i18n';
+const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+const whole = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+/** $29.95, but $50 rather than $50.00 for round amounts. */
+export function formatPrice(cents: number) {
+  return cents % 100 === 0 ? whole.format(cents / 100) : money.format(cents / 100);
+}
+
+export const isPlaceholder = (s: string) => /^\[.*\]$/.test(s.trim());

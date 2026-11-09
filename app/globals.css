@@ -1,90 +1,90 @@
 @import "tailwindcss";
 
 /* ── Fonts ───────────────────────────────────────────────────────────────────
-   Site: Young Serif (headings) + Nunito Sans (text).
-   Print designs (live preview): Bebas Neue, Dancing Script, Playfair Display, Nunito Sans.
-   The preview uses the exact files the print renderer uses. */
-@font-face { font-family: "Young Serif"; src: url("/fonts/YoungSerif_400Regular.ttf") format("truetype"); font-weight: 400; font-display: swap; }
-@font-face { font-family: "Nunito Sans"; src: url("/fonts/NunitoSans_400Regular.ttf") format("truetype"); font-weight: 400; font-display: swap; }
-@font-face { font-family: "Nunito Sans"; src: url("/fonts/NunitoSans_700Bold.ttf") format("truetype"); font-weight: 700; font-display: swap; }
+   Site: Fraunces Black (display) + DM Sans (everything else).
+   Print designs (live preview) use the exact files the print renderer uses. */
+@font-face { font-family: "DM Sans"; src: url("/fonts/DMSans_400Regular.ttf") format("truetype"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "DM Sans"; src: url("/fonts/DMSans_500Medium.ttf") format("truetype"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "DM Sans"; src: url("/fonts/DMSans_700Bold.ttf") format("truetype"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Fraunces"; src: url("/fonts/Fraunces_900Black.ttf") format("truetype"); font-weight: 900; font-style: normal; font-display: block; }
+@font-face { font-family: "Fraunces"; src: url("/fonts/Fraunces_900Black_Italic.ttf") format("truetype"); font-weight: 900; font-style: italic; font-display: block; }
+@font-face { font-family: "Archivo Black"; src: url("/fonts/ArchivoBlack_400Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
+@font-face { font-family: "Permanent Marker"; src: url("/fonts/PermanentMarker_400Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
+@font-face { font-family: "Courier Prime"; src: url("/fonts/CourierPrime_700Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
 @font-face { font-family: "Bebas Neue"; src: url("/fonts/BebasNeue_400Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
 @font-face { font-family: "Dancing Script"; src: url("/fonts/DancingScript_700Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
 @font-face { font-family: "Playfair Display"; src: url("/fonts/PlayfairDisplay_700Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
+@font-face { font-family: "Nunito Sans"; src: url("/fonts/NunitoSans_700Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
 
+/* Purple and red, worn together on purpose. */
 @theme {
-  --color-ink: #16213A;
-  --color-ink-soft: #4E5870;
-  --color-blau: #23408E;      /* Kornblumenblau – brand, buttons, links */
-  --color-blau-dunkel: #18306E;
-  --color-blau-hell: #E9EEFA; /* panels behind shirts */
-  --color-gelb: #F6C445;      /* the one loud colour: main call to action */
-  --color-gelb-hell: #FBF1D3;
-  --color-rot: #C8382D;       /* hearts, errors */
-  --color-rose-hell: #F8E7E4;
-  --color-linie: #D5DCEC;
+  --color-violet: #5B2A86;
+  --color-violet-deep: #43195F;
+  --color-red: #E2342B;
+  --color-red-deep: #C2241C;
+  --color-lilac: #F2ECF8;
+  --color-lilac-line: #DCCFEA;
+  --color-ink: #1E1626;
+  --color-ink-soft: #5E5468;
+  --color-sun: #FFD84D;
 
-  --font-serif: "Young Serif", Georgia, serif;
-  --font-sans: "Nunito Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-script: "Dancing Script", cursive;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
-/* Element defaults and component classes live in layers so Tailwind utilities can override them. */
 @layer base {
   html {
     font-family: var(--font-sans);
     color: var(--color-ink);
     background: #fff;
-    font-size: 106.25%; /* 17px base – larger than usual for an older audience */
+    font-size: 112.5%; /* 18px – generous for an older audience */
     -webkit-text-size-adjust: 100%;
   }
-  @media (min-width: 768px) { html { font-size: 112.5%; } } /* 18px */
-
-  body { line-height: 1.6; }
-  h1, h2, h3 { font-family: var(--font-serif); font-weight: 400; line-height: 1.15; letter-spacing: -0.005em; }
-
+  body { line-height: 1.55; }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 900; line-height: 1.05; letter-spacing: -0.015em; color: var(--color-violet); }
   a { color: inherit; }
-  :focus-visible { outline: 3px solid var(--color-gelb); outline-offset: 2px; border-radius: 4px; }
+  :focus-visible { outline: 3px solid var(--color-red); outline-offset: 2px; border-radius: 6px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
 }
 
 @layer components {
-  /* Buttons */
-  .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 3.25rem; padding: .75rem 1.5rem; border-radius: 999px; font-weight: 700; text-decoration: none; transition: background-color .15s, color .15s, transform .1s; cursor: pointer; }
+  .wrap { width: 100%; max-width: 76rem; margin-inline: auto; padding-inline: 1.1rem; }
+  @media (min-width: 768px) { .wrap { padding-inline: 2rem; } }
+
+  /* Buttons: one loud red action per screen, violet outline for the quiet one */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 3.4rem; padding: .8rem 1.6rem; border-radius: 999px; font-weight: 700; font-size: 1.05rem; text-decoration: none; cursor: pointer; transition: background-color .15s, color .15s, transform .1s; }
   .btn:active { transform: translateY(1px); }
   .btn:disabled { opacity: .5; cursor: not-allowed; }
-  .btn-primary { background: var(--color-gelb); color: var(--color-ink); }
-  .btn-primary:hover { background: #F2B623; }
-  .btn-blue { background: var(--color-blau); color: #fff; }
-  .btn-blue:hover { background: var(--color-blau-dunkel); }
-  .btn-ghost { background: transparent; color: var(--color-blau); box-shadow: inset 0 0 0 2px var(--color-blau); }
-  .btn-ghost:hover { background: var(--color-blau-hell); }
+  .btn-red { background: var(--color-red); color: #fff; }
+  .btn-red:hover { background: var(--color-red-deep); }
+  .btn-violet { background: var(--color-violet); color: #fff; }
+  .btn-violet:hover { background: var(--color-violet-deep); }
+  .btn-line { background: #fff; color: var(--color-violet); box-shadow: inset 0 0 0 2px var(--color-violet); }
+  .btn-line:hover { background: var(--color-lilac); }
 
-  .link { color: var(--color-blau); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
-  .link:hover { color: var(--color-blau-dunkel); }
+  /* Clip-out coupon: dashed perforation + notches – the offer format this audience trusts */
+  .coupon { position: relative; background: #fff; border: 2px dashed var(--color-violet); border-radius: 14px; padding: .9rem 1.1rem; }
+  .coupon::before, .coupon::after { content: ""; position: absolute; top: 50%; width: 18px; height: 18px; margin-top: -9px; border-radius: 50%; background: var(--coupon-bg, var(--color-lilac)); border: 2px dashed var(--color-violet); }
+  .coupon::before { left: -11px; clip-path: inset(0 0 0 50%); }
+  .coupon::after { right: -11px; clip-path: inset(0 50% 0 0); }
 
   /* Form controls */
-  .field-input { width: 100%; min-height: 3.1rem; padding: .6rem .9rem; border: 2px solid var(--color-linie); border-radius: 10px; background: #fff; font-size: 1.05rem; color: var(--color-ink); }
-  .field-input:focus { outline: none; border-color: var(--color-blau); box-shadow: 0 0 0 3px rgba(35,64,142,.18); }
-  .field-input[aria-invalid="true"] { border-color: var(--color-rot); }
+  .field { display: block; width: 100%; min-height: 3.2rem; padding: .7rem .95rem; border: 2px solid var(--color-lilac-line); border-radius: 12px; background: #fff; font: inherit; color: var(--color-ink); }
+  .field:focus { outline: none; border-color: var(--color-violet); box-shadow: 0 0 0 3px rgba(91, 42, 134, .18); }
+  .field[aria-invalid="true"] { border-color: var(--color-red); }
 
-  .chip { min-height: 2.75rem; padding: .45rem 1rem; border-radius: 999px; border: 2px solid var(--color-linie); background: #fff; font-weight: 700; cursor: pointer; }
-  .chip[aria-checked="true"], .chip[aria-pressed="true"] { border-color: var(--color-blau); background: var(--color-blau); color: #fff; }
-  .chip:hover:not([aria-checked="true"]):not([aria-pressed="true"]) { border-color: var(--color-blau); }
+  /* Choice chips (style, size) */
+  .chip { display: inline-flex; align-items: center; justify-content: center; min-height: 3rem; min-width: 3.4rem; padding: .4rem .9rem; border-radius: 12px; border: 2px solid var(--color-lilac-line); background: #fff; font-weight: 700; cursor: pointer; }
+  .chip:hover { border-color: var(--color-violet); }
+  .chip[aria-pressed="true"], .chip[aria-checked="true"] { border-color: var(--color-violet); background: var(--color-violet); color: #fff; }
+  .chip:disabled { opacity: .35; cursor: not-allowed; text-decoration: line-through; }
 
-  /* Disclosure panels on product page */
-  details.info { border-top: 1px solid var(--color-linie); }
-  details.info summary { list-style: none; cursor: pointer; padding: 1rem 0; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
-  details.info summary::-webkit-details-marker { display: none; }
-  details.info summary::after { content: "+"; font-size: 1.5rem; line-height: 1; color: var(--color-blau); }
-  details.info[open] summary::after { content: "–"; }
-
-  /* Legal pages */
-  .prose-legal h2 { font-size: 1.4rem; margin: 2rem 0 .5rem; }
-  .prose-legal h3 { font-family: var(--font-sans); font-weight: 700; font-size: 1.05rem; margin: 1.25rem 0 .25rem; }
-  .prose-legal p, .prose-legal ul { margin: .5rem 0; max-width: 70ch; }
-  .prose-legal ul { list-style: disc; padding-left: 1.25rem; }
-  .prose-legal .todo { background: var(--color-gelb-hell); padding: 0 .25rem; border-radius: 3px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { transition: none !important; animation: none !important; }
+  /* Long-form text on policy pages */
+  .prose-s { max-width: 42rem; }
+  .prose-s h2 { font-size: 1.6rem; margin: 2.2rem 0 .7rem; }
+  .prose-s h3 { font-size: 1.2rem; margin: 1.6rem 0 .5rem; font-family: var(--font-sans); font-weight: 700; letter-spacing: 0; color: var(--color-ink); }
+  .prose-s p, .prose-s ul { margin: 0 0 1rem; }
+  .prose-s ul { padding-left: 1.2rem; list-style: disc; }
+  .prose-s li { margin: .3rem 0; }
+  .prose-s a { color: var(--color-violet); font-weight: 700; }
 }

@@ -1,7 +1,7 @@
-// End-to-end test against local mock Stripe + Printful APIs. No real accounts needed.
+// End-to-end test against local mock Stripe + Printful + Resend APIs. No real accounts needed.
 //   npm run test:e2e
-// Flow: printful:sync → build → checkout → signed Stripe webhook → Printful order →
-// print file download → duplicate webhook (idempotency) → withdrawal → order summary.
+// Flow: printful:sync → build → checkout (bundles, shipping, US-only stock) → signed Stripe
+// webhook → Printful order → print file download → duplicate webhook (idempotency) → emails.
 import { spawn, execSync, type ChildProcess } from 'node:child_process';
 import fs from 'node:fs';
 import http from 'node:http';
@@ -11,7 +11,7 @@ import { Resvg } from '@resvg/resvg-js';
 
 const ROOT = process.cwd();
 const MOCK_PORT = 4010;
-const APP_PORT = 3100;
+const APP_PORT = 3200;
 const WEBHOOK_SECRET = 'whsec_test_secret';
 const VARIANTS = path.join(ROOT, 'data', 'printful-variants.json');
 const MOCKUPS = path.join(ROOT, 'data', 'printful-mockups.json');
@@ -26,6 +26,7 @@ const ok = (cond: unknown, msg: string) => {
 // ── Mock APIs ─────────────────────────────────────────────────────────────────
 const state = {
   sessions: [] as URLSearchParams[], // one per created Checkout Session (cs_test_s1, cs_test_s2, …)
+  coupons: {} as Record<string, number>,
   printfulOrders: [] as Record<string, unknown>[],
   createOrderCalls: 0,
   emails: [] as { to: string[]; subject: string; html: string }[],
@@ -33,7 +34,7 @@ const state = {
 };
 
 // Fake "photos" for the mock Printful: a garment on grey (background) and a soft shadow layer (overlay).
-const COLOR_HEX: Record<string, string> = { Navy: '#1F2A44', White: '#FFFFFF', Black: '#1B1B1D', Maroon: '#5A1E2A', Forest: '#253B2F', 'Forest Green': '#253B2F', 'Athletic Heather': '#BDBCB8', 'Sport Grey': '#B7B7B3' };
+const COLOR_HEX: Record<string, string> = { Navy: '#1F2A44', White: '#FFFFFF', Black: '#1B1B1D', Maroon: '#5A1E2A', Forest: '#253B2F', 'Forest Green': '#253B2F', 'Athletic Heather': '#BDBCB8', 'Sport Grey': '#B7B7B3', 'Heather Mauve': '#BF9AA0', 'Light Pink': '#F2CBD3' };
 function png(svg: string) {
   return new Resvg(svg).render().asPng();
 }
@@ -44,10 +45,10 @@ const fakePhoto = png(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" heig
 const sessionParams = (id: string) => state.sessions[Number(id.replace('cs_test_s', '')) - 1];
 
 const pfColors: Record<number, string[]> = {
-  71: ['Navy', 'White', 'Black', 'Maroon', 'Forest', 'Athletic Heather'],
-  146: ['Navy', 'Black', 'Maroon', 'Forest Green', 'Sport Grey', 'White'],
+  71: ['Black', 'White', 'Athletic Heather', 'Heather Mauve', 'Navy', 'Maroon', 'Forest'],
+  146: ['Black', 'Sport Grey', 'Navy', 'Maroon', 'Forest Green', 'Light Pink', 'White'],
 };
-const SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
+const SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
 function pfProduct(id: number) {
   let vid = id * 1000;
   const variants = pfColors[id].flatMap((color) =>
@@ -55,9 +56,12 @@ function pfProduct(id: number) {
       id: ++vid,
       size,
       color,
-      price: id === 71 ? '12.95' : '24.50',
-      // Like the real catalogue: maroon tee in 3XL can't be printed in the EU
-      availability_status: [{ region: 'EU_LV', status: id === 71 && color === 'Maroon' && size === '3XL' ? 'not_available' : 'in_stock' }],
+      price: id === 71 ? '12.95' : '26.95',
+      // Like the real catalogue, some variants are only stocked in some regions: maroon tee 4XL isn't in the US
+      availability_status: [
+        { region: 'US', status: id === 71 && color === 'Maroon' && size === '4XL' ? 'not_available' : 'in_stock' },
+        { region: 'EU_LV', status: 'in_stock' },
+      ],
     })),
   );
   return { product: { id, title: id === 71 ? 'Bella + Canvas 3001' : 'Gildan 18500' }, variants };
@@ -80,6 +84,18 @@ const mock = http.createServer(async (req, res) => {
     state.emails.push(JSON.parse(raw));
     return send(res, 200, { id: 'email_' + state.emails.length });
   }
+  const coupon = url.pathname.match(/^\/v1\/coupons\/(\w+)$/);
+  if (coupon && req.method === 'GET') {
+    const pct = state.coupons[coupon[1]];
+    return pct
+      ? send(res, 200, { id: coupon[1], object: 'coupon', percent_off: pct, valid: true })
+      : send(res, 404, { error: { type: 'invalid_request_error', code: 'resource_missing', message: `No such coupon: '${coupon[1]}'` } });
+  }
+  if (url.pathname === '/v1/coupons' && req.method === 'POST') {
+    const p = new URLSearchParams(raw);
+    state.coupons[p.get('id')!] = Number(p.get('percent_off'));
+    return send(res, 200, { id: p.get('id'), object: 'coupon', percent_off: Number(p.get('percent_off')), valid: true });
+  }
   if (url.pathname === '/v1/checkout/sessions' && req.method === 'POST') {
     state.sessions.push(new URLSearchParams(raw));
     const id = `cs_test_s${state.sessions.length}`;
@@ -89,14 +105,18 @@ const mock = http.createServer(async (req, res) => {
   if (liMatch) {
     const p = sessionParams(liMatch[1]);
     const data = [];
+    const pct = state.coupons[p.get('discounts[0][coupon]') ?? ''] ?? 0;
     for (let i = 0; p.has(`line_items[${i}][quantity]`); i++) {
       const qty = Number(p.get(`line_items[${i}][quantity]`));
       const unit = Number(p.get(`line_items[${i}][price_data][unit_amount]`));
+      const discount = Math.round((unit * qty * pct) / 100);
       data.push({
         id: `li_${i}`,
         object: 'item',
         quantity: qty,
-        amount_total: unit * qty,
+        amount_subtotal: unit * qty,
+        amount_discount: discount,
+        amount_total: unit * qty - discount,
         description: p.get(`line_items[${i}][price_data][product_data][name]`),
         price: { id: `price_${i}`, object: 'price', product: { id: `prod_${i}`, object: 'product', metadata: { item: p.get(`line_items[${i}][price_data][product_data][metadata][item]`) } } },
       });
@@ -106,18 +126,23 @@ const mock = http.createServer(async (req, res) => {
   const sMatch = url.pathname.match(/^\/v1\/checkout\/sessions\/(cs_test_s\d+)$/);
   if (sMatch) {
     const p = sessionParams(sMatch[1]);
-    let amount = 0;
-    for (let i = 0; p.has(`line_items[${i}][quantity]`); i++) amount += Number(p.get(`line_items[${i}][price_data][unit_amount]`)) * Number(p.get(`line_items[${i}][quantity]`));
+    let subtotal = 0;
+    for (let i = 0; p.has(`line_items[${i}][quantity]`); i++) subtotal += Number(p.get(`line_items[${i}][price_data][unit_amount]`)) * Number(p.get(`line_items[${i}][quantity]`));
+    const pct = state.coupons[p.get('discounts[0][coupon]') ?? ''] ?? 0;
+    const discount = Math.round((subtotal * pct) / 100);
+    const shippingAmount = Number(p.get('shipping_options[0][shipping_rate_data][fixed_amount][amount]') ?? 0);
     return send(res, 200, {
       id: sMatch[1],
       object: 'checkout.session',
       status: 'complete',
       payment_status: 'paid',
-      amount_total: amount,
-      customer_details: { email: 'kunde@example.de', name: 'Erika Mustermann', phone: null },
-      collected_information: { shipping_details: { name: 'Erika Mustermann', address: { line1: 'Musterstraße 1', line2: null, city: 'Köln', postal_code: '50667', country: 'DE', state: null } } },
-      shipping_cost: { amount_total: 0 },
-      metadata: { marketing: p.get('metadata[marketing]'), lang: p.get('metadata[lang]') },
+      amount_subtotal: subtotal,
+      amount_total: subtotal - discount + shippingAmount,
+      total_details: { amount_discount: discount, amount_shipping: shippingAmount, amount_tax: 0 },
+      customer_details: { email: 'linda@example.com', name: 'Linda Carter', phone: null },
+      collected_information: { shipping_details: { name: 'Linda Carter', address: { line1: '12 Maple Ave', line2: null, city: 'Columbus', postal_code: '43004', country: 'US', state: 'OH' } } },
+      shipping_cost: { amount_total: shippingAmount },
+      metadata: { marketing: p.get('metadata[marketing]') },
     });
   }
 
@@ -256,19 +281,27 @@ async function main() {
   };
   let app: ChildProcess | null = null;
   await new Promise<void>((r) => mock.listen(MOCK_PORT, r));
+  const post = (A: string, items: unknown[], extra: Record<string, unknown> = {}) =>
+    fetch(`${A}/api/checkout`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items, marketingConsent: false, ...extra }) });
+  const deliver = async (A: string, sessionId: string, evt: string) => {
+    const payload = JSON.stringify({ id: evt, object: 'event', type: 'checkout.session.completed', data: { object: { id: sessionId, object: 'checkout.session', payment_status: 'paid' } } });
+    const header = new Stripe('sk_test_mock').webhooks.generateTestHeaderString({ payload, secret: WEBHOOK_SECRET });
+    return fetch(`${A}/api/webhooks/stripe`, { method: 'POST', headers: { 'stripe-signature': header, 'Content-Type': 'application/json' }, body: payload });
+  };
 
   try {
     console.log('\n1) Printful sync');
     await run('npx', ['tsx', 'scripts/printful-sync.ts'], env);
     const synced = JSON.parse(fs.readFileSync(VARIANTS, 'utf8'));
-    ok(synced.garments.tee.variants.navy.L.id === 71003, 'tee navy L → variant 71003');
-    ok(synced.garments.hoodie.variants.waldgruen.XL.id > 146000, 'hoodie colour mapping (Forest Green)');
-    ok(synced.garments.hoodie.printfile.height === 1500, 'hoodie print-file size from Printful');
+    const navyL = synced.garments.tee.variants.navy.L;
+    ok(navyL.id > 71000 && navyL.regions?.includes('US'), `tee navy L → variant ${navyL.id}, in stock in US`);
+    ok(synced.garments.tee.variants.mauve?.M?.id > 71000, 'tee Heather Mauve mapped');
+    ok(synced.garments.hoodie.variants.forest.XL.id > 146000 && synced.garments.hoodie.variants.pink.L.id > 146000, 'hoodie colors mapped (Forest Green, Light Pink)');
     ok(synced.garments.tee.placement === 'front_large' && synced.garments.hoodie.placement === 'front', 'detects front_large vs front placement');
     const mockData = JSON.parse(fs.readFileSync(MOCKUPS, 'utf8'));
     const teeNavy = mockData.garments.tee?.colors?.navy;
     ok(teeNavy && teeNavy.bg && fs.existsSync(path.join(ROOT, 'public', teeNavy.bg)), `garment photo saved (${teeNavy?.bg})`);
-    ok(Object.keys(mockData.garments.hoodie?.colors ?? {}).length === 6, 'photos for all 6 hoodie colours');
+    ok(Object.keys(mockData.garments.hoodie?.colors ?? {}).length === 7, 'photos for all 7 hoodie colors');
 
     console.log('\n2) Build');
     execSync('npx next build', { cwd: ROOT, env: { ...process.env, ...env }, stdio: 'ignore' });
@@ -278,69 +311,68 @@ async function main() {
 
     console.log('\n2b) Product photos (mockup generator)');
     await run('npx', ['tsx', 'scripts/printful-sync.ts', '--photos'], env);
-    ok(state.mockupTasks.length === 3, 'one mockup task per product');
+    ok(state.mockupTasks.length === 9, `one mockup task per featured design (${state.mockupTasks.length})`);
     ok(state.mockupTasks.every((t) => t.printFileStatus === 200), 'Printful could download every example print file');
-    ok((state.mockupTasks[0].body as { files: { placement: string }[] }).files[0].placement === 'front_large', 'mockup task uses front_large');
     const photos = JSON.parse(fs.readFileSync(MOCKUPS, 'utf8')).products;
-    ok(photos['opa-oma-namen']?.length === 2 && fs.existsSync(path.join(ROOT, 'public', photos['opa-oma-namen'][0].src)), 'product photos saved');
+    ok(photos['not-old-seasoned']?.length === 2 && fs.existsSync(path.join(ROOT, 'public', photos['not-old-seasoned'][0].src)), 'product photos saved');
 
     console.log('\n3) Checkout');
-    const bad = await fetch(`${A}/api/checkout`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items: [{ productSlug: 'opa-oma-namen', garment: 'tee', color: 'navy', size: 'L', values: { titel: 'OPA', namen: ['<script>'] }, qty: 1 }] }),
-    });
-    ok(bad.status === 400, `rejects invalid personalisation (${bad.status}: ${(await bad.json()).error})`);
-    const notEu = await fetch(`${A}/api/checkout`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ locale: 'en', items: [{ productSlug: 'opa-oma-namen', garment: 'tee', color: 'bordeaux', size: '3XL', values: { titel: 'OPA', namen: ['Mia'] }, qty: 1 }] }),
-    });
-    ok(notEu.status === 400 && /unavailable/.test((await notEu.json()).error), 'refuses a size Printful can’t print in the EU');
-    const badEn = await fetch(`${A}/api/checkout`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ locale: 'en', items: [{ productSlug: 'opa-oma-namen', garment: 'tee', color: 'navy', size: 'L', values: { titel: 'OPA', namen: [] }, qty: 1 }] }),
-    });
-    const badEnJson = await badEn.json();
-    ok(badEn.status === 400 && /enter at least one name/.test(badEnJson.error), `English error message (${badEnJson.error})`);
+    const bad = await post(A, [{ design: 'loved-by-grandkids', garment: 'tee', color: 'navy', size: 'L', values: { nickname: 'Nana', year: '', names: ['<script>'] }, qty: 1 }]);
+    ok(bad.status === 400, `rejects invalid personalization (${bad.status}: ${(await bad.json()).error})`);
+    const empty = await post(A, [{ design: 'loved-by-grandkids', garment: 'tee', color: 'navy', size: 'L', values: { nickname: 'Nana', names: [] }, qty: 1 }]);
+    ok(empty.status === 400 && /at least one name/.test((await empty.json()).error), 'asks for at least one name');
+    const notUs = await post(A, [{ design: 'not-old-seasoned', garment: 'tee', color: 'maroon', size: '4XL', values: {}, qty: 1 }]);
+    ok(notUs.status === 400 && /out of stock/.test((await notUs.json()).error), 'refuses a size Printful has no US stock for');
+    const ghost = await post(A, [{ design: 'nope', garment: 'tee', color: 'navy', size: 'L', values: {}, qty: 1 }]);
+    ok(ghost.status === 400, 'refuses unknown designs');
 
+    // Two items → 10% bundle, free shipping
     const cart = [
-      { productSlug: 'opa-oma-namen', garment: 'tee', color: 'navy', size: 'L', values: { titel: 'OMA', namen: ['Jörg', 'Änne', 'Zoë'], seit: '2011' }, qty: 1 },
-      { productSlug: 'familie-weihnachten', garment: 'hoodie', color: 'waldgruen', size: 'XL', values: { nachname: 'Schößler', vorname: 'Lena', jahr: '2026' }, qty: 1 },
+      { design: 'loved-by-grandkids', garment: 'tee', color: 'navy', size: 'L', values: { nickname: 'Gigi', year: '2011', names: ['Zoë', 'Mateo', 'Ava'] }, qty: 1 },
+      { design: 'family-christmas', garment: 'hoodie', color: 'forest', size: 'XL', values: { surname: 'Johnsons', year: '2026' }, qty: 1 },
     ];
-    const co = await fetch(`${A}/api/checkout`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: cart, marketingConsent: false, locale: 'de' }) });
+    const co = await post(A, cart);
     const coJson = await co.json();
-    const SESSION_ID = 'cs_test_s1';
-    ok(co.status === 200 && String(coJson.url).includes(SESSION_ID), 'checkout returns Stripe URL');
+    ok(co.status === 200 && String(coJson.url).includes('cs_test_s1'), 'checkout returns Stripe URL');
     const p = state.sessions[0];
-    ok(p.get('line_items[0][price_data][unit_amount]') === '3495', 'tee price from catalog (34,95 €)');
-    ok(p.get('line_items[1][price_data][unit_amount]') === '5495', 'hoodie price from catalog (54,95 €)');
-    ok(p.get('shipping_options[0][shipping_rate_data][fixed_amount][amount]') === '0', 'free shipping above 60 €');
-    ok(p.get('shipping_address_collection[allowed_countries][0]') === 'DE', 'EU shipping countries');
-    ok(p.get('locale') === 'de' && p.get('metadata[lang]') === 'de', 'German checkout');
-    ok((p.get('custom_text[submit][message]') ?? '').includes('312g'), 'withdrawal exclusion shown in checkout');
+    ok(p.get('line_items[0][price_data][unit_amount]') === '2995' && p.get('line_items[0][price_data][currency]') === 'usd', 'tee $29.95 from catalog');
+    ok(p.get('line_items[1][price_data][unit_amount]') === '4495', 'hoodie $44.95 from catalog');
+    ok(p.get('discounts[0][coupon]') === 'BUNDLE10' && state.coupons.BUNDLE10 === 10, '2 items → 10% bundle coupon (created on first use)');
+    ok(p.get('shipping_options[0][shipping_rate_data][fixed_amount][amount]') === '0', 'free shipping over $50 after savings');
+    ok(p.get('shipping_address_collection[allowed_countries][0]') === 'US' && !p.has('shipping_address_collection[allowed_countries][1]'), 'ships to the US only');
+    ok((p.get('line_items[0][price_data][product_data][description]') ?? '').includes('Gigi'), 'personalization shown on Stripe');
+
+    // One tee in 2XL → size extra, shipping charged, no coupon
+    const one = await post(A, [{ design: 'not-old-seasoned', garment: 'tee', color: 'black', size: '2XL', values: {}, qty: 1 }]);
+    ok(one.status === 200, 'single-item checkout');
+    const p2 = state.sessions[1];
+    ok(p2.get('line_items[0][price_data][unit_amount]') === '3195', '2XL costs $2 more');
+    ok(p2.get('shipping_options[0][shipping_rate_data][fixed_amount][amount]') === '495' && !p2.has('discounts[0][coupon]'), '$4.95 shipping, no bundle under 2 items');
+
+    // Three items → 15%
+    const three = await post(A, [{ design: 'grill-nap-repeat', garment: 'tee', color: 'black', size: 'L', values: {}, qty: 3 }]);
+    ok(three.status === 200 && state.sessions[2].get('discounts[0][coupon]') === 'BUNDLE15', '3 items → 15% bundle coupon');
 
     console.log('\n4) Stripe webhook → Printful order');
-    const payload = JSON.stringify({ id: 'evt_1', object: 'event', type: 'checkout.session.completed', data: { object: { id: SESSION_ID, object: 'checkout.session', payment_status: 'paid' } } });
-    const header = new Stripe('sk_test_mock').webhooks.generateTestHeaderString({ payload, secret: WEBHOOK_SECRET });
+    const payload = JSON.stringify({ id: 'evt_1', object: 'event', type: 'checkout.session.completed', data: { object: { id: 'cs_test_s1', object: 'checkout.session', payment_status: 'paid' } } });
     const forged = await fetch(`${A}/api/webhooks/stripe`, { method: 'POST', headers: { 'stripe-signature': 't=1,v1=deadbeef' }, body: payload });
     ok(forged.status === 400, 'rejects unsigned webhook');
-    const wh = await fetch(`${A}/api/webhooks/stripe`, { method: 'POST', headers: { 'stripe-signature': header, 'Content-Type': 'application/json' }, body: payload });
+    const wh = await deliver(A, 'cs_test_s1', 'evt_1');
     ok(wh.status === 200, `webhook accepted (${wh.status})`);
     const order = state.printfulOrders[0] as {
       external_id: string;
-      recipient: { name: string; city: string; country_code: string; zip: string };
+      recipient: { name: string; city: string; country_code: string; zip: string; state_code: string };
       items: { variant_id: number; quantity: number; retail_price: string; files: { type: string; url: string }[] }[];
+      retail_costs: { currency: string; discount: string; total: string };
     };
     ok(order && order.external_id.length === 32, 'Printful order created with 32-char external ID');
-    ok(order?.recipient.city === 'Köln' && order.recipient.country_code === 'DE' && order.recipient.zip === '50667', 'recipient address passed through');
-    ok(order?.items[0].variant_id === 71003 && order.items[0].retail_price === '34.95', 'tee: right variant + retail price');
-    const hoodieVariant = synced.garments.hoodie.variants.waldgruen.XL.id;
-    ok(order?.items[1].variant_id === hoodieVariant, 'hoodie: right variant');
+    ok(order?.recipient.city === 'Columbus' && order.recipient.country_code === 'US' && order.recipient.state_code === 'OH', 'US recipient address passed through');
+    ok(order?.items[0].variant_id === navyL.id && order.items[0].retail_price === '26.95', `tee: right variant + price paid after 10% (${order?.items[0].retail_price})`);
+    ok(order?.items[1].variant_id === synced.garments.hoodie.variants.forest.XL.id, 'hoodie: right variant');
+    ok(order?.retail_costs.currency === 'USD' && order.retail_costs.discount === '7.49' && order.retail_costs.total === '67.41', `retail costs in USD with discount (${JSON.stringify(order?.retail_costs)})`);
 
     console.log('\n5) Print files');
-    ok(order.items[0].files[0].type === 'front_large' && order.items[1].files[0].type === 'front', 'order uses each garment\'s placement');
+    ok(order.items[0].files[0].type === 'front_large' && order.items[1].files[0].type === 'front', "order uses each garment's placement");
     for (const [i, expected] of [[0, [2250, 2700]], [1, [1800, 1500]]] as const) {
       const fileUrl = order.items[i].files[0].url;
       const r = await fetch(fileUrl);
@@ -352,64 +384,47 @@ async function main() {
       fs.mkdirSync(path.join(ROOT, 'test-output'), { recursive: true });
       fs.writeFileSync(path.join(ROOT, 'test-output', `e2e-printfile-${i + 1}.png`), buf);
     }
-    // Design must stay ≤ 12″ wide on the 15″ area: check the outermost opaque pixels of the tee print
+    // Design must stay ≤ 11″ wide on the 15″ area: check the outermost opaque pixels of the tee print
     const { data: px, info } = await (await import('sharp')).default(path.join(ROOT, 'test-output', 'e2e-printfile-1.png')).raw().toBuffer({ resolveWithObject: true });
     let minX = info.width, maxX = 0;
     for (let y = 0; y < info.height; y += 4) for (let x = 0; x < info.width; x += 2) if (px[(y * info.width + x) * info.channels + 3] > 0) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); }
-    ok(maxX - minX <= 1800, `print stays within 12″ on front_large (${((maxX - minX) / 150).toFixed(1)}″ wide)`);
+    ok(maxX > minX && maxX - minX <= 1650, `print stays within 11″ on front_large (${((maxX - minX) / 150).toFixed(1)}″ wide)`);
     const tampered = order.items[0].files[0].url.replace(/s=[^&]+/, 's=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
     ok((await fetch(tampered)).status === 403, 'tampered print-file URL is refused');
 
     console.log('\n6) Idempotency');
-    const header2 = new Stripe('sk_test_mock').webhooks.generateTestHeaderString({ payload, secret: WEBHOOK_SECRET });
-    await fetch(`${A}/api/webhooks/stripe`, { method: 'POST', headers: { 'stripe-signature': header2 }, body: payload });
+    await deliver(A, 'cs_test_s1', 'evt_1');
     ok(state.createOrderCalls === 1, 'redelivered webhook does not create a second order');
 
-    console.log('\n7) Emails + English order');
-    const custDe = state.emails.find((e) => e.to[0] === 'kunde@example.de');
+    console.log('\n7) Emails');
+    const cust = state.emails.find((e) => e.to[0] === 'linda@example.com');
     const ownerMail = state.emails.find((e) => e.to[0] === 'owner@example.com');
-    ok(custDe && custDe.subject.startsWith('Deine Bestellung') && custDe.html.includes('Widerrufsbelehrung'), 'German customer email with withdrawal policy');
-    ok(ownerMail && ownerMail.subject.startsWith('New order') && ownerMail.html.includes('customer language: DE'), 'owner email in English');
-    const coEn = await fetch(`${A}/api/checkout`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ locale: 'en', items: [cart[0]], marketingConsent: false }),
-    });
-    ok(coEn.status === 200, 'English checkout created');
-    const pEn = state.sessions[1];
-    ok(pEn.get('locale') === 'en' && pEn.get('metadata[lang]') === 'en', 'Stripe page in English');
-    ok((pEn.get('line_items[0][price_data][product_data][name]') ?? '').startsWith('Grandpa & Grandma shirt'), `English product name on Stripe (${pEn.get('line_items[0][price_data][product_data][name]')})`);
-    ok(pEn.get('shipping_options[0][shipping_rate_data][fixed_amount][amount]') === '495', 'shipping charged below 60 €');
-    const payloadEn = JSON.stringify({ id: 'evt_2', object: 'event', type: 'checkout.session.completed', data: { object: { id: 'cs_test_s2', object: 'checkout.session', payment_status: 'paid' } } });
-    const whEn = await fetch(`${A}/api/webhooks/stripe`, { method: 'POST', headers: { 'stripe-signature': new Stripe('sk_test_mock').webhooks.generateTestHeaderString({ payload: payloadEn, secret: WEBHOOK_SECRET }) }, body: payloadEn });
-    ok(whEn.status === 200 && state.createOrderCalls === 2, 'English order sent to Printful');
-    const custEn = state.emails.filter((e) => e.to[0] === 'kunde@example.de').at(-1)!;
-    ok(custEn.subject.startsWith('Your order') && custEn.html.includes('Model withdrawal form') && custEn.html.includes('Grandpa'), 'English customer email');
+    ok(cust && /^Your Seasoned order SN-/.test(cust.subject) && cust.html.includes('Bundle savings') && cust.html.includes('Gigi'), `customer email (${cust?.subject})`);
+    ok(ownerMail && ownerMail.subject.startsWith('New order') && ownerMail.html.includes('bundle savings'), 'owner email');
+    const wh2 = await deliver(A, 'cs_test_s2', 'evt_2');
+    const order2 = state.printfulOrders[1] as { items: { retail_price: string }[]; retail_costs: { shipping: string } } | undefined;
+    ok(wh2.status === 200 && order2?.items[0].retail_price === '31.95' && order2.retail_costs.shipping === '4.95', 'single-item order: full price + shipping');
 
     console.log('\n8) Other endpoints');
-    const sum = await fetch(`${A}/api/order-summary?session_id=${SESSION_ID}`);
+    const sum = await fetch(`${A}/api/order-summary?session_id=cs_test_s1`);
     const sumJson = await sum.json();
-    ok(sum.status === 200 && sumJson.email === 'kunde@example.de' && /^LS-/.test(sumJson.orderRef), `order summary (${sumJson.orderRef})`);
-    const wd = await fetch(`${A}/api/withdrawal`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'Erika', email: 'kunde@example.de', order: sumJson.orderRef, locale: 'en' }) });
-    ok(wd.status === 200 && (await wd.json()).stamp, 'withdrawal accepted with timestamp');
-    const wdMail = state.emails.filter((e) => e.to[0] === 'kunde@example.de').at(-1)!;
-    ok(wdMail.subject.startsWith('Confirmation of receipt'), 'withdrawal receipt in English');
+    ok(sum.status === 200 && sumJson.email === 'linda@example.com' && /^SN-/.test(sumJson.orderRef), `order summary (${sumJson.orderRef})`);
     const pfBad = await fetch(`${A}/api/webhooks/printful?token=wrong-token-xxxx`, { method: 'POST', body: '{}' });
     ok(pfBad.status === 403, 'Printful webhook needs token');
     const pfGood = await fetch(`${A}/api/webhooks/printful?token=pfhook_secret_123`, {
       method: 'POST',
-      body: JSON.stringify({ type: 'package_shipped', data: { shipment: { carrier: 'DHL', tracking_url: 'https://dhl.example/1' }, order: { recipient: { name: 'Erika', email: 'kunde@example.de', country_code: 'DE' } } } }),
+      body: JSON.stringify({ type: 'package_shipped', data: { shipment: { carrier: 'USPS', tracking_url: 'https://usps.example/1' }, order: { recipient: { name: 'Linda Carter', email: 'linda@example.com', country_code: 'US' } } } }),
     });
-    ok(pfGood.status === 200 && state.emails.at(-1)!.subject === 'Dein Shirt ist unterwegs', 'shipping email (German for DE address)');
-    await fetch(`${A}/api/webhooks/printful?token=pfhook_secret_123`, {
-      method: 'POST',
-      body: JSON.stringify({ type: 'package_shipped', data: { shipment: { carrier: 'PostNL', tracking_url: 'https://x.example/1' }, order: { recipient: { name: 'Jan', email: 'jan@example.nl', country_code: 'NL' } } } }),
-    });
-    ok(state.emails.at(-1)!.subject === 'Your shirt is on its way', 'shipping email (English for NL address)');
-    for (const page of ['/', '/produkt/opa-oma-namen/', '/warenkorb/', '/widerruf/', '/impressum/', '/agb/', '/datenschutz/', '/widerrufsbelehrung/', '/versand-zahlung/']) {
+    ok(pfGood.status === 200 && state.emails.at(-1)!.subject === 'Your order is on its way' && state.emails.at(-1)!.html.includes('Linda'), 'shipping email with tracking');
+    for (const page of ['/', '/shop/', '/shop/grandma/', '/shop/personalized/', '/p/not-old-seasoned/', '/p/loved-by-grandkids/', '/cart/', '/thanks/', '/faq/', '/shipping/', '/returns/', '/privacy/', '/terms/', '/privacy-choices/']) {
       const r = await fetch(`${A}${page}`);
       ok(r.status === 200, `page ${page}`);
     }
+    ok((await fetch(`${A}/p/no-such-shirt/`)).status === 404, 'unknown product → 404');
+    const home = await (await fetch(`${A}/`)).text();
+    ok(home.includes('Not old. Seasoned.') && home.includes('Shop by vibe'), 'home page content');
+    const prod = await (await fetch(`${A}/p/not-old-seasoned/`)).text();
+    ok(prod.includes('/og/not-old-seasoned.jpg') && prod.includes('application/ld+json'), 'product page has link preview image + product data');
   } finally {
     app?.kill();
     mock.close();
@@ -425,6 +440,5 @@ async function main() {
 
 main().catch((e) => {
   console.error(e);
-  fs.existsSync(VARIANTS);
   process.exit(1);
 });

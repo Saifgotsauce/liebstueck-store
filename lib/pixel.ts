@@ -1,4 +1,4 @@
-// Meta Pixel helpers. The pixel script is only injected after marketing consent
+// Meta Pixel helpers. The pixel script is only injected when ad tracking is allowed
 // (see components/MetaPixel.tsx); before that these calls do nothing.
 
 type Fbq = (...args: unknown[]) => void;

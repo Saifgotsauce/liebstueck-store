@@ -1,38 +1,56 @@
-// Renders sample print files (and a dark-background proof) for every design into test-output/.
-// Run: npm run test:print
+// Stress-tests personalization: renders the extreme inputs (longest names, most names, accents)
+// as real print files and a contact sheet for eyeballing.  npm run test:print → out/print-test/
 import fs from 'node:fs';
 import path from 'node:path';
-import { Resvg } from '@resvg/resvg-js';
-import { TEMPLATES, defaultValues } from '../lib/design/templates';
-import { PALETTES } from '../lib/design/types';
-import { renderPrintPng } from '../lib/print/render';
+import sharp from 'sharp';
+import { getTemplate } from '../lib/design/templates';
+import { designPalette } from '../lib/design/templates';
 import { validateValues } from '../lib/design/validate';
+import { renderPrintPng } from '../lib/print/render';
 
-const out = path.join(process.cwd(), 'test-output');
+const out = path.join(process.cwd(), 'out', 'print-test');
 fs.mkdirSync(out, { recursive: true });
 
-const cases: { t: string; v: Record<string, string | string[]>; name: string }[] = [
-  { t: 'familienbande', v: defaultValues(TEMPLATES.familienbande), name: 'opa-default' },
-  { t: 'familienbande', v: { titel: 'OMA', namen: ['Jörg', 'Änne', 'Lukas', 'Sophie-Marie', 'Ben', 'Zoë', 'Mats'], seit: '2011' }, name: 'oma-7names-umlauts' },
-  { t: 'familienbande', v: { titel: 'PATENTANTE', namen: ['Maximilian-Alexander'], seit: '' }, name: 'patentante-1long' },
-  { t: 'weihnachten', v: { nachname: 'Schößler', vorname: 'Lena', jahr: '2026' }, name: 'xmas-full' },
-  { t: 'weihnachten', v: { nachname: 'von Hohenstein-Grüßing', vorname: '', jahr: '2026' }, name: 'xmas-longname' },
-  { t: 'jahrgang', v: { jahr: '1966', name: 'Klaus' }, name: 'jahrgang-klaus' },
+const cases: { d: string; v: Record<string, string | string[]>; name: string }[] = [
+  { d: 'loved-by-grandkids', v: { nickname: 'Grandmother', year: '1998', names: ['Alexandrina', 'Bartholomew', 'Zoë', 'Renée', 'José', 'Mia', 'Christopher', 'Ava', 'Maximiliana'] }, name: 'names-9-long' },
+  { d: 'loved-by-grandkids', v: { nickname: 'Mimi', year: '', names: ['Jo'] }, name: 'names-1-short-no-year' },
+  { d: 'grandma-era', v: { nickname: 'Grandmommy!' }, name: 'era-long' },
+  { d: 'grandmas-house-rules', v: { nickname: 'Grandmother' }, name: 'rules-long' },
+  { d: 'family-christmas', v: { surname: 'Van Der Berghers', year: '2026' }, name: 'xmas-long-surname' },
+  { d: 'most-likely-to-christmas', v: { line: 'start the group chat drama!!', year: '2026' }, name: 'likely-30' },
+  { d: 'vintage-birth-year', v: { year: '2008' }, name: 'vintage-2008' },
+  { d: 'still-not-a-grown-up', v: { age: '100' }, name: 'age-100' },
+  { d: 'grandpa-job-description', v: { nickname: 'Grandaddyyyy' }, name: 'grandpa-long' },
+  { d: 'grandmas-cookie-crew', v: { nickname: 'Grandmother', year: '2026' }, name: 'cookie-long' },
 ];
 
-for (const c of cases) {
-  const t = TEMPLATES[c.t];
-  const res = validateValues(t, c.v);
-  if (!res.ok) console.log(c.name, 'VALIDATION', res.errors);
-  for (const theme of ['dark', 'light'] as const) {
-    const png = renderPrintPng(t, c.v, PALETTES[theme], 1800, 2400);
-    const file = path.join(out, `${c.name}-${theme}.png`);
-    fs.writeFileSync(file, png);
-    // proof on a garment-like background for eyeballing
-    const b64 = png.toString('base64');
-    const bg = theme === 'dark' ? '#ffffff' : '#1F2A44';
-    const proof = new Resvg(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="600" height="800"><rect width="600" height="800" fill="${bg}"/><image width="600" height="800" xlink:href="data:image/png;base64,${b64}"/></svg>`).render().asPng();
-    fs.writeFileSync(path.join(out, `proof-${c.name}-${theme}.png`), proof);
+(async () => {
+  const tiles: Buffer[] = [];
+  let failed = 0;
+  for (const c of cases) {
+    const t = getTemplate(c.d);
+    const res = validateValues(t, c.v);
+    if (!res.ok) {
+      failed++;
+      console.log(`✗ ${c.name}: ${JSON.stringify(res.errors)}`);
+      continue;
+    }
+    for (const [ink, bg] of [['dark', '#ffffff'], ['light', '#212642']] as const) {
+      const png = renderPrintPng(t, res.values, designPalette(c.d, ink), 2250, 2700);
+      fs.writeFileSync(path.join(out, `${c.name}-${ink}.png`), png);
+      if (ink === 'light') {
+        const full = await sharp({ create: { width: 2250, height: 2700, channels: 3, background: bg } }).composite([{ input: png }]).png().toBuffer();
+        tiles.push(await sharp(full).resize(450).png().toBuffer());
+      }
+    }
+    console.log(`✓ ${c.name}: ${t.summarize(res.values)}`);
   }
-  console.log('rendered', c.name, t.summarize(c.v));
-}
+  const cols = 5;
+  const h = 540;
+  const sheet = await sharp({ create: { width: cols * 450, height: Math.ceil(tiles.length / cols) * h, channels: 3, background: '#999' } })
+    .composite(tiles.map((b, i) => ({ input: b, left: (i % cols) * 450, top: Math.floor(i / cols) * h })))
+    .png()
+    .toFile(path.join(out, 'sheet.png'));
+  console.log(`\n${sheet.width}×${sheet.height} contact sheet → out/print-test/sheet.png${failed ? `; ${failed} case(s) failed validation` : ''}`);
+  process.exit(failed ? 1 : 0);
+})();

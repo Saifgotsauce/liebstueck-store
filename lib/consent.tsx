@@ -2,53 +2,49 @@
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 
-// Cookie consent. "Notwendig" (cart, this choice) is always on; "Marketing" (Meta Pixel)
-// only after an explicit opt-in. Reject is as easy as accept, as German regulators require.
+// US privacy model: ad tracking (Meta Pixel) is on unless the visitor opts out via
+// "Your Privacy Choices" in the footer, or their browser sends a Global Privacy Control signal.
 
-type Consent = { decided: boolean; marketing: boolean };
-type ConsentCtx = Consent & {
+type ConsentCtx = {
   ready: boolean;
-  settingsOpen: boolean;
-  openSettings: () => void;
-  save: (marketing: boolean) => void;
+  /** Ad tracking allowed */
+  marketing: boolean;
+  /** Opted out via the browser's Global Privacy Control */
+  gpc: boolean;
+  setOptOut: (optOut: boolean) => void;
 };
 
-const KEY = 'liebstueck-consent-v1';
+const KEY = 'seasoned-privacy-v1';
 const Ctx = createContext<ConsentCtx | null>(null);
 
 export function ConsentProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<Consent>({ decided: false, marketing: false });
+  const [optOut, setOptOutState] = useState(false);
+  const [gpc, setGpc] = useState(false);
   const [ready, setReady] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) {
-        const c = JSON.parse(raw) as { marketing: boolean };
-        setState({ decided: true, marketing: !!c.marketing });
-      }
+      if (raw) setOptOutState(Boolean((JSON.parse(raw) as { optOut?: boolean }).optOut));
     } catch {
       /* ignore */
     }
+    setGpc(Boolean((navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl));
     setReady(true);
   }, []);
 
-  const save = useCallback((marketing: boolean) => {
-    setState({ decided: true, marketing });
-    setSettingsOpen(false);
+  const setOptOut = useCallback((value: boolean) => {
+    setOptOutState(value);
     try {
-      localStorage.setItem(KEY, JSON.stringify({ marketing, ts: new Date().toISOString() }));
+      localStorage.setItem(KEY, JSON.stringify({ optOut: value, ts: new Date().toISOString() }));
     } catch {
       /* ignore */
     }
-    // Withdrawing consent: reload so the already-loaded pixel script is gone.
-    if (!marketing && typeof window !== 'undefined' && (window as unknown as { fbq?: unknown }).fbq) window.location.reload();
+    // Opting out after the pixel loaded: reload so the script is gone.
+    if (value && typeof window !== 'undefined' && (window as unknown as { fbq?: unknown }).fbq) window.location.reload();
   }, []);
 
-  const openSettings = useCallback(() => setSettingsOpen(true), []);
-
-  return <Ctx.Provider value={{ ...state, ready, settingsOpen, openSettings, save }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ ready, marketing: ready && !optOut && !gpc, gpc, setOptOut }}>{children}</Ctx.Provider>;
 }
 
 export function useConsent() {
