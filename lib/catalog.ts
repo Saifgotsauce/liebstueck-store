@@ -228,9 +228,23 @@ type VariantFile = {
   >;
 };
 const variants = variantData as VariantFile;
+export const variantsSynced = Boolean(variants.generatedAt);
 
 export function printfulVariant(garment: Garment['key'], color: string, size: string): VariantInfo | null {
   return variants.garments[garment]?.variants?.[color]?.[size] ?? null;
+}
+
+/**
+ * Can this colour/size be sold? Before the first sync everything counts as available.
+ * After it, a variant must exist at Printful and be printable in an EU facility
+ * (otherwise it would ship from outside the EU, with customs and long delivery).
+ */
+export function isAvailable(garment: Garment['key'], color: string, size?: string): boolean {
+  if (!variantsSynced) return true;
+  const byColor = variants.garments[garment]?.variants?.[color];
+  if (!byColor) return false;
+  if (size) return Boolean(byColor[size]) && byColor[size].eu !== false;
+  return Object.values(byColor).some((v) => v.eu !== false);
 }
 
 export function printfileSize(garment: Garment['key']) {
@@ -243,4 +257,4 @@ export function printPlacement(garment: Garment['key']) {
   return variants.garments[garment]?.placement ?? 'front';
 }
 
-export const variantsSynced = Boolean(variants.generatedAt);
+

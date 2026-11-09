@@ -51,7 +51,14 @@ const SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
 function pfProduct(id: number) {
   let vid = id * 1000;
   const variants = pfColors[id].flatMap((color) =>
-    SIZES.map((size) => ({ id: ++vid, size, color, price: id === 71 ? '12.95' : '24.50', availability_status: [{ region: 'EU_LV', status: 'in_stock' }] })),
+    SIZES.map((size) => ({
+      id: ++vid,
+      size,
+      color,
+      price: id === 71 ? '12.95' : '24.50',
+      // Like the real catalogue: maroon tee in 3XL can't be printed in the EU
+      availability_status: [{ region: 'EU_LV', status: id === 71 && color === 'Maroon' && size === '3XL' ? 'not_available' : 'in_stock' }],
+    })),
   );
   return { product: { id, title: id === 71 ? 'Bella + Canvas 3001' : 'Gildan 18500' }, variants };
 }
@@ -284,6 +291,12 @@ async function main() {
       body: JSON.stringify({ items: [{ productSlug: 'opa-oma-namen', garment: 'tee', color: 'navy', size: 'L', values: { titel: 'OPA', namen: ['<script>'] }, qty: 1 }] }),
     });
     ok(bad.status === 400, `rejects invalid personalisation (${bad.status}: ${(await bad.json()).error})`);
+    const notEu = await fetch(`${A}/api/checkout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ locale: 'en', items: [{ productSlug: 'opa-oma-namen', garment: 'tee', color: 'bordeaux', size: '3XL', values: { titel: 'OPA', namen: ['Mia'] }, qty: 1 }] }),
+    });
+    ok(notEu.status === 400 && /unavailable/.test((await notEu.json()).error), 'refuses a size Printful can’t print in the EU');
     const badEn = await fetch(`${A}/api/checkout`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

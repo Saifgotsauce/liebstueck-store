@@ -57,7 +57,7 @@ async function pf<T>(method: string, p: string, body?: unknown, retry = true): P
 }
 
 type PfVariant = { id: number; size: string; color: string; price: string; availability_status?: { region: string; status: string }[] };
-type PfProduct = { product: { id: number; title: string }; variants: PfVariant[] };
+type PfProduct = { product: { id: number; title: string; currency?: string }; variants: PfVariant[] };
 type PfPrintfiles = {
   available_placements?: Record<string, string>;
   printfiles: { printfile_id: number; width: number; height: number; dpi: number }[];
@@ -118,7 +118,8 @@ async function main() {
 
   for (const g of Object.values(GARMENTS)) {
     const data = await pf<PfProduct>('GET', `/products/${g.printfulProductId}`);
-    console.log(`\n${g.label.en}: Printful #${data.product.id} – ${data.product.title}`);
+    const cur = data.product.currency ?? '(currency not stated by Printful)';
+    console.log(`\n${g.label.en}: Printful #${data.product.id} – ${data.product.title} – costs in ${cur}`);
     const colorsAvailable = [...new Set(data.variants.map((v) => v.color))];
 
     const variants: Record<string, Record<string, { id: number; cost: number; eu: boolean | null }>> = {};
@@ -140,11 +141,12 @@ async function main() {
         const eu = v.availability_status ? v.availability_status.some((a) => a.region.startsWith('EU') && a.status === 'in_stock') : null;
         const cost = Number(v.price);
         variants[c.key][size] = { id: v.id, cost, eu };
-        row.push(`${size}: €${cost.toFixed(2)}${eu === false ? ' (NOT in EU!)' : ''}`);
+        row.push(`${size}: ${cost.toFixed(2)}${eu === false ? ' (not printable in EU → hidden)' : ''}`);
       }
       const sample = variants[c.key]['L'] ?? Object.values(variants[c.key])[0];
       const margin = sample ? g.priceCents / 100 / VAT - sample.cost : 0;
-      console.log(`  ✓ ${c.label.en.padEnd(13)} ${row.join('  ')}   → margin (size L, after VAT, before shipping/ads): €${margin.toFixed(2)}`);
+      const allOut = Object.values(variants[c.key]).every((v) => v.eu === false);
+      console.log(`  ${allOut ? '✗' : '✓'} ${c.label.en.padEnd(13)} ${row.join('  ')}   → margin size L (price after 19% VAT minus cost, before shipping/ads): ${margin.toFixed(2)}${allOut ? '   COLOUR HIDDEN: not printable in the EU' : ''}`);
     }
 
     // Print placement + print-file size. Printful moved many DTG tees to "front_large" (15″ × 18″) in 2025.
@@ -161,7 +163,7 @@ async function main() {
     } catch (e) {
       console.log(`  ! Could not fetch print-file info (${(e as Error).message}) – using “front”, ${printfile.width} × ${printfile.height}`);
     }
-    variantsOut[g.key] = { productId: data.product.id, productName: data.product.title, placement, printfile, variants };
+    variantsOut[g.key] = { productId: data.product.id, productName: data.product.title, currency: data.product.currency ?? null, placement, printfile, variants };
 
     // Real garment photos for the live preview (Printful layout templates)
     try {
@@ -199,12 +201,12 @@ async function main() {
 
   // Product photos from Printful's mockup generator (model / flat-lay shots of each example design)
   let productPhotos: Record<string, { src: string; title: string }[]> = previous.products ?? {};
-  if (WANT_PHOTOS) {
-    const secret = process.env.PRINT_FILE_SECRET;
-    if (!SITE || !secret || (SITE.includes('localhost') && !process.env.PRINTFUL_API_BASE)) {
-      console.error('\n--photos needs NEXT_PUBLIC_SITE_URL (your live site) and PRINT_FILE_SECRET (same value as in Vercel).');
-      process.exit(1);
-    }
+  const secret = process.env.PRINT_FILE_SECRET;
+  const photosReady = Boolean(SITE && secret && (!SITE.includes('localhost') || process.env.PRINTFUL_API_BASE));
+  if (WANT_PHOTOS && !photosReady) {
+    console.log('\n! Skipped product photos: they need the GitHub variable SITE_URL (your live site address) and the secret PRINT_FILE_SECRET (same value as in Vercel). Everything else was saved.');
+  }
+  if (WANT_PHOTOS && photosReady && secret) {
     productPhotos = {};
     for (const p of PRODUCTS) {
       const g = GARMENTS[p.defaultGarment];

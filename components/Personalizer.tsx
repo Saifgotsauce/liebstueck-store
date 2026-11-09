@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ShirtPreview from './ShirtPreview';
-import { GARMENTS, getColor, type Product } from '@/lib/catalog';
+import { GARMENTS, getColor, isAvailable, type Product } from '@/lib/catalog';
 import { legal, shop } from '@/lib/config';
 import { loc } from '@/lib/i18n';
 import { useLocale } from '@/lib/i18n/context';
@@ -23,8 +23,10 @@ export default function Personalizer({ product, prefill }: Props) {
 
   const [garmentKey, setGarmentKey] = useState(product.defaultGarment);
   const garment = GARMENTS[garmentKey];
+  // Only colours Printful can print in the EU (all colours until the first Printful sync)
+  const colors = useMemo(() => garment.colors.filter((c) => isAvailable(garmentKey, c.key)), [garment, garmentKey]);
   const [colorKey, setColorKey] = useState(product.defaultColor);
-  const color = getColor(garment, colorKey) ?? garment.colors[0];
+  const color = colors.find((c) => c.key === colorKey) ?? colors[0] ?? garment.colors[0];
   const [size, setSize] = useState<string>('');
   const [values, setValues] = useState<FieldValues>(() => defaultValues(template));
   const [checked, setChecked] = useState(false);
@@ -52,10 +54,13 @@ export default function Personalizer({ product, prefill }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.slug]);
 
-  // Keep the chosen colour when switching garment if it exists there
+  // Keep the chosen colour when switching garment if it exists there; drop a size that isn't available
   useEffect(() => {
-    if (!getColor(garment, colorKey)) setColorKey(garment.colors[0].key);
-  }, [garment, colorKey]);
+    if (!colors.some((c) => c.key === colorKey) && colors[0]) setColorKey(colors[0].key);
+  }, [colors, colorKey]);
+  useEffect(() => {
+    if (size && !isAvailable(garmentKey, color.key, size)) setSize('');
+  }, [garmentKey, color.key, size]);
 
   const validation = useMemo(() => validateValues(template, values, locale), [template, values, locale]);
   const errors = validation.ok ? {} : validation.errors;
@@ -189,7 +194,7 @@ export default function Personalizer({ product, prefill }: Props) {
               {t('product.colour')}: <span className="font-normal">{loc(color.label, locale)}</span>
             </legend>
             <div role="radiogroup" aria-label={t('product.colour')} className="flex flex-wrap gap-3">
-              {garment.colors.map((c) => (
+              {colors.map((c) => (
                 <button
                   key={c.key}
                   type="button"
@@ -223,21 +228,27 @@ export default function Personalizer({ product, prefill }: Props) {
           <fieldset ref={sizeRef}>
             <legend className="mb-2 font-bold">{t('product.size')}</legend>
             <div role="radiogroup" aria-label={t('product.size')} className="flex flex-wrap gap-2">
-              {garment.sizes.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  role="radio"
-                  aria-checked={size === s}
-                  className="chip min-w-[3.4rem]"
-                  onClick={() => {
-                    setSize(s);
-                    setAdded(false);
-                  }}
-                >
-                  {s}
-                </button>
-              ))}
+              {garment.sizes.map((s) => {
+                const ok = isAvailable(garmentKey, color.key, s);
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    role="radio"
+                    aria-checked={size === s}
+                    disabled={!ok}
+                    title={ok ? undefined : t('product.sizeUnavailable', { size: s })}
+                    aria-label={ok ? s : t('product.sizeUnavailable', { size: s })}
+                    className="chip min-w-[3.4rem] disabled:cursor-not-allowed disabled:border-dashed disabled:text-ink-soft disabled:line-through"
+                    onClick={() => {
+                      setSize(s);
+                      setAdded(false);
+                    }}
+                  >
+                    {s}
+                  </button>
+                );
+              })}
             </div>
             {showErrors && !size && <p className="mt-2 font-bold text-rot">{t('product.sizeError')}</p>}
             <p className="mt-2 text-sm text-ink-soft">{loc(garment.fit, locale)}</p>

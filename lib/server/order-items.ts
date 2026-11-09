@@ -1,5 +1,5 @@
 import 'server-only';
-import { GARMENTS, getColor, getProduct, printfulVariant, type Garment, type GarmentColor, type Product } from '../catalog';
+import { GARMENTS, getColor, getProduct, isAvailable, printfulVariant, type Garment, type GarmentColor, type Product } from '../catalog';
 import { shop } from '../config';
 import { getTemplate } from '../design/templates';
 import { validateValues } from '../design/validate';
@@ -50,7 +50,7 @@ export function parseItems(raw: unknown, locale: Locale = 'de'): { items: CleanI
     const v = validateValues(template, o.values, locale);
     if (!v.ok) return errors.push({ index, message: Object.values(v.errors)[0] });
     const variant = printfulVariant(gKey, color.key, size);
-    if (!variant) return errors.push({ index, message: fmt(m.unavailable, { garment: loc(garment.label, locale), colour: loc(color.label, locale), size }) });
+    if (!variant || !isAvailable(gKey, color.key, size)) return errors.push({ index, message: fmt(m.unavailable, { garment: loc(garment.label, locale), colour: loc(color.label, locale), size }) });
     const qty = Math.max(1, Math.min(shop.maxQuantityPerItem, Math.floor(Number(o.qty) || 1)));
     items.push({ product, template, garment, color, size, values: v.values, qty, variantId: variant.id, unitCents: garment.priceCents });
   });
