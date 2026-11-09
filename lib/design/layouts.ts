@@ -30,7 +30,7 @@ export type LayoutSpec =
   | { layout: 'checklist'; title: Line[]; items: string[]; itemFont?: FontKey }
   | { layout: 'quote'; lines: Line[]; by: string }
   | { layout: 'vintage'; top: string; big: string; bottom: string }
-  | { layout: 'names'; title: string; est?: string; lovedBy: string; namesKey: string };
+  | { layout: 'names'; title: string; est?: string; estLabel?: string; lovedBy: string; namesKey: string };
 
 const CX = 600;
 const TOP = 150; // ~1.5 in below the top of the print area, where chest prints usually start
@@ -231,7 +231,7 @@ function names(spec: Extract<LayoutSpec, { layout: 'names' }>, v: FieldValues, p
   let y = titleBase;
   if (spec.est && hasValue(v, spec.est)) {
     y += 40 + capHeight('heavy', 60);
-    svg += ruled(y, `EST. ${fillText(`{${spec.est}}`, v)}`, 'heavy', 60, 0.3, p.ink, p.accent);
+    svg += ruled(y, `${spec.estLabel ?? 'EST.'} ${fillText(`{${spec.est}}`, v)}`, 'heavy', 60, 0.3, p.ink, p.accent);
   }
   const loved = fillText(spec.lovedBy, v);
   const ls = 130;

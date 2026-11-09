@@ -1,6 +1,6 @@
 // Turns every design in the phrase bank (lib/designs.ts) into a print template. The same
 // template renders the live preview in the browser and the print file on the server.
-import { DESIGNS, type Design } from '../designs';
+import { ALL_DESIGNS, type Design } from '../designs';
 import { fillText, layoutFonts, renderLayout } from './layouts';
 import { palette, type DesignTemplate, type FieldValues, type InkTheme } from './types';
 
@@ -24,7 +24,7 @@ function makeTemplate(d: Design): DesignTemplate {
   };
 }
 
-export const TEMPLATES: Record<string, DesignTemplate> = Object.fromEntries(DESIGNS.map((d) => [d.slug, makeTemplate(d)]));
+export const TEMPLATES: Record<string, DesignTemplate> = Object.fromEntries(ALL_DESIGNS.map((d) => [d.slug, makeTemplate(d)]));
 
 export function getTemplate(id: string): DesignTemplate {
   const t = TEMPLATES[id];
@@ -38,7 +38,7 @@ export function defaultValues(t: DesignTemplate): FieldValues {
 
 /** The print palette for a design on a garment colour. */
 export function designPalette(slug: string, ink: InkTheme) {
-  const d = DESIGNS.find((x) => x.slug === slug);
+  const d = ALL_DESIGNS.find((x) => x.slug === slug);
   return palette(ink, d?.accent ?? 'red');
 }
 

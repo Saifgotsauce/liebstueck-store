@@ -2,45 +2,78 @@
 
 import Link from 'next/link';
 import { brand } from '@/lib/config';
-import { VIBES } from '@/lib/designs';
+import { vibesFor } from '@/lib/designs';
+import { useLocale } from '@/lib/i18n';
+import { ROUTES, shopPath } from '@/lib/locale';
 import { Logo } from './Logo';
 
+const HELP = {
+  en: [
+    { href: ROUTES.en.faq, label: 'FAQ' },
+    { href: ROUTES.en.shipping, label: 'Shipping' },
+    { href: ROUTES.en.returns, label: 'Returns & replacements' },
+    { href: ROUTES.en.privacy, label: 'Privacy policy' },
+    { href: ROUTES.en.terms, label: 'Terms of service' },
+    { href: ROUTES.en.privacyChoices, label: 'Your privacy choices' },
+  ],
+  de: [
+    { href: ROUTES.de.faq, label: 'Häufige Fragen' },
+    { href: ROUTES.de.shipping, label: 'Versand & Zahlung' },
+    { href: ROUTES.de.returns, label: 'Widerrufsbelehrung' },
+    { href: ROUTES.de.terms, label: 'AGB' },
+    { href: ROUTES.de.privacy, label: 'Datenschutz' },
+    { href: ROUTES.de.imprint, label: 'Impressum' },
+    { href: ROUTES.de.privacyChoices, label: 'Cookie-Einstellungen' },
+  ],
+};
+
 export default function Footer() {
+  const { locale, t, routes } = useLocale();
   return (
     <footer className="mt-24 bg-violet text-white">
       <div className="wrap grid gap-10 py-14 md:grid-cols-[1.5fr_1fr_1fr]">
         <div>
           <Logo className="text-white" />
-          <p className="mt-4 max-w-sm text-white/80">Funny shirts for women who are getting older out loud, and the people who love them. Printed to order, one at a time.</p>
+          <p className="mt-4 max-w-sm text-white/80">{t.footer.about}</p>
           <p className="mt-4 text-white/80">
-            Questions? <a href={`mailto:${brand.email}`} className="font-bold text-white">{brand.email}</a>
+            {t.footer.questions} <a href={`mailto:${brand.email}`} className="font-bold text-white">{brand.email}</a>
           </p>
+          {locale === 'de' && (
+            // Electronic withdrawal function (§ 356a BGB): always visible, set apart from the legal links
+            <Link href={ROUTES.de.withdraw} className="btn mt-6 border-2 border-white bg-transparent text-white no-underline hover:bg-white hover:text-violet">
+              Vertrag widerrufen
+            </Link>
+          )}
         </div>
         <div>
-          <h2 className="font-sans text-base font-bold tracking-normal text-white">Shop</h2>
+          <h2 className="font-sans text-base font-bold tracking-normal text-white">{t.footer.shop}</h2>
           <ul className="mt-3 space-y-2 text-white/80">
-            <li><Link href="/shop/" className="no-underline hover:text-white">All shirts</Link></li>
-            {VIBES.map((v) => (
+            <li><Link href={routes.shop} className="no-underline hover:text-white">{t.common.allShirts}</Link></li>
+            {vibesFor(locale).map((v) => (
               <li key={v.key}>
-                <Link href={`/shop/${v.key}/`} className="no-underline hover:text-white">{v.name}</Link>
+                <Link href={shopPath(locale, v.key)} className="no-underline hover:text-white">{v.name}</Link>
               </li>
             ))}
           </ul>
         </div>
         <div>
-          <h2 className="font-sans text-base font-bold tracking-normal text-white">Help</h2>
+          <h2 className="font-sans text-base font-bold tracking-normal text-white">{t.footer.help}</h2>
           <ul className="mt-3 space-y-2 text-white/80">
-            <li><Link href="/faq/" className="no-underline hover:text-white">FAQ</Link></li>
-            <li><Link href="/shipping/" className="no-underline hover:text-white">Shipping</Link></li>
-            <li><Link href="/returns/" className="no-underline hover:text-white">Returns & replacements</Link></li>
-            <li><Link href="/privacy/" className="no-underline hover:text-white">Privacy policy</Link></li>
-            <li><Link href="/terms/" className="no-underline hover:text-white">Terms of service</Link></li>
-            <li><Link href="/privacy-choices/" className="no-underline hover:text-white">Your privacy choices</Link></li>
+            {HELP[locale].map((l) => (
+              <li key={l.href}>
+                <Link href={l.href} className="no-underline hover:text-white">{l.label}</Link>
+              </li>
+            ))}
           </ul>
         </div>
       </div>
       <div className="border-t border-white/20">
-        <p className="wrap py-5 text-sm text-white/70">© {new Date().getFullYear()} {brand.name}. Secure checkout by Stripe.</p>
+        <p className="wrap flex flex-wrap justify-between gap-x-6 gap-y-2 py-5 text-sm text-white/70">
+          <span>{t.footer.bottom(new Date().getFullYear())}</span>
+          <Link href={locale === 'de' ? ROUTES.en.home : ROUTES.de.home} className="text-white/80 hover:text-white" hrefLang={locale === 'de' ? 'en-US' : 'de-DE'}>
+            {locale === 'de' ? 'US store (English)' : 'Deutscher Shop'}
+          </Link>
+        </p>
       </div>
     </footer>
   );

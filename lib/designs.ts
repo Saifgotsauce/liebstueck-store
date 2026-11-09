@@ -8,12 +8,19 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import type { LayoutSpec } from './design/layouts';
 import type { AccentKey, FieldDef } from './design/types';
+import type { Locale } from './locale';
+import { DESIGNS_DE, VIBES_DE } from './designs-de';
 
-export type VibeKey = 'aging' | 'grandma' | 'retired' | 'birthday' | 'for-him' | 'holiday';
+/** US: aging, grandma, retired, birthday, for-him, holiday · DE: see lib/designs-de.ts */
+export type VibeKey = string;
 
 export type Vibe = {
   key: VibeKey;
+  /** Store the vibe belongs to (default 'en'). */
+  locale?: Locale;
   name: string;
+  /** Short label for the menu (defaults to the first word of name). */
+  nav?: string;
   blurb: string;
   /** How people search for this kind of shirt – used in page titles and descriptions. */
   searchTerm: string;
@@ -27,32 +34,32 @@ export type Vibe = {
 
 export const VIBES: Vibe[] = [
   {
-    key: 'aging', name: 'Aging, Unbothered', blurb: 'Getting older? Getting louder.', searchTerm: 'funny shirts for women over 50',
+    key: 'aging', nav: 'Aging', name: 'Aging, Unbothered', blurb: 'Getting older? Getting louder.', searchTerm: 'funny shirts for women over 50',
     hook: 'Getting older? Getting louder.', tagline: 'For women who refuse to act their age.',
     occasion: 'Perfect for birthdays, Mother’s Day or just because',
   },
   {
-    key: 'grandma', name: 'Grandma Era', blurb: 'Spoiling is a sport. These are the uniforms.', searchTerm: 'funny grandma shirts',
+    key: 'grandma', nav: 'Grandma', name: 'Grandma Era', blurb: 'Spoiling is a sport. These are the uniforms.', searchTerm: 'funny grandma shirts',
     hook: 'Spoil them. Brag about it.', tagline: 'For grandmas with a sense of humor.',
     occasion: 'Perfect for Mother’s Day, birthdays and new-grandma news',
   },
   {
-    key: 'retired', name: 'Retired & Loving It', blurb: 'Out of office. Permanently.', searchTerm: 'funny retirement shirts',
+    key: 'retired', nav: 'Retired', name: 'Retired & Loving It', blurb: 'Out of office. Permanently.', searchTerm: 'funny retirement shirts',
     hook: 'Off the clock. Forever.', tagline: 'For the newly retired and gloriously unbothered.',
     occasion: 'Perfect for retirement parties and the first Monday off',
   },
   {
-    key: 'birthday', name: 'Milestone Birthdays', blurb: '50, 60, 70 and fabulously unbothered.', searchTerm: 'funny 50th, 60th and 70th birthday shirts',
+    key: 'birthday', nav: 'Birthdays', name: 'Milestone Birthdays', blurb: '50, 60, 70 and fabulously unbothered.', searchTerm: 'funny 50th, 60th and 70th birthday shirts',
     hook: 'Make the big number look good.', tagline: 'For the milestone birthday girl.',
     occasion: 'Perfect for 50th, 60th and 70th birthdays',
   },
   {
-    key: 'for-him', name: 'Gifts for Him', blurb: 'For grandpas, husbands and professional nappers.', searchTerm: 'funny gifts for grandpa and dad',
+    key: 'for-him', nav: 'For Him', name: 'Gifts for Him', blurb: 'For grandpas, husbands and professional nappers.', searchTerm: 'funny gifts for grandpa and dad',
     hook: 'The gift he’ll actually wear.', tagline: 'For grandpas, husbands and nap champions.',
     occasion: 'Perfect for Father’s Day, birthdays and Christmas',
   },
   {
-    key: 'holiday', name: 'Holiday Shop', blurb: 'Family Christmas shirts and festive sass.', searchTerm: 'funny family Christmas shirts',
+    key: 'holiday', nav: 'Holiday', name: 'Holiday Shop', blurb: 'Family Christmas shirts and festive sass.', searchTerm: 'funny family Christmas shirts',
     hook: 'Matching shirts. Unmatched chaos.', tagline: 'For the whole family photo.',
     occasion: 'Get one for everyone – bundle savings apply automatically',
   },
@@ -70,6 +77,12 @@ export type Design = {
   color: string;
   blurb: string;
   featured?: boolean;
+  /** Store the design is sold in (default 'en' = US). German designs only appear under /de/. */
+  locale?: Locale;
+  /** Based on a well-known phrase – check the trademark registers before advertising it. */
+  famous?: boolean;
+  /** Switched off (e.g. the phrase turned out to be trademarked). */
+  hidden?: boolean;
 };
 
 // ── Personalisation fields ─────────────────────────────────────────────────────
@@ -960,16 +973,33 @@ export const DESIGNS: Design[] = [
   },
 ];
 
+/** Every design in both stores (slugs are unique across stores). */
+export const ALL_DESIGNS: Design[] = [...DESIGNS, ...DESIGNS_DE];
+const ALL_VIBES: Vibe[] = [...VIBES, ...VIBES_DE];
+
+export const designLocale = (d: Pick<Design, 'locale'>): Locale => d.locale ?? 'en';
+
+/** The designs on sale in one store. */
+export function designsFor(locale: Locale) {
+  return ALL_DESIGNS.filter((d) => designLocale(d) === locale && !d.hidden);
+}
+
+export function vibesFor(locale: Locale) {
+  return ALL_VIBES.filter((v) => (v.locale ?? 'en') === locale);
+}
+
+export const vibeNav = (v: Vibe) => v.nav ?? v.name.split(/[ ,&]/)[0];
+
 export function getDesign(slug: string) {
-  return DESIGNS.find((d) => d.slug === slug);
+  return ALL_DESIGNS.find((d) => d.slug === slug);
 }
 
 export function getVibe(key: string) {
-  return VIBES.find((v) => v.key === key);
+  return ALL_VIBES.find((v) => v.key === key);
 }
 
 export function designsInVibe(key: VibeKey) {
-  return DESIGNS.filter((d) => d.vibe === key);
+  return ALL_DESIGNS.filter((d) => d.vibe === key && !d.hidden);
 }
 
 export const isPersonalized = (d: Design) => Boolean(d.fields?.length);

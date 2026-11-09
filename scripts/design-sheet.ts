@@ -5,7 +5,7 @@ import path from 'node:path';
 // Contact sheets of every design on its default shirt color, for reviewing the phrase bank.
 //   npm run design:sheet            (all)   →  out/designs/sheet-1.png …
 //   npm run design:sheet -- grandma (only slugs containing "grandma"; comma-separate several)
-import { DESIGNS } from '../lib/designs';
+import { ALL_DESIGNS as DESIGNS } from '../lib/designs';
 import { getTemplate, defaultValues, designPalette } from '../lib/design/templates';
 import { FONT_FILES } from '../lib/print/render';
 import { GARMENTS } from '../lib/catalog';

@@ -17,7 +17,8 @@ export async function GET(req: Request) {
       email: session.customer_details?.email ?? null,
       amountTotal: session.amount_total ?? 0,
       orderRef: orderRef(id),
-      items: items.data.map((li) => ({ name: li.description ?? '', quantity: li.quantity ?? 1 })),
+      // the German store bills shipping as its own line – not a product
+      items: items.data.filter((li) => !/^Versand innerhalb/.test(li.description ?? '')).map((li) => ({ name: li.description ?? '', quantity: li.quantity ?? 1 })),
     });
   } catch {
     return NextResponse.json({ error: 'not found' }, { status: 404 });

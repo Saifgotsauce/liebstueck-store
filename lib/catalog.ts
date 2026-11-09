@@ -2,7 +2,8 @@
 // lib/designs.ts. After changing Printful products or colours, run the "Printful sync"
 // GitHub Action so the variant IDs in data/printful-variants.json match.
 import variantData from '@/data/printful-variants.json';
-import { shop } from './config';
+import { stores } from './config';
+import type { Locale } from './locale';
 import type { Design } from './designs';
 import type { InkTheme } from './design/types';
 
@@ -103,16 +104,73 @@ export function getColor(g: Garment, key: string) {
   return g.colors.find((c) => c.key === key);
 }
 
-/** The everyday price, before any store-wide sale. */
-export function regularPriceCents(garment: GarmentKey, size?: string) {
+/** German store prices in euro cents, VAT included. */
+const PRICES_DE: Record<GarmentKey, { base: number; sizeExtra: Record<string, number> }> = {
+  tee: { base: 2995, sizeExtra: { '2XL': 200, '3XL': 300, '4XL': 400 } },
+  hoodie: { base: 4995, sizeExtra: { '2XL': 300, '3XL': 400, '4XL': 500 } },
+};
+
+/** The everyday price, before any store-wide sale (US dollars or euros, in cents). */
+export function regularPriceCents(garment: GarmentKey, size?: string, locale: Locale = 'en') {
+  if (locale === 'de') {
+    const p = PRICES_DE[garment];
+    return p.base + (size ? p.sizeExtra[size] ?? 0 : 0);
+  }
   const g = GARMENTS[garment];
   return g.priceCents + (size ? g.sizeExtraCents[size] ?? 0 : 0);
 }
 
 /** What the shopper pays per item (before bundle savings). Includes the store-wide sale when one is on. */
-export function unitPriceCents(garment: GarmentKey, size?: string) {
-  const regular = regularPriceCents(garment, size);
-  return shop.sale ? Math.round((regular * (100 - shop.sale.percent)) / 100) : regular;
+export function unitPriceCents(garment: GarmentKey, size?: string, locale: Locale = 'en') {
+  const regular = regularPriceCents(garment, size, locale);
+  const sale = stores[locale].sale;
+  return sale ? Math.round((regular * (100 - sale.percent)) / 100) : regular;
+}
+
+/** Size extra for a size, for the "+$2" / "+2 €" hint on size buttons. */
+export function sizeExtraCents(garment: GarmentKey, size: string, locale: Locale = 'en') {
+  return locale === 'de' ? PRICES_DE[garment].sizeExtra[size] ?? 0 : GARMENTS[garment].sizeExtraCents[size] ?? 0;
+}
+
+// ── German wording for garments and colours ─────────────────────────────────
+
+const COPY_DE: Record<GarmentKey, { label: string; model: string; material: string; fit: string; care: string[] }> = {
+  tee: {
+    label: 'T-Shirt',
+    model: 'Bella+Canvas 3001 Unisex-T-Shirt',
+    material: '100 % gekämmte, ringgesponnene Baumwolle – weich und leicht (meliert: Baumwolle mit Polyester)',
+    fit: 'Unisex, locker geschnitten. Frauen nehmen meist ihre normale Größe, für einen engeren Sitz eine kleiner.',
+    care: ['Auf links bei 30 °C waschen', 'Schonend trocknen oder aufhängen', 'Nicht direkt auf dem Druck bügeln'],
+  },
+  hoodie: {
+    label: 'Hoodie',
+    model: 'Gildan 18500 Unisex-Kapuzenpullover',
+    material: '50 % Baumwolle, 50 % Polyester, innen angeraut – warm und kuschelig',
+    fit: 'Unisex, klassischer Schnitt mit Kängurutasche und Kordel an der Kapuze.',
+    care: ['Auf links bei 30 °C waschen', 'Schonend trocknen', 'Nicht direkt auf dem Druck bügeln'],
+  },
+};
+
+const COLOR_DE: Record<string, string> = {
+  Black: 'Schwarz',
+  White: 'Weiß',
+  'Heather Gray': 'Grau meliert',
+  'Heather Mauve': 'Mauve meliert',
+  Navy: 'Marineblau',
+  Maroon: 'Weinrot',
+  'Forest Green': 'Waldgrün',
+  'Sport Gray': 'Grau meliert',
+  'Light Pink': 'Rosa',
+};
+
+/** Garment name, model, material, fit and care text in the store's language. */
+export function garmentText(garment: GarmentKey, locale: Locale = 'en') {
+  const g = GARMENTS[garment];
+  return locale === 'de' ? COPY_DE[garment] : { label: g.label, model: g.model, material: g.material, fit: g.fit, care: g.care };
+}
+
+export function colorLabel(c: GarmentColor, locale: Locale = 'en') {
+  return locale === 'de' ? COLOR_DE[c.label] ?? c.label : c.label;
 }
 
 // ── Printful variant lookup (written by scripts/printful-sync.ts) ─────────────
@@ -141,28 +199,31 @@ export function printfulVariant(garment: GarmentKey, color: string, size: string
   return variants.garments[garment]?.variants?.[color]?.[size] ?? null;
 }
 
-/** Variant can be printed in our fulfilment region (unknown before the first sync with region data → yes). */
-const inRegion = (v: VariantInfo) => !v.regions || v.regions.some((r) => r === shop.fulfilmentRegion || r.startsWith(`${shop.fulfilmentRegion}_`));
+/** Variant can be printed in the store's fulfilment region (unknown before the first sync with region data → yes). */
+const inRegion = (v: VariantInfo, locale: Locale) => {
+  const region = stores[locale].fulfilmentRegion;
+  return !v.regions || v.regions.some((r) => r === region || r.startsWith(`${region}_`));
+};
 
 /**
  * Can this colour/size be sold? Before the first sync everything counts as available (demo).
  * After it, the variant must exist at Printful and be in stock in our fulfilment region.
  */
-export function isAvailable(garment: GarmentKey, color: string, size?: string): boolean {
+export function isAvailable(garment: GarmentKey, color: string, size?: string, locale: Locale = 'en'): boolean {
   if (!variantsSynced) return true;
   const byColor = variants.garments[garment]?.variants?.[color];
   if (!byColor) return false;
-  if (size) return Boolean(byColor[size]) && inRegion(byColor[size]);
-  return Object.values(byColor).some(inRegion);
+  if (size) return Boolean(byColor[size]) && inRegion(byColor[size], locale);
+  return Object.values(byColor).some((v) => inRegion(v, locale));
 }
 
-export function availableColors(garment: GarmentKey) {
-  return GARMENTS[garment].colors.filter((c) => isAvailable(garment, c.key));
+export function availableColors(garment: GarmentKey, locale: Locale = 'en') {
+  return GARMENTS[garment].colors.filter((c) => isAvailable(garment, c.key, undefined, locale));
 }
 
 /** The design's preferred colour on this garment, or the first one we can actually sell. */
-export function defaultColor(design: Pick<Design, 'color'>, garment: GarmentKey): string {
-  const avail = availableColors(garment);
+export function defaultColor(design: Pick<Design, 'color'>, garment: GarmentKey, locale: Locale = 'en'): string {
+  const avail = availableColors(garment, locale);
   if (avail.some((c) => c.key === design.color)) return design.color;
   // keep the same ink family if possible (dark shirt ↔ dark shirt)
   const wanted = getColor(GARMENTS.tee, design.color)?.ink;

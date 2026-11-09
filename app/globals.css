@@ -91,4 +91,7 @@
   .prose-s ul { padding-left: 1.2rem; list-style: disc; }
   .prose-s li { margin: .3rem 0; }
   .prose-s a { color: var(--color-violet); font-weight: 700; }
+  .prose-s .muted { color: var(--color-ink-soft); font-size: .95rem; }
+  /* placeholder still to be filled in lib/config.ts */
+  .prose-s .todo, .todo { background: var(--color-sun); padding: 0 .2em; border-radius: .2em; }
 }

@@ -27,6 +27,7 @@ const ok = (cond: unknown, msg: string) => {
 const state = {
   sessions: [] as URLSearchParams[], // one per created Checkout Session (cs_test_s1, cs_test_s2, …)
   coupons: {} as Record<string, number>,
+  amountCoupons: {} as Record<string, number>,
   printfulOrders: [] as Record<string, unknown>[],
   createOrderCalls: 0,
   emails: [] as { to: string[]; subject: string; html: string }[],
@@ -84,15 +85,20 @@ const mock = http.createServer(async (req, res) => {
     state.emails.push(JSON.parse(raw));
     return send(res, 200, { id: 'email_' + state.emails.length });
   }
-  const coupon = url.pathname.match(/^\/v1\/coupons\/(\w+)$/);
+  const coupon = url.pathname.match(/^\/v1\/coupons\/([\w-]+)$/);
   if (coupon && req.method === 'GET') {
     const pct = state.coupons[coupon[1]];
-    return pct
-      ? send(res, 200, { id: coupon[1], object: 'coupon', percent_off: pct, valid: true })
-      : send(res, 404, { error: { type: 'invalid_request_error', code: 'resource_missing', message: `No such coupon: '${coupon[1]}'` } });
+    const amt = state.amountCoupons[coupon[1]];
+    if (pct) return send(res, 200, { id: coupon[1], object: 'coupon', percent_off: pct, valid: true });
+    if (amt) return send(res, 200, { id: coupon[1], object: 'coupon', amount_off: amt, currency: 'eur', valid: true });
+    return send(res, 404, { error: { type: 'invalid_request_error', code: 'resource_missing', message: `No such coupon: '${coupon[1]}'` } });
   }
   if (url.pathname === '/v1/coupons' && req.method === 'POST') {
     const p = new URLSearchParams(raw);
+    if (p.has('amount_off')) {
+      state.amountCoupons[p.get('id')!] = Number(p.get('amount_off'));
+      return send(res, 200, { id: p.get('id'), object: 'coupon', amount_off: Number(p.get('amount_off')), currency: p.get('currency'), valid: true });
+    }
     state.coupons[p.get('id')!] = Number(p.get('percent_off'));
     return send(res, 200, { id: p.get('id'), object: 'coupon', percent_off: Number(p.get('percent_off')), valid: true });
   }
@@ -106,10 +112,14 @@ const mock = http.createServer(async (req, res) => {
     const p = sessionParams(liMatch[1]);
     const data = [];
     const pct = state.coupons[p.get('discounts[0][coupon]') ?? ''] ?? 0;
+    const amt = state.amountCoupons[p.get('discounts[0][coupon]') ?? ''] ?? 0;
+    let all = 0;
+    for (let i = 0; p.has(`line_items[${i}][quantity]`); i++) all += Number(p.get(`line_items[${i}][price_data][unit_amount]`)) * Number(p.get(`line_items[${i}][quantity]`));
     for (let i = 0; p.has(`line_items[${i}][quantity]`); i++) {
       const qty = Number(p.get(`line_items[${i}][quantity]`));
       const unit = Number(p.get(`line_items[${i}][price_data][unit_amount]`));
-      const discount = Math.round((unit * qty * pct) / 100);
+      // like Stripe: a fixed-amount coupon is spread over the lines by value
+      const discount = amt ? Math.round((amt * unit * qty) / all) : Math.round((unit * qty * pct) / 100);
       data.push({
         id: `li_${i}`,
         object: 'item',
@@ -118,7 +128,17 @@ const mock = http.createServer(async (req, res) => {
         amount_discount: discount,
         amount_total: unit * qty - discount,
         description: p.get(`line_items[${i}][price_data][product_data][name]`),
-        price: { id: `price_${i}`, object: 'price', product: { id: `prod_${i}`, object: 'product', metadata: { item: p.get(`line_items[${i}][price_data][product_data][metadata][item]`) } } },
+        price: {
+          id: `price_${i}`,
+          object: 'price',
+          product: {
+            id: `prod_${i}`,
+            object: 'product',
+            metadata: Object.fromEntries(
+              ['item', 'kind'].flatMap((k) => (p.has(`line_items[${i}][price_data][product_data][metadata][${k}]`) ? [[k, p.get(`line_items[${i}][price_data][product_data][metadata][${k}]`)]] : [])),
+            ),
+          },
+        },
       });
     }
     return send(res, 200, { object: 'list', data, has_more: false, url: url.pathname });
@@ -129,8 +149,10 @@ const mock = http.createServer(async (req, res) => {
     let subtotal = 0;
     for (let i = 0; p.has(`line_items[${i}][quantity]`); i++) subtotal += Number(p.get(`line_items[${i}][price_data][unit_amount]`)) * Number(p.get(`line_items[${i}][quantity]`));
     const pct = state.coupons[p.get('discounts[0][coupon]') ?? ''] ?? 0;
-    const discount = Math.round((subtotal * pct) / 100);
+    const discount = state.amountCoupons[p.get('discounts[0][coupon]') ?? ''] ?? Math.round((subtotal * pct) / 100);
     const shippingAmount = Number(p.get('shipping_options[0][shipping_rate_data][fixed_amount][amount]') ?? 0);
+    const metadata = Object.fromEntries([...p.entries()].filter(([k]) => k.startsWith('metadata[')).map(([k, v]) => [k.slice(9, -1), v]));
+    const collectsAddress = p.has('shipping_address_collection[allowed_countries][0]');
     return send(res, 200, {
       id: sMatch[1],
       object: 'checkout.session',
@@ -139,10 +161,13 @@ const mock = http.createServer(async (req, res) => {
       amount_subtotal: subtotal,
       amount_total: subtotal - discount + shippingAmount,
       total_details: { amount_discount: discount, amount_shipping: shippingAmount, amount_tax: 0 },
-      customer_details: { email: 'linda@example.com', name: 'Linda Carter', phone: null },
-      collected_information: { shipping_details: { name: 'Linda Carter', address: { line1: '12 Maple Ave', line2: null, city: 'Columbus', postal_code: '43004', country: 'US', state: 'OH' } } },
-      shipping_cost: { amount_total: shippingAmount },
-      metadata: { marketing: p.get('metadata[marketing]') },
+      customer_email: p.get('customer_email'),
+      customer_details: { email: p.get('customer_email') ?? 'linda@example.com', name: collectsAddress ? 'Linda Carter' : 'Gisela Schmidt', phone: null },
+      collected_information: collectsAddress
+        ? { shipping_details: { name: 'Linda Carter', address: { line1: '12 Maple Ave', line2: null, city: 'Columbus', postal_code: '43004', country: 'US', state: 'OH' } } }
+        : null,
+      shipping_cost: collectsAddress ? { amount_total: shippingAmount } : null,
+      metadata,
     });
   }
 
@@ -416,6 +441,62 @@ async function main() {
       body: JSON.stringify({ type: 'package_shipped', data: { shipment: { carrier: 'USPS', tracking_url: 'https://usps.example/1' }, order: { recipient: { name: 'Linda Carter', email: 'linda@example.com', country_code: 'US' } } } }),
     });
     ok(pfGood.status === 200 && state.emails.at(-1)!.subject === 'Your order is on its way' && state.emails.at(-1)!.html.includes('Linda'), 'shipping email with tracking');
+    console.log('\n6) German store (/de/)');
+    const addr = { firstName: 'Gisela', lastName: 'Schmidt', street: 'Lindenstraße 12', extra: '', zip: '10115', city: 'Berlin', email: 'gisela@example.de' };
+    const deCart = [
+      { design: 'geliebt-von-enkeln', garment: 'tee', color: 'navy', size: 'L', values: { nickname: 'Omi', year: '2015', names: ['Jörg', 'Lea', 'Max'] }, qty: 1 },
+      { design: 'familie-weihnachten', garment: 'hoodie', color: 'forest', size: 'XL', values: { surname: 'Müller', year: '2026' }, qty: 1 },
+    ];
+    const noAddr = await post(A, deCart, { locale: 'de' });
+    ok(noAddr.status === 400 && /Vorname/.test((await noAddr.json()).error), 'German checkout needs the address (German error)');
+    const badZip = await post(A, deCart, { locale: 'de', address: { ...addr, zip: '1011' } });
+    ok(badZip.status === 400 && /Postleitzahl/.test((await badZip.json()).error), 'German checkout checks the postcode');
+    const usInDe = await post(A, [{ design: 'not-old-seasoned', garment: 'tee', color: 'black', size: 'L', values: {}, qty: 1 }], { locale: 'de', address: addr });
+    ok(usInDe.status === 400, 'US design can’t be ordered in the German store');
+    const deInUs = await post(A, [deCart[0]]);
+    ok(deInUs.status === 400, 'German design can’t be ordered in the US store');
+    const deBadName = await post(A, [{ ...deCart[0], values: { nickname: '', names: ['Lea'] } }], { locale: 'de', address: addr });
+    ok(deBadName.status === 400 && /Bitte ausfüllen/.test((await deBadName.json()).error), 'German validation messages');
+    const deCo = await post(A, deCart, { locale: 'de', address: addr });
+    ok(deCo.status === 200, 'German checkout returns Stripe URL');
+    const dp = state.sessions.at(-1)!;
+    const deSessionId = `cs_test_s${state.sessions.length}`;
+    ok(dp.get('line_items[0][price_data][currency]') === 'eur' && dp.get('line_items[0][price_data][unit_amount]') === '2995', 'tee 29,95 € in euros');
+    ok(dp.get('line_items[1][price_data][unit_amount]') === '4995', 'hoodie 49,95 €');
+    ok(dp.get('discounts[0][coupon]') === 'MENGENRABATT-EUR-799' && state.amountCoupons['MENGENRABATT-EUR-799'] === 799, '2 items → exact 7,99 € bundle saving');
+    ok(!dp.has('line_items[2][quantity]'), 'free shipping over 50 € (no shipping line)');
+    ok(dp.get('locale') === 'de' && dp.get('metadata[store]') === 'de' && dp.get('customer_email') === addr.email, 'German Stripe page with the customer’s email');
+    ok(!dp.has('shipping_address_collection[allowed_countries][0]') && dp.get('payment_intent_data[shipping][address][postal_code]') === '10115', 'address from our order page, not asked again');
+    ok((dp.get('line_items[0][price_data][product_data][description]') ?? '').includes('Größe L') && (dp.get('line_items[0][price_data][product_data][description]') ?? '').includes('Jörg'), 'German item description with umlauts');
+    const deOne = await post(A, [{ design: 'nicht-alt-vintage', garment: 'tee', color: 'black', size: '2XL', values: {}, qty: 1 }], { locale: 'de', address: addr });
+    const dp2 = state.sessions.at(-1)!;
+    ok(deOne.status === 200 && dp2.get('line_items[0][price_data][unit_amount]') === '3195' && dp2.get('line_items[1][price_data][unit_amount]') === '495' && !dp2.has('discounts[0][coupon]'), 'one tee 2XL: 31,95 € + 4,95 € shipping');
+    const deWh = await deliver(A, deSessionId, 'evt_de1');
+    ok(deWh.status === 200, `German webhook accepted (${deWh.status})`);
+    const deOrder = state.printfulOrders.at(-1) as { recipient: { name: string; city: string; zip: string; country_code: string; address1: string }; retail_costs: { currency: string; discount: string; total: string }; items: { retail_price: string }[] };
+    ok(deOrder.recipient.city === 'Berlin' && deOrder.recipient.zip === '10115' && deOrder.recipient.country_code === 'DE' && deOrder.recipient.address1 === 'Lindenstraße 12', 'Printful gets the German address');
+    ok(deOrder.retail_costs.currency === 'EUR' && deOrder.retail_costs.discount === '7.99' && deOrder.retail_costs.total === '71.91', `retail costs in EUR (${JSON.stringify(deOrder.retail_costs)})`);
+    const deMail = state.emails.find((e) => e.to[0] === addr.email);
+    ok(deMail && /^Deine Bestellung SN-/.test(deMail.subject) && deMail.html.includes('Widerrufsbelehrung') && deMail.html.includes('Allgemeine Geschäftsbedingungen') && deMail.html.includes('Mengenrabatt') && deMail.html.includes('Jörg'), `German confirmation with terms + withdrawal notice (${deMail?.subject})`);
+    const deWh2 = await deliver(A, `cs_test_s${state.sessions.length}`, 'evt_de2');
+    const deOrder2 = state.printfulOrders.at(-1) as { retail_costs: { shipping: string; total: string } };
+    ok(deWh2.status === 200 && deOrder2.retail_costs.shipping === '4.95' && deOrder2.retail_costs.total === '36.90', `German single item: shipping line handled (${JSON.stringify(deOrder2.retail_costs)})`);
+    const wd = await fetch(`${A}/api/withdrawal`, { method: 'POST', body: JSON.stringify({ name: 'Gisela Schmidt', email: addr.email, order: 'SN-TEST123', items: '' }) });
+    const wdJson = await wd.json();
+    ok(wd.status === 200 && /Uhr$/.test(wdJson.stamp) && state.emails.some((e) => /^Eingangsbestätigung deines Widerrufs/.test(e.subject)), `withdrawal button: instant receipt (${wdJson.stamp})`);
+    const wdBad = await fetch(`${A}/api/withdrawal`, { method: 'POST', body: JSON.stringify({ name: 'X' }) });
+    ok(wdBad.status === 400, 'withdrawal needs name, email and order number');
+    for (const page of ['/de/', '/de/shop/', '/de/shop/oma/', '/de/shop/mit-namen/', '/de/p/nicht-alt-vintage/', '/de/p/geliebt-von-enkeln/', '/de/warenkorb/', '/de/kasse/', '/de/danke/', '/de/faq/', '/de/impressum/', '/de/agb/', '/de/datenschutz/', '/de/widerrufsbelehrung/', '/de/versand-zahlung/', '/de/widerruf/', '/de/cookie-einstellungen/']) {
+      const r = await fetch(`${A}${page}`);
+      ok(r.status === 200, `page ${page}`);
+    }
+    ok((await fetch(`${A}/de/p/not-old-seasoned/`)).status === 404 && (await fetch(`${A}/p/nicht-alt-vintage/`)).status === 404, 'each store only shows its own designs');
+    const deHome = await (await fetch(`${A}/de/`)).text();
+    ok(deHome.includes('Nicht alt. Erfahren.') && deHome.includes('Vertrag widerrufen') && deHome.includes('Impressum'), 'German home page with withdrawal button + Impressum link');
+    const deProd = await (await fetch(`${A}/de/p/nicht-alt-vintage/`)).text();
+    ok(deProd.includes('Produktsicherheit') && deProd.includes('SINDEN VENTURES') && deProd.includes('inkl. MwSt.') && deProd.includes('"priceCurrency":"EUR"'), 'German product page: VAT note, product safety, euro price data');
+    ok((await (await fetch(`${A}/api/geo`)).json()).country !== undefined, 'geo endpoint answers');
+
     for (const page of ['/', '/shop/', '/shop/grandma/', '/shop/personalized/', '/p/not-old-seasoned/', '/p/loved-by-grandkids/', '/cart/', '/thanks/', '/faq/', '/shipping/', '/returns/', '/privacy/', '/terms/', '/privacy-choices/']) {
       const r = await fetch(`${A}${page}`);
       ok(r.status === 200, `page ${page}`);

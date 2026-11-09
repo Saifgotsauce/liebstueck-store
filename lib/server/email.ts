@@ -26,14 +26,15 @@ export const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 /** Simple, readable email layout in the shop's colors. */
-export function emailLayout(title: string, body: string) {
-  return `<!doctype html><html lang="en"><body style="margin:0;background:#F6F1E7;font-family:Arial,Helvetica,sans-serif;color:#1F1C1A">
+export function emailLayout(title: string, body: string, lang: 'en' | 'de' = 'en') {
+  const help = lang === 'de' ? `Fragen? Antworte einfach auf diese E-Mail oder schreib an ${escapeHtml(brand.email)}.` : `Questions? Just reply to this email or write to ${escapeHtml(brand.email)}.`;
+  return `<!doctype html><html lang="${lang}"><body style="margin:0;background:#F2ECF8;font-family:Arial,Helvetica,sans-serif;color:#1E1626">
 <div style="max-width:560px;margin:0 auto;padding:24px">
-<p style="font-family:Georgia,serif;font-weight:bold;font-size:26px;margin:0 0 16px">${escapeHtml(brand.name)}<span style="color:#D2452B">.</span></p>
+<p style="font-family:Georgia,serif;font-weight:bold;font-size:26px;margin:0 0 16px;color:#5B2A86">${escapeHtml(brand.name)}<span style="color:#E2342B">.</span></p>
 <div style="background:#fff;border-radius:14px;padding:24px;font-size:16px;line-height:1.55">
 <h1 style="font-family:Georgia,serif;font-size:24px;margin:0 0 12px">${escapeHtml(title)}</h1>
 ${body}
 </div>
-<p style="font-size:13px;color:#6B635B;margin-top:16px">Questions? Just reply to this email or write to ${escapeHtml(brand.email)}.</p>
+<p style="font-size:13px;color:#5E5468;margin-top:16px">${help}</p>
 </div></body></html>`;
 }

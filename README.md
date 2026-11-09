@@ -1,4 +1,4 @@
-# Seasoned – funny shirts for women who are aging out loud (US store)
+# Seasoned – funny shirts for women who are aging out loud (US store + German store at /de/)
 
 Next.js shop in the style of Regular Mess: a big catalog of slogan tees and hoodies, shop by vibe,
 live personalization (names, years, ages), bundle savings, Stripe Checkout and automatic
@@ -16,6 +16,15 @@ fulfilment through Printful. The German "Liebstück" version is kept at git tag 
   savings become Stripe coupons (`BUNDLE10`, `BUNDLE15`, created automatically on first use).
 - **Fulfilment** – Stripe webhook → Printful order (idempotent) → confirmation email (Resend)
   → Meta Conversions API. Printful's shipping webhook sends the tracking email.
+
+## German store (/de/)
+
+Same site, same design, German words: 50 German designs (`lib/designs-de.ts`), German copy
+(`lib/messages.tsx`), euro prices, shipping to Germany from Printful's EU facilities, opt-in
+cookie banner, Impressum, AGB, Datenschutz, Widerrufsbelehrung and the "Vertrag widerrufen"
+button. German orders go through our own order page (`/de/kasse/`, "Zahlungspflichtig
+bestellen") and then Stripe for payment only. Research, laws and the launch to-do list:
+[docs/germany.md](docs/germany.md).
 
 ## Add a design (the "AI-run" loop)
 

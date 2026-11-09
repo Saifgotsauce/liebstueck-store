@@ -9,8 +9,8 @@ import path from 'node:path';
 import { Resvg } from '@resvg/resvg-js';
 import sharp from 'sharp';
 import { defaultColor, GARMENTS, getColor, unitPriceCents, type GarmentKey } from '../lib/catalog';
-import { brand, formatPrice, shop } from '../lib/config';
-import { DESIGNS, isPersonalized, type Design } from '../lib/designs';
+import { brand, formatPrice, stores } from '../lib/config';
+import { ALL_DESIGNS as DESIGNS, designLocale, isPersonalized, type Design } from '../lib/designs';
 import { defaultValues, designPalette, getTemplate } from '../lib/design/templates';
 import { esc } from '../lib/design/text';
 import { garmentPhoto, mockupGeometry, type MockupView } from '../lib/mockups';
@@ -63,16 +63,37 @@ function text(svgW: number, svgH: number, body: string) {
 const wordmark = (x: number, y: number, size: number, fill: string, anchor = 'start') =>
   `<text x="${x}" y="${y}" font-family="Fraunces" font-weight="900" font-size="${size}" fill="${fill}" text-anchor="${anchor}">${esc(brand.name)}<tspan fill="${RED}">.</tspan></text>`;
 
+// Text on the images, in the language of the design's store
+const COPY = {
+  en: {
+    personal: 'Personalize it',
+    general: 'Funny shirts, printed to order',
+    from: (p: string) => `T-shirts from ${p}`,
+    free: (p: string) => `Free US shipping over ${p}`,
+    adLine: (personal: boolean, free: string) => `${personal ? 'Personalize it' : 'Buy 2, save 10%'} | Free US shipping over ${free}`,
+  },
+  de: {
+    personal: 'Mit deinem Namen',
+    general: 'Lustige Sprüche-Shirts',
+    from: (p: string) => `T-Shirts ab ${p}`,
+    free: (p: string) => `Gratis Versand ab ${p}`,
+    adLine: (personal: boolean, free: string) => `${personal ? 'Mit deinem Namen' : 'Ab 2 Shirts 10 % sparen'} | Gratis Versand ab ${free}`,
+  },
+};
+
 async function og(d: Design) {
   const img = await shirt(d, 'tee', 'main', 630);
   const personal = isPersonalized(d);
+  const loc = designLocale(d);
+  const c = COPY[loc];
+  const fmt = (x: number) => formatPrice(x, loc);
   const panel = text(
     570,
     630,
     `<rect width="570" height="630" fill="${VIOLET}"/>${wordmark(56, 120, 64, '#fff')}
-<text x="56" y="470" font-family="DM Sans" font-weight="700" font-size="34" fill="#fff">${personal ? 'Personalize it' : 'Funny shirts, printed to order'}</text>
-<text x="56" y="520" font-family="DM Sans" font-weight="500" font-size="30" fill="#E6DAF2">T-shirts from ${formatPrice(unitPriceCents('tee'))}</text>
-<text x="56" y="565" font-family="DM Sans" font-weight="500" font-size="30" fill="#E6DAF2">Free US shipping over ${formatPrice(shop.freeShippingFromCents)}</text>`,
+<text x="56" y="470" font-family="DM Sans" font-weight="700" font-size="34" fill="#fff">${personal ? c.personal : c.general}</text>
+<text x="56" y="520" font-family="DM Sans" font-weight="500" font-size="30" fill="#E6DAF2">${esc(c.from(fmt(unitPriceCents('tee', undefined, loc))))}</text>
+<text x="56" y="565" font-family="DM Sans" font-weight="500" font-size="30" fill="#E6DAF2">${esc(c.free(fmt(stores[loc].freeShippingFromCents)))}</text>`,
   );
   await sharp({ create: { width: 1200, height: 630, channels: 3, background: '#fff' } })
     .composite([{ input: panel, left: 0, top: 0 }, { input: img, left: 570, top: 0 }])
@@ -96,7 +117,7 @@ async function ad(d: Design, kind: 'feed' | 'story') {
     H,
     `<rect width="${W}" height="${H}" fill="${LILAC}"/>
 ${wordmark(W / 2, top + size + band * 0.45, 76, VIOLET, 'middle')}
-<text x="${W / 2}" y="${top + size + band * 0.45 + 62}" font-family="DM Sans" font-weight="700" font-size="34" fill="#1E1626" text-anchor="middle">${isPersonalized(d) ? 'Personalize it' : 'Buy 2, save 10%'} | Free US shipping over ${formatPrice(shop.freeShippingFromCents)}</text>`,
+<text x="${W / 2}" y="${top + size + band * 0.45 + 62}" font-family="DM Sans" font-weight="700" font-size="34" fill="#1E1626" text-anchor="middle">${esc(COPY[designLocale(d)].adLine(isPersonalized(d), formatPrice(stores[designLocale(d)].freeShippingFromCents, designLocale(d))))}</text>`,
   );
   await sharp(bottom)
     .composite([{ input: rounded, left: (W - size) / 2, top }])

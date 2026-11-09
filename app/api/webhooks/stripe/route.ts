@@ -1,8 +1,10 @@
 import crypto from 'node:crypto';
 import { NextResponse } from 'next/server';
 import type Stripe from 'stripe';
-import { brand, formatPrice, siteUrl } from '@/lib/config';
-import { printPlacement } from '@/lib/catalog';
+import { brand, formatPrice as fmtPrice, siteUrl } from '@/lib/config';
+import { colorLabel, garmentText, printPlacement } from '@/lib/catalog';
+import { agbHtml, widerrufsbelehrungHtml } from '@/lib/legal-de';
+import { ROUTES } from '@/lib/locale';
 import { emailLayout, escapeHtml, sendEmail } from '@/lib/server/email';
 import { env, requireEnv } from '@/lib/server/env';
 import { sendPurchaseEvent } from '@/lib/server/meta-capi';
@@ -52,16 +54,29 @@ async function fulfill(sessionId: string) {
   const session = await s.checkout.sessions.retrieve(sessionId);
   const lineItems = await s.checkout.sessions.listLineItems(sessionId, { limit: 100, expand: ['data.price.product'] });
 
-  const shipping =
-    session.collected_information?.shipping_details ??
-    ((session as unknown as { shipping_details?: Stripe.Checkout.Session.CollectedInformation.ShippingDetails }).shipping_details || null);
-  if (!shipping?.address) throw new Error('No shipping address on session');
+  // German orders: the address was entered on our own order page (/de/kasse/) and travels in metadata
+  const de = session.metadata?.store === 'de';
+  const md = session.metadata ?? {};
+  const shipping = de
+    ? {
+        name: md.ship_name ?? '',
+        address: { line1: md.ship_line1 ?? '', line2: md.ship_line2 || null, city: md.ship_city ?? '', postal_code: md.ship_zip ?? '', country: md.ship_country ?? 'DE', state: null },
+      }
+    : (session.collected_information?.shipping_details ??
+      ((session as unknown as { shipping_details?: Stripe.Checkout.Session.CollectedInformation.ShippingDetails }).shipping_details || null));
+  if (!shipping?.address || !shipping.address.line1) throw new Error('No shipping address on session');
   const a = shipping.address;
-  const email = session.customer_details?.email ?? undefined;
+  const email = session.customer_details?.email ?? session.customer_email ?? undefined;
+  const formatPrice = (c: number) => fmtPrice(c, de ? 'de' : 'en');
 
   const items: { clean: CleanItem; unitCents: number }[] = [];
+  let shippingLine = { subtotal: 0, total: 0 };
   for (const li of lineItems.data) {
     const product = li.price?.product as Stripe.Product | undefined;
+    if (product?.metadata?.kind === 'shipping') {
+      shippingLine = { subtotal: li.amount_subtotal ?? 0, total: li.amount_total ?? 0 };
+      continue;
+    }
     const storedJson = product?.metadata?.item;
     if (!storedJson) throw new Error(`Line item ${li.id} has no design metadata`);
     const clean = fromStored(JSON.parse(storedJson) as StoredItem, li.quantity ?? 1);
@@ -72,10 +87,10 @@ async function fulfill(sessionId: string) {
   }
 
   const total = session.amount_total ?? 0;
-  const shippingCents = session.shipping_cost?.amount_total ?? 0;
+  const shippingCents = de ? shippingLine.subtotal : (session.shipping_cost?.amount_total ?? 0);
   const discount = session.total_details?.amount_discount ?? 0;
   const tax = session.total_details?.amount_tax ?? 0;
-  const subtotal = session.amount_subtotal ?? 0;
+  const subtotal = (session.amount_subtotal ?? 0) - shippingLine.subtotal;
   await createOrder({
     externalId,
     recipient: {
@@ -97,7 +112,7 @@ async function fulfill(sessionId: string) {
       files: [{ type: printPlacement(clean.garment.key), url: printFileUrl({ p: clean.design.slug, g: clean.garment.key, c: clean.color.key, v: clean.values }) }],
     })),
     retailCosts: {
-      currency: 'USD',
+      currency: de ? 'EUR' : 'USD',
       subtotal: (subtotal / 100).toFixed(2),
       discount: (discount / 100).toFixed(2),
       shipping: (shippingCents / 100).toFixed(2),
@@ -107,7 +122,9 @@ async function fulfill(sessionId: string) {
   });
 
   const ref = orderRef(sessionId);
-  if (email) {
+  if (email && de) {
+    await sendEmail(email, `Deine Bestellung ${ref} bei ${brand.name}`, germanConfirmation({ ref, items, discount, shippingCents, tax, total, shipping }), undefined);
+  } else if (email) {
     const row = (left: string, right: string, bold = false) =>
       `<tr><td style="padding:6px 0;${bold ? 'font-weight:bold' : ''}">${left}</td><td style="padding:6px 0;text-align:right;white-space:nowrap;${bold ? 'font-weight:bold' : ''}">${right}</td></tr>`;
     const rows = items
@@ -150,6 +167,8 @@ ${row('Total', formatPrice(total), true)}</table>
   if (session.metadata?.marketing === '1') {
     const [firstName, ...rest] = (shipping.name ?? '').split(' ');
     await sendPurchaseEvent({
+      currency: de ? 'EUR' : 'USD',
+      sourcePath: de ? ROUTES.de.thanks : ROUTES.en.thanks,
       eventId: sessionId,
       valueCents: total,
       email,
@@ -164,6 +183,45 @@ ${row('Total', formatPrice(total), true)}</table>
       contentIds: items.map((i) => i.clean.design.slug),
     }).catch((e) => console.error('CAPI failed', e));
   }
+}
+
+type Shipping = { name?: string | null; address: { line1?: string | null; line2?: string | null; postal_code?: string | null; city?: string | null } };
+
+/**
+ * Bestellbestätigung = Vertragsannahme und Vertragsbestätigung auf einem dauerhaften
+ * Datenträger (§ 312f BGB): mit Bestelldaten, AGB und Widerrufsbelehrung inkl. Formular.
+ */
+function germanConfirmation(o: { ref: string; items: { clean: CleanItem; unitCents: number }[]; discount: number; shippingCents: number; tax: number; total: number; shipping: Shipping }) {
+  const eur = (c: number) => fmtPrice(c, 'de');
+  const row = (left: string, right: string, bold = false) =>
+    `<tr><td style="padding:6px 0;${bold ? 'font-weight:bold' : ''}">${left}</td><td style="padding:6px 0;text-align:right;white-space:nowrap;${bold ? 'font-weight:bold' : ''}">${right}</td></tr>`;
+  const rows = o.items
+    .map(({ clean, unitCents }) => {
+      const personal = clean.template.summarize(clean.values);
+      const line = `${garmentText(clean.garment.key, 'de').label}, ${colorLabel(clean.color, 'de')}, Größe ${clean.size}`;
+      return `<tr><td style="padding:10px 0;border-bottom:1px solid #DCCFEA">${clean.qty} × ${escapeHtml(clean.design.title)}<br><span style="color:#5E5468">${escapeHtml(line)}${
+        personal ? `<br>${escapeHtml(personal)}` : ''
+      }</span></td><td style="padding:10px 0;border-bottom:1px solid #DCCFEA;text-align:right;white-space:nowrap">${eur(unitCents * clean.qty)}</td></tr>`;
+    })
+    .join('');
+  const a = o.shipping.address;
+  const legal = (title: string, html: string) =>
+    `<h2 style="font-family:Georgia,serif;font-size:19px;margin:28px 0 8px">${title}</h2><div style="font-size:13px;line-height:1.5;color:#3d3446">${html.replace(/<h2>/g, '<h3 style="font-size:15px;margin:16px 0 4px">').replace(/<\/h2>/g, '</h3>')}</div>`;
+  return emailLayout(
+    'Danke für deine Bestellung!',
+    `<p>Hiermit bestätigen wir deine Bestellung und nehmen sie an. Bestellnummer: <strong>${o.ref}</strong></p>
+<table style="width:100%;border-collapse:collapse">${rows}
+${o.discount ? row('Mengenrabatt', `−${eur(o.discount)}`) : ''}
+${row('Versand', o.shippingCents ? eur(o.shippingCents) : 'kostenlos')}
+${row('Gesamt', eur(o.total), true)}
+${o.tax ? row('darin enthaltene MwSt.', eur(o.tax)) : row('inkl. gesetzlicher MwSt.', '')}</table>
+<p>Lieferung an: ${escapeHtml([o.shipping.name, a.line1, a.line2, `${a.postal_code ?? ''} ${a.city ?? ''}`].filter(Boolean).join(', '))}</p>
+<p>Deine Bestellung wird nur für dich gedruckt und verlässt uns meist innerhalb von 2–5 Werktagen. Sobald sie unterwegs ist, schicken wir dir den Link zur Sendungsverfolgung.</p>
+<p>Etwas stimmt nicht, wenn das Paket ankommt? Antworte innerhalb von 30 Tagen auf diese E-Mail – du bekommst kostenlos Ersatz oder dein Geld zurück. Widerrufen kannst du jederzeit hier: <a href="${siteUrl}${ROUTES.de.withdraw}">Vertrag widerrufen</a>.</p>
+${legal('Widerrufsbelehrung', widerrufsbelehrungHtml)}
+${legal('Allgemeine Geschäftsbedingungen', agbHtml)}`,
+    'de',
+  );
 }
 
 async function notifyOwner(subject: string, html: string) {

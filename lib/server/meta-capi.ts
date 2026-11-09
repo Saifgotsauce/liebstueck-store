@@ -21,6 +21,8 @@ export async function sendPurchaseEvent(input: {
   fbp?: string;
   fbc?: string;
   contentIds: string[];
+  currency?: 'USD' | 'EUR';
+  sourcePath?: string;
 }) {
   if (!env.metaPixelId || !env.metaCapiToken) return;
   const user_data: Record<string, unknown> = {
@@ -41,10 +43,10 @@ export async function sendPurchaseEvent(input: {
         event_time: Math.floor(Date.now() / 1000),
         event_id: input.eventId, // same ID as the browser pixel → Meta de-duplicates
         action_source: 'website',
-        event_source_url: `${siteUrl}/thanks/`,
+        event_source_url: `${siteUrl}${input.sourcePath ?? '/thanks/'}`,
         user_data,
         custom_data: {
-          currency: 'USD',
+          currency: input.currency ?? 'USD',
           value: input.valueCents / 100,
           content_type: 'product',
           content_ids: input.contentIds,

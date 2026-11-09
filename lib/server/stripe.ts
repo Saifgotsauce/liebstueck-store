@@ -33,6 +33,23 @@ export async function bundleCoupon(s: Stripe, percent: number) {
   throw new Error(`Stripe coupon ${id} exists but is not a valid ${percent}% coupon – delete it in the Stripe dashboard.`);
 }
 
+/**
+ * German store: the bundle saving as an exact euro amount (e.g. "MENGENRABATT-599" = 5,99 €),
+ * so the charge matches the cart to the cent and the shipping line is never discounted.
+ */
+export async function amountCoupon(s: Stripe, cents: number, currency: 'eur' | 'usd', name: string) {
+  const id = `MENGENRABATT-${currency.toUpperCase()}-${cents}`;
+  try {
+    const c = await s.coupons.retrieve(id);
+    if (c.valid && c.amount_off === cents && c.currency === currency) return id;
+  } catch (e) {
+    if ((e as { code?: string }).code !== 'resource_missing') throw e;
+    await s.coupons.create({ id, amount_off: cents, currency, duration: 'once', name });
+    return id;
+  }
+  throw new Error(`Stripe coupon ${id} exists but doesn't match – delete it in the Stripe dashboard.`);
+}
+
 /** Short, human-friendly order number derived from the Checkout Session ID. */
 export function orderRef(sessionId: string) {
   let h = 0;
