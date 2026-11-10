@@ -361,7 +361,7 @@ async function main() {
     ok(co.status === 200 && String(coJson.url).includes('cs_test_s1'), 'checkout returns Stripe URL');
     const p = state.sessions[0];
     ok(p.get('line_items[0][price_data][unit_amount]') === '3495' && p.get('line_items[0][price_data][currency]') === 'usd', 'tee $34.95 from catalog');
-    ok(p.get('line_items[1][price_data][unit_amount]') === '4495', 'hoodie $44.95 from catalog');
+    ok(p.get('line_items[1][price_data][unit_amount]') === '4995', 'hoodie $49.95 from catalog');
     ok(p.get('discounts[0][coupon]') === 'BUNDLE10' && state.coupons.BUNDLE10 === 10, '2 items → 10% bundle coupon (created on first use)');
     ok(p.get('shipping_options[0][shipping_rate_data][fixed_amount][amount]') === '0', 'free shipping over $50 after savings');
     ok(p.get('shipping_address_collection[allowed_countries][0]') === 'US' && !p.has('shipping_address_collection[allowed_countries][1]'), 'ships to the US only');
@@ -377,6 +377,10 @@ async function main() {
     // Three items → 15%
     const three = await post(A, [{ design: 'grill-nap-repeat', garment: 'tee', color: 'black', size: 'L', values: {}, qty: 3 }]);
     ok(three.status === 200 && state.sessions[2].get('discounts[0][coupon]') === 'BUNDLE15', '3 items → 15% bundle coupon');
+
+    // One hoodie on its own: under $50, but hoodies always ship free (US)
+    const hood = await post(A, [{ design: 'grill-nap-repeat', garment: 'hoodie', color: 'black', size: 'L', values: {}, qty: 1 }]);
+    ok(hood.status === 200 && state.sessions.at(-1)!.get('shipping_options[0][shipping_rate_data][fixed_amount][amount]') === '0', 'single hoodie ships free');
 
     console.log('\n4) Stripe webhook → Printful order');
     const payload = JSON.stringify({ id: 'evt_1', object: 'event', type: 'checkout.session.completed', data: { object: { id: 'cs_test_s1', object: 'checkout.session', payment_status: 'paid' } } });
@@ -394,7 +398,7 @@ async function main() {
     ok(order?.recipient.city === 'Columbus' && order.recipient.country_code === 'US' && order.recipient.state_code === 'OH', 'US recipient address passed through');
     ok(order?.items[0].variant_id === navyL.id && order.items[0].retail_price === '31.45', `tee: right variant + price paid after 10% (${order?.items[0].retail_price})`);
     ok(order?.items[1].variant_id === synced.garments.hoodie.variants.forest.XL.id, 'hoodie: right variant');
-    ok(order?.retail_costs.currency === 'USD' && order.retail_costs.discount === '7.99' && order.retail_costs.total === '71.91', `retail costs in USD with discount (${JSON.stringify(order?.retail_costs)})`);
+    ok(order?.retail_costs.currency === 'USD' && order.retail_costs.discount === '8.49' && order.retail_costs.total === '76.41', `retail costs in USD with discount (${JSON.stringify(order?.retail_costs)})`);
 
     console.log('\n5) Print files');
     ok(order.items[0].files[0].type === 'front_large' && order.items[1].files[0].type === 'front', "order uses each garment's placement");

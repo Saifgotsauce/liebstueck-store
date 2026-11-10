@@ -13,7 +13,8 @@ export default function Shipping() {
       <h2>What it costs</h2>
       <ul>
         <li>Orders over {formatPrice(shop.freeShippingFromCents)}: free standard shipping.</li>
-        <li>Orders under {formatPrice(shop.freeShippingFromCents)}: {formatPrice(shop.shippingCents)} flat.</li>
+        <li>Any order with a hoodie in it: free standard shipping, whatever the total.</li>
+        <li>T-shirt orders under {formatPrice(shop.freeShippingFromCents)}: {formatPrice(shop.shippingCents)} flat.</li>
       </ul>
       <p>The free-shipping total is counted after bundle savings.</p>
       <h2>Holiday orders</h2>

@@ -54,7 +54,7 @@ export default function HomeUS() {
               </Link>
             </div>
             <ul className="mt-7 space-y-2 text-[1.05rem]">
-              {[`T-shirts ${fmt(unitPriceCents('tee', undefined, locale))}. Free US shipping over ${free}`, `At your door in about a week, with tracking`, `We mess up, we fix it free`].map((x) => (
+              {[`T-shirts ${fmt(unitPriceCents('tee', undefined, locale))}. Free US shipping over ${free}`, `Hoodies ${fmt(unitPriceCents('hoodie', undefined, locale))}, always shipped free`, `At your door in about a week, with tracking`, `We mess up, we fix it free`].map((x) => (
                 <li key={x} className="flex gap-2.5">
                   <IconCheck className="mt-1 h-5 w-5 shrink-0 text-red" />
                   <span>{x}</span>
@@ -83,7 +83,7 @@ export default function HomeUS() {
         <div className="wrap py-9">
           <ul className="grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { Icon: IconTruck, t: 'At your door in about a week', d: `Printed just for you in 2–5 days, then shipped with tracking. Free over ${free}.` },
+              { Icon: IconTruck, t: 'At your door in about a week', d: `Printed just for you in 2–5 days, then shipped with tracking. Free over ${free} or with any hoodie.` },
               { Icon: IconShield, t: 'We mess up, we pay', d: 'Misprint, damage or a lost package: a new shirt or your money back. Nothing to send back.' },
               { Icon: IconLock, t: 'Pay safely', d: 'Card, Apple Pay or Google Pay through Stripe. We never see your card number.' },
               { Icon: IconChat, t: 'Real humans answer', d: 'Email us and a real person replies, usually within a day. No bots, no runaround.' },

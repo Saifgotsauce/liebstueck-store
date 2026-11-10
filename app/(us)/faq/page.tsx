@@ -38,7 +38,7 @@ const QA: { q: string; a: React.ReactNode }[] = [
     q: 'How long does it take?',
     a: (
       <>
-        Most orders arrive {shop.deliveryMinDays}–{shop.deliveryMaxDays} business days after you order: 2–5 days to print, then 3–4 days in the mail. Shipping is free over {formatPrice(shop.freeShippingFromCents)}. <Link href="/shipping/">Shipping details</Link>
+        Most orders arrive {shop.deliveryMinDays}–{shop.deliveryMaxDays} business days after you order: 2–5 days to print, then 3–4 days in the mail. Shipping is free over {formatPrice(shop.freeShippingFromCents)}, and always free on hoodies. <Link href="/shipping/">Shipping details</Link>
       </>
     ),
   },

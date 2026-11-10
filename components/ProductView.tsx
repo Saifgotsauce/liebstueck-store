@@ -209,7 +209,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
     vibe.occasion,
     personalized ? T.benefitName : T.benefitPrint,
     T.benefitFabric(garment),
-    T.benefitShipping(fmt(store.freeShippingFromCents)),
+    locale === 'en' && garment === 'hoodie' ? 'Free US shipping on every hoodie' : T.benefitShipping(fmt(store.freeShippingFromCents)),
   ];
 
   const featureText = T.features(garment);
@@ -526,7 +526,9 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
         )}
 
         <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-4 border-y border-lilac-line py-5 text-[0.9rem]">
-          {T.trust(fmt(store.freeShippingFromCents)).map((x, i) => (
+          {T.trust(fmt(store.freeShippingFromCents))
+            .map((x, i) => (i === 1 && locale === 'en' && garment === 'hoodie' ? { ...x, text: 'On every hoodie' } : x))
+            .map((x, i) => (
             <Trust
               key={x.title}
               Icon={[IconLock, IconTruck, IconShield, IconCalendar][i]}

@@ -53,7 +53,7 @@ export async function POST(req: Request) {
   const subtotal = items.reduce((s, i) => s + i.unitCents * i.qty, 0);
   const percent = bundlePercent(count, locale);
   const discount = Math.round((subtotal * percent) / 100);
-  const shipping = shippingFor(subtotal - discount, locale);
+  const shipping = shippingFor(subtotal - discount, locale, items.some((i) => i.garment.key === 'hoodie'));
   const marketing = body?.marketingConsent === true;
   const tracking = {
     marketing: marketing ? '1' : '0',

@@ -39,6 +39,8 @@ export type Store = {
   vatIncluded: boolean;
   shippingCents: number;
   freeShippingFromCents: number;
+  /** Any order with a hoodie in it ships free, whatever the total. */
+  freeShippingWithHoodie: boolean;
   bundles: Bundle[];
   deliveryMinDays: number;
   deliveryMaxDays: number;
@@ -70,6 +72,7 @@ export const stores: Record<Locale, Store> = {
     vatIncluded: false,
     shippingCents: 495,
     freeShippingFromCents: 5000,
+    freeShippingWithHoodie: true,
     bundles: BUNDLES,
     deliveryMinDays: 5,
     deliveryMaxDays: 9,
@@ -87,6 +90,7 @@ export const stores: Record<Locale, Store> = {
     vatIncluded: true,
     shippingCents: 495,
     freeShippingFromCents: 5000,
+    freeShippingWithHoodie: false,
     bundles: BUNDLES,
     // printed in Printful's EU facilities (2–5 days) + 4–7 days to Germany
     deliveryMinDays: 6,

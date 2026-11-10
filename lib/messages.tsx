@@ -51,7 +51,7 @@ const en = {
     items: (two: { percent: number; minItems: number }, three: { percent: number; minItems: number }, free: string) => [
       { big: `Save ${two.percent}%`, small: `when you buy ${two.minItems} shirts` },
       { big: `Save ${three.percent}%`, small: `when you buy ${three.minItems} or more` },
-      { big: 'Free shipping', small: `on US orders over ${free}` },
+      { big: 'Free shipping', small: `over ${free}, or with any hoodie` },
     ],
     note: 'Mix and match any shirts. Savings apply automatically in your cart.',
   },

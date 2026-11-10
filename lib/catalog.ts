@@ -73,7 +73,7 @@ export const GARMENTS: Record<GarmentKey, Garment> = {
     model: 'Gildan 18500 unisex heavy blend hoodie',
     material: '50% cotton, 50% polyester fleece – warm and cozy',
     fit: 'Unisex, classic fit with front pouch pocket and drawstring hood.',
-    priceCents: 4495,
+    priceCents: 4995, // $49.95, and every order with a hoodie ships free (stores.en.freeShippingWithHoodie)
     sizeExtraCents: { '2XL': 300, '3XL': 400, '4XL': 500 },
     sizes: ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'],
     colors: [

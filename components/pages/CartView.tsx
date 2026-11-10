@@ -155,7 +155,7 @@ export default function CartView() {
                 <dd>{formatPrice(totals.total)}</dd>
               </div>
             </dl>
-            {toFree > 0 && (
+            {toFree > 0 && totals.shipping > 0 && (
               <div className="mt-4">
                 <p className="text-[0.95rem]">{C.toFree(formatPrice(toFree))}</p>
                 <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-white" aria-hidden="true">

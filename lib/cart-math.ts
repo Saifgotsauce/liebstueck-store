@@ -21,9 +21,11 @@ export function nextBundle(itemCount: number, locale: Locale = 'en') {
   return tiers.find((b) => itemCount < b.minItems) ?? null;
 }
 
-export function shippingFor(merchandiseCents: number, locale: Locale = 'en') {
+/** Shipping for an order: free over the threshold, and (US) free whenever there's a hoodie in it. */
+export function shippingFor(merchandiseCents: number, locale: Locale = 'en', hasHoodie = false) {
   const s = stores[locale];
-  return merchandiseCents === 0 || merchandiseCents >= s.freeShippingFromCents ? 0 : s.shippingCents;
+  if (merchandiseCents === 0 || merchandiseCents >= s.freeShippingFromCents) return 0;
+  return hasHoodie && s.freeShippingWithHoodie ? 0 : s.shippingCents;
 }
 
 export function cartTotals(lines: PricedLine[], locale: Locale = 'en') {
@@ -32,6 +34,6 @@ export function cartTotals(lines: PricedLine[], locale: Locale = 'en') {
   const percent = bundlePercent(count, locale);
   const discount = Math.round((subtotal * percent) / 100);
   const merchandise = subtotal - discount;
-  const shipping = shippingFor(merchandise, locale);
+  const shipping = shippingFor(merchandise, locale, lines.some((l) => l.garment === 'hoodie' && l.qty > 0));
   return { count, subtotal, percent, discount, merchandise, shipping, total: merchandise + shipping };
 }
