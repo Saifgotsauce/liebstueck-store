@@ -9,7 +9,7 @@ export default function PrivacyChoices() {
     <div className="wrap max-w-2xl pt-10 sm:pt-14">
       <h1 className="text-[2.6rem] sm:text-[3.2rem]">Your privacy choices</h1>
       <p className="mt-4 text-[1.1rem]">
-        We use the Meta Pixel to see which ads lead to visits and orders. You can turn that off here. The shop works exactly the same either way. Details are in our <Link href="/privacy/" className="font-bold text-violet">privacy policy</Link>.
+        We use the Meta Pixel, Google Analytics and Microsoft Clarity to see which ads lead to visits and orders and how people use the shop. You can turn all of that off here. The shop works exactly the same either way. Details are in our <Link href="/privacy/" className="font-bold text-violet">privacy policy</Link>.
       </p>
       {ready && (
         <div className="mt-8 rounded-2xl bg-lilac p-5" role="status">

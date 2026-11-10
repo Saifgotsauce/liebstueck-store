@@ -13,13 +13,13 @@ export default function Privacy() {
       <ul>
         <li>Order details: your name, email, shipping address, phone number if you give one, what you bought and any personalization you typed.</li>
         <li>Payment: handled entirely by Stripe. We see the payment status and the last digits of your card, never the full card number.</li>
-        <li>Browsing: your cart and your privacy choice are stored in your browser. If you haven’t opted out, the Meta Pixel records pages you view and purchases so we can measure and improve our ads.</li>
+        <li>Browsing: your cart and your privacy choice are stored in your browser. If you haven’t opted out, the Meta Pixel, Google Analytics and Microsoft Clarity record how you use the shop (pages you view, how far you scroll, what you click, how long you stay, where you leave, and purchases) so we can measure our ads and improve the site. Clarity can record your visit as a replay; it masks what you type into form fields.</li>
       </ul>
       <h2>Why we use it</h2>
       <ul>
         <li>To make, ship and support your order, including confirmation and tracking emails.</li>
         <li>To prevent fraud and keep records required for taxes and accounting.</li>
-        <li>To measure our advertising on Facebook and Instagram, unless you opt out.</li>
+        <li>To measure our advertising on Facebook and Instagram and to find and fix problems on the site, unless you opt out.</li>
       </ul>
       <h2>Who we share it with</h2>
       <p>Only the companies that help us run the shop, each for its own job:</p>
@@ -29,6 +29,8 @@ export default function Privacy() {
         <li>Resend (sending order emails)</li>
         <li>Vercel (website hosting)</li>
         <li>Meta Platforms (ad measurement through the Meta Pixel and Conversions API, unless you opt out; contact details are sent hashed)</li>
+        <li>Google (Google Analytics, site statistics, unless you opt out)</li>
+        <li>Microsoft (Clarity, session replays and heatmaps, unless you opt out)</li>
       </ul>
       <p>We don’t sell your personal information for money. Sharing browsing and purchase data with Meta for advertising may count as “sharing” or “targeted advertising” under some state privacy laws, and you can opt out of it below.</p>
       <h2>Your choices</h2>

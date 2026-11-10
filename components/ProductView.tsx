@@ -7,6 +7,8 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { trackEvent } from '@/lib/analytics';
+import { useConsent } from '@/lib/consent';
 import { GARMENTS, GARMENT_KEYS, colorLabel, defaultColor, garmentText, isAvailable, regularPriceCents, sizeExtraCents, unitPriceCents, type GarmentKey } from '@/lib/catalog';
 import { legalDe } from '@/lib/config';
 import { useLocale } from '@/lib/i18n';
@@ -53,6 +55,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const T = M.pdp;
   const SET_PERCENT = bundlePercent(3, locale);
 
+  const { marketing } = useConsent();
   const [garment, setGarment] = useState<GarmentKey>('tee');
   const [color, setColor] = useState(() => defaultColor(design, 'tee', locale));
   const [size, setSize] = useState<string | null>(null);
@@ -85,8 +88,14 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
     }
     if (Object.keys(pre).length) setValues((cur) => ({ ...cur, ...pre }));
     setDates({ window: deliveryWindow(locale), holiday: holidayDeadline(locale) });
+  }, [slug, template.fields, locale]);
+
+  // Waits for the visitor's tracking choice: the pixel isn't on the page yet when this component first mounts,
+  // so firing straight away would lose the view for anyone who lands directly on a product page (e.g. from an ad).
+  useEffect(() => {
+    if (!marketing) return;
     track('ViewContent', { content_ids: [slug], content_type: 'product', value: unitPriceCents('tee', undefined, locale) / 100, currency: store.currency });
-  }, [slug, template.fields, locale, store.currency]);
+  }, [marketing, slug, locale, store.currency]);
 
   // Sticky add-to-cart bar on phones whenever the main button is off screen
   useEffect(() => {
@@ -118,6 +127,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
     const n = Math.max(0, Math.min(slides.length - 1, i));
     el.scrollTo({ left: n * el.clientWidth, behavior: 'smooth' });
     setSlide(n);
+    trackEvent('PhotoViewed', { product: slug, photo: n + 1 });
   }
 
   const onScroll = useCallback(() => {
@@ -127,6 +137,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
 
   function pickGarment(k: GarmentKey) {
     setGarment(k);
+    trackEvent('GarmentSelected', { product: slug, garment: k });
     const keep = GARMENTS[k].colors.some((c) => c.key === color) && isAvailable(k, color, undefined, locale);
     if (!keep) setColor(defaultColor(design, k, locale));
     if (size && !GARMENTS[k].sizes.includes(size)) setSize(null);
@@ -141,6 +152,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   /** Personalization and size are filled in; otherwise show what's missing. */
   function ready() {
     if (!check.ok) {
+      trackEvent('AddToCartBlocked', { product: slug, reason: 'missing_personalization', fields: Object.keys(check.errors).join(',') });
       setErrors(check.errors);
       const el = document.getElementById(`f-${Object.keys(check.errors)[0]}`);
       el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -148,6 +160,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
       return false;
     }
     if (!size) {
+      trackEvent('AddToCartBlocked', { product: slug, reason: 'no_size_chosen' });
       setSizeError(true);
       sizeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return false;
@@ -178,6 +191,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
     if (!ready() || !size) return;
     const blocked = setItems.find((x) => !isAvailable(garment, x.color, size, locale));
     if (blocked) {
+      trackEvent('AddToCartBlocked', { product: slug, reason: 'set_item_unavailable', size });
       alertSet(T.notAvailable(blocked.d.title, size));
       return;
     }
@@ -371,7 +385,10 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
                   aria-checked={color === c.key}
                   aria-label={colorLabel(c, locale)}
                   title={colorLabel(c, locale)}
-                  onClick={() => setColor(c.key)}
+                  onClick={() => {
+                    setColor(c.key);
+                    trackEvent('ColorSelected', { product: slug, color: c.key });
+                  }}
                   className={`h-11 w-11 rounded-full border-2 ${color === c.key ? 'border-violet ring-2 ring-violet ring-offset-2' : 'border-lilac-line'}`}
                   style={{ backgroundColor: c.hex }}
                 />
@@ -401,6 +418,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
                   className="chip flex-col leading-tight"
                   onClick={() => {
                     setSize(s);
+                    trackEvent('SizeSelected', { product: slug, garment, size: s });
                     setSizeError(false);
                     alertSet('');
                   }}
@@ -428,7 +446,10 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
               const on = qty === n;
               return (
                 <label key={n} className={`relative flex cursor-pointer items-center gap-3 rounded-2xl border-2 px-4 py-3.5 ${on ? 'border-violet bg-lilac' : 'border-lilac-line bg-white hover:border-violet'}`}>
-                  <input type="radio" name="tier" checked={on} onChange={() => setQty(n)} className="h-5 w-5 shrink-0 accent-violet" />
+                  <input type="radio" name="tier" checked={on} onChange={() => {
+                      setQty(n);
+                      trackEvent('QuantitySelected', { product: slug, qty: n });
+                    }} className="h-5 w-5 shrink-0 accent-violet" />
                   <span className="flex-1">
                     <span className="font-bold">{T.pieces(n, garment)}</span>
                     {pct > 0 && <span className="ml-2 rounded-full bg-red px-2 py-0.5 text-[0.78rem] font-bold text-white">{T.save(pct)}</span>}
@@ -671,7 +692,10 @@ function SizeGuide({ garment, locale, T }: { garment: GarmentKey; locale: Locale
   const unit = (inches: number) => (T.inches ? `${inches}″` : `${Math.round(inches * 2.54)} cm`);
   return (
     <>
-      <button type="button" className="font-bold text-violet underline" onClick={() => ref.current?.showModal()}>
+      <button type="button" className="font-bold text-violet underline" onClick={() => {
+            trackEvent('SizeGuideOpened', { garment });
+            ref.current?.showModal();
+          }}>
         {T.sizeGuide}
       </button>
       <dialog ref={ref} className="m-auto w-[min(32rem,92vw)] rounded-2xl p-0 backdrop:bg-ink/50" onClick={(e) => e.target === ref.current && ref.current?.close()}>

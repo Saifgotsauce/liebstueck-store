@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { trackEvent } from '@/lib/analytics';
 import ShirtPreview from '@/components/ShirtPreview';
 import { GARMENTS, colorLabel, garmentText } from '@/lib/catalog';
 import { isDemo } from '@/lib/config';
@@ -24,6 +25,11 @@ export default function CartView() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    if (ready && items.length) trackEvent('CartViewed', { items: totals.count, value: totals.total / 100 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready]);
+
   async function checkout() {
     setBusy(true);
     setError('');
@@ -38,6 +44,7 @@ export default function CartView() {
       if (!res.ok || !data.url) throw new Error(data.error || C.error);
       window.location.href = data.url;
     } catch (e) {
+      trackEvent('CheckoutError', { message: (e as Error).message.slice(0, 80) });
       setError((e as Error).message);
       setBusy(false);
     }
@@ -89,15 +96,24 @@ export default function CartView() {
                   {personal && <p className="mt-0.5 text-[0.95rem] text-ink-soft">{personal}</p>}
                   <div className="mt-3 flex items-center gap-4">
                     <div className="flex items-center rounded-full ring-2 ring-lilac-line" role="group" aria-label={C.qtyOf(d.title)}>
-                      <button type="button" className="h-10 w-10 text-lg font-bold" onClick={() => setQty(i.id, i.qty - 1)} aria-label={C.less}>
+                      <button type="button" className="h-10 w-10 text-lg font-bold" onClick={() => {
+                          trackEvent('CartQuantityChanged', { direction: 'down' });
+                          setQty(i.id, i.qty - 1);
+                        }} aria-label={C.less}>
                         −
                       </button>
                       <span className="w-7 text-center font-bold">{i.qty}</span>
-                      <button type="button" className="h-10 w-10 text-lg font-bold" onClick={() => setQty(i.id, i.qty + 1)} aria-label={C.more}>
+                      <button type="button" className="h-10 w-10 text-lg font-bold" onClick={() => {
+                          trackEvent('CartQuantityChanged', { direction: 'up' });
+                          setQty(i.id, i.qty + 1);
+                        }} aria-label={C.more}>
                         +
                       </button>
                     </div>
-                    <button type="button" className="font-bold text-ink-soft underline hover:text-red" onClick={() => remove(i.id)}>
+                    <button type="button" className="font-bold text-ink-soft underline hover:text-red" onClick={() => {
+                        trackEvent('CartItemRemoved', { product: i.design });
+                        remove(i.id);
+                      }}>
                       {C.remove}
                     </button>
                   </div>
