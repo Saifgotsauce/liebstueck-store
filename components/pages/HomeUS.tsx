@@ -1,14 +1,15 @@
 import Link from 'next/link';
 import Coupons from '@/components/Coupons';
 import HeroTry from '@/components/HeroTry';
-import { IconCheck, IconLock, IconShield, IconShirt, IconTruck } from '@/components/Icons';
+import { IconChat, IconCheck, IconLock, IconShield, IconTruck } from '@/components/Icons';
 import ProductCard, { ProductGrid } from '@/components/ProductCard';
 import ShirtPreview from '@/components/ShirtPreview';
 import { ContactCard, OrderSteps, PaymentLogos, Photo } from '@/components/Trust';
 import { defaultColor, unitPriceCents } from '@/lib/catalog';
-import { formatPrice, promise, stores } from '@/lib/config';
+import { formatPrice, stores } from '@/lib/config';
 import { holidayDeadline } from '@/lib/dates';
-import { designsFor, designsInVibe, vibesFor } from '@/lib/designs';
+import { designsFor, designsInVibe, getDesign, vibesFor } from '@/lib/designs';
+import { MODEL_PHOTOS } from '@/lib/model-photos';
 import { defaultValues, getTemplate } from '@/lib/design/templates';
 import { ROUTES, productPath, shopPath } from '@/lib/locale';
 import { MESSAGES } from '@/lib/messages';
@@ -26,8 +27,8 @@ export default function HomeUS() {
   const DESIGNS = designsFor(locale);
   const VIBES = vibesFor(locale);
   const holiday = holidayDeadline(locale);
-  const featured = DESIGNS.filter((d) => d.featured && !(holiday && d.vibe === 'holiday'));
-  const swap = fmt(promise.sizeSwapCents);
+  // The shirts with photos on real-looking women lead (the same ten the ads test).
+  const featured = Object.keys(MODEL_PHOTOS).map((slug) => getDesign(slug)!).filter(Boolean);
   const free = fmt(store.freeShippingFromCents);
   const two = store.bundles.find((b) => b.minItems === 2)?.percent;
   const three = store.bundles.find((b) => b.minItems === 3)?.percent;
@@ -42,18 +43,18 @@ export default function HomeUS() {
               Not old. Seasoned.
             </h1>
             <p className="mt-5 max-w-xl text-[1.2rem] leading-relaxed">
-              Funny shirts for women who are getting older out loud. Big, bold print your friends can read across the room, on soft cotton you’ll want to wear twice a week.
+              Funny shirts for women who stopped asking permission years ago. Big, loud print your friends can read across the room. Soft cotton. Zero apologies.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Link href={routes.shop} className="btn btn-red">
                 Shop all {DESIGNS.length} shirts
               </Link>
               <Link href={shopPath(locale, 'personalized')} className="btn btn-line">
-                Add a name or a year
+                Put your name on one
               </Link>
             </div>
             <ul className="mt-7 space-y-2 text-[1.05rem]">
-              {[`T-shirts ${fmt(unitPriceCents('tee', undefined, locale))}. Free US shipping over ${free}`, `At your door in about a week, with tracking`, `Wrong size? We’ll send the right one for ${swap}`].map((x) => (
+              {[`T-shirts ${fmt(unitPriceCents('tee', undefined, locale))}. Free US shipping over ${free}`, `At your door in about a week, with tracking`, `We mess up, we fix it free`].map((x) => (
                 <li key={x} className="flex gap-2.5">
                   <IconCheck className="mt-1 h-5 w-5 shrink-0 text-red" />
                   <span>{x}</span>
@@ -83,9 +84,9 @@ export default function HomeUS() {
           <ul className="grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
               { Icon: IconTruck, t: 'At your door in about a week', d: `Printed just for you in 2–5 days, then shipped with tracking. Free over ${free}.` },
-              { Icon: IconShirt, t: 'Wrong size? Keep it', d: `We send the right size for ${swap}. No post office, nothing to send back.` },
-              { Icon: IconShield, t: 'Our mistake? It’s free', d: 'Misprint, damage or a lost package: we replace it or refund you.' },
+              { Icon: IconShield, t: 'We mess up, we pay', d: 'Misprint, damage or a lost package: a new shirt or your money back. Nothing to send back.' },
               { Icon: IconLock, t: 'Pay safely', d: 'Card, Apple Pay or Google Pay through Stripe. We never see your card number.' },
+              { Icon: IconChat, t: 'Real humans answer', d: 'Email us and a real person replies, usually within a day. No bots, no runaround.' },
             ].map(({ Icon, t: title, d }) => (
               <li key={title} className="flex gap-4">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-lilac text-violet">
@@ -111,7 +112,7 @@ export default function HomeUS() {
       <section className="bg-lilac py-10" aria-labelledby="offers">
         <div className="wrap">
           <h2 id="offers" className="text-[2rem] sm:text-[2.3rem]">
-            Buy more, save more
+            Buy more, pay less. Obviously.
           </h2>
           <div className="mt-5">
             <Coupons locale={locale} />
@@ -142,13 +143,13 @@ export default function HomeUS() {
       <section className="wrap mt-16" aria-labelledby="start">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h2 id="start" className="text-[2.2rem] sm:text-[2.6rem]">
-            Start here
+            Start here. Pick your attitude.
           </h2>
           <Link href={routes.shop} className="font-bold text-violet">
             {H.seeAll(DESIGNS.length)}
           </Link>
         </div>
-        <ul className="mt-6 grid grid-cols-2 gap-x-3.5 gap-y-8 sm:gap-x-5 md:grid-cols-3 lg:grid-cols-4">
+        <ul className="mt-6 grid grid-cols-2 gap-x-3.5 gap-y-8 sm:gap-x-5 lg:grid-cols-5">
           {featured.map((d, i) => (
             <ProductCard key={d.slug} design={d} eager={i < 4} />
           ))}
@@ -169,10 +170,10 @@ export default function HomeUS() {
               Wear it to brunch. Watch the table lose it.
             </h2>
             <p className="mt-4 text-[1.15rem] leading-relaxed">
-              Our shirts are made for the friends who make you laugh till you cry. The print is big enough to read across the table, and the jokes are about doing exactly what you want, never about getting “over the hill”.
+              Made for the friends who make you laugh till you snort. The print’s big enough to read across the table, and every joke is about doing exactly what you want. None of that “over the hill” nonsense.
             </p>
             <p className="mt-4 text-[1.15rem] leading-relaxed">
-              Getting one for the whole group? Buy 2 and save {two}%. Buy 3 or more and save {three}%. It comes off automatically in your cart.
+              Getting one for the whole crew? Buy 2 and save {two}%. Buy 3 or more and save {three}%. It comes off in your cart, no codes.
             </p>
             <Link href={routes.shop} className="btn btn-red mt-7">
               Shop all {DESIGNS.length} shirts
@@ -184,7 +185,7 @@ export default function HomeUS() {
       {/* Shop by vibe */}
       <section className="wrap mt-20" aria-labelledby="vibes">
         <h2 id="vibes" className="text-[2.2rem] sm:text-[2.6rem]">
-          Find your kind of funny
+          Find your kind of trouble
         </h2>
         <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {VIBES.map((v) => {
@@ -212,10 +213,10 @@ export default function HomeUS() {
         <div className="wrap grid items-center gap-10 py-14 lg:grid-cols-[1fr_1fr] lg:gap-14">
           <div>
             <h2 id="personal" className="text-[2.4rem] text-white sm:text-[2.8rem]">
-              Put your name on it.
+              Put your name on it. Loudly.
             </h2>
             <p className="mt-4 max-w-md text-[1.15rem] leading-relaxed text-white">
-              What the grandkids call you. The year you were born. The year you finally retired. Type it in, watch the shirt change, and we print exactly what you see. Buying for someone else? Use her name.
+              What the grandkids call you. The year you were born (we won’t tell). The year you finally quit. Type it in, watch the shirt change, and we print exactly what you see. Buying for someone else? Use her name.
             </p>
             <p className="mt-4 max-w-md text-[1.15rem] leading-relaxed text-white">
               Not a grandma? Try{' '}
@@ -241,12 +242,12 @@ export default function HomeUS() {
         <div className="grid items-center gap-8 lg:grid-cols-[1fr_1.2fr] lg:gap-14">
           <div className="order-2 lg:order-1">
             <h2 id="gifts" className="text-[2.3rem] sm:text-[2.8rem]">
-              Buying for your mom, your sister or your best friend?
+              Buying for your mom, your sister or the friend who says what everyone’s thinking?
             </h2>
             <ul className="mt-6 space-y-5">
               {[
                 { t: 'Send it straight to her.', d: 'Put her name and address as the shipping address at checkout. You get the confirmation and tracking emails.' },
-                { t: 'Not sure of her size?', d: `If it doesn’t fit, we send the right size for ${swap} and she keeps the first one. Nothing to send back.` },
+                { t: 'Not sure of her size?', d: 'Pick what she wears in everyday tees. Most women take their usual size, and every shirt has a size chart in inches.' },
                 ...(holiday ? [{ t: `Order by ${holiday.label} for ${holiday.name}.`, d: 'That’s our printer’s deadline for standard US shipping before the holidays.' }] : []),
               ].map((x) => (
                 <li key={x.t} className="flex gap-3.5">
@@ -281,7 +282,7 @@ export default function HomeUS() {
             <h2 id="after" className="text-[2.3rem] sm:text-[2.8rem]">
               What happens after you order
             </h2>
-            <p className="mt-3 text-[1.15rem]">No surprises. Here’s every step, from your click to your front door.</p>
+            <p className="mt-3 text-[1.15rem]">No surprises. You’ve had enough of those. Here’s every step, from your click to your front door.</p>
             <OrderSteps className="mt-7" tone="onLilac" />
           </div>
           <div className="flex flex-col gap-6">
@@ -315,11 +316,11 @@ export default function HomeUS() {
       {/* ── The questions she asks first ───────────────────────────────────────── */}
       <section className="wrap mt-20" aria-labelledby="questions">
         <h2 id="questions" className="text-[2.2rem] sm:text-[2.6rem]">
-          The questions people ask us first
+          Fair questions. Straight answers.
         </h2>
         <dl className="mt-7 grid gap-x-12 gap-y-7 md:grid-cols-2">
           {[
-            { q: 'Is Seasoned a real shop?', a: 'Yes. We’re a small, independent online shop. Every shirt is printed to order in the US and shipped with tracking, and a real person answers every message.' },
+            { q: 'Is Seasoned a real shop?', a: 'Yes. A small, independent online shop, not a faceless warehouse. Every shirt is printed to order in the US and shipped with tracking, and a real person answers every message.' },
             { q: 'How do the sizes run?', a: 'Our tees are a relaxed unisex fit. Most women take their usual size, or one size down for a closer fit. Every product page has a size chart in inches.' },
             { q: 'Will it shrink?', a: 'The tees are pre-shrunk cotton. Wash cold, inside out, and tumble dry low or hang dry, and the shirt and the print will last.' },
             { q: 'Is it safe to pay?', a: 'Yes. Checkout is run by Stripe, which handles payments for millions of businesses. Pay by card, Apple Pay or Google Pay. We never see your card number.' },

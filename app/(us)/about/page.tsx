@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { IconCheck } from '@/components/Icons';
 import { ContactCard, Photo } from '@/components/Trust';
-import { brand, formatPrice, promise } from '@/lib/config';
+import { brand } from '@/lib/config';
 import { ROUTES } from '@/lib/locale';
 import { PROMISE } from '@/lib/promise';
 
@@ -43,9 +43,9 @@ export default function About() {
               Who we make them for
             </h2>
             <p className="mt-4">
-              You don’t feel old, and you’re tired of being treated like you are. You’ve earned your opinions, your laugh lines and your right to say no. Our shirts say that out loud: coffee, wine, sarcasm, grandkids if you’ve got them, and a lot of doing exactly what you want.
+              You don’t feel old, and you’re done being treated like you are. You’ve earned your opinions, your laugh lines and your right to say no, loudly. Our shirts say it for you: sarcasm, spite, coffee, wine, grandkids if you’ve got them, and a lot of doing exactly what you want.
             </p>
-            <p className="mt-4">What you won’t find here: “over the hill” jokes, bladder jokes, or anything that makes getting older sound like a problem. It isn’t one.</p>
+            <p className="mt-4">What you won’t find here: “over the hill” jokes, bladder jokes, or anything that makes getting older sound like a problem. It isn’t one. Other people’s opinions about it might be.</p>
           </section>
 
           <section aria-labelledby="made">
@@ -76,7 +76,7 @@ export default function About() {
               {PROMISE.title}
             </h2>
             <p className="mt-4">
-              If we get it wrong, we fix it for free, and you don’t send anything back. If the size is wrong, we print the right one for a flat {formatPrice(promise.sizeSwapCents)} and you keep the first. <Link href={r.returns} className="font-bold text-violet">Read the whole promise</Link>
+              If we get it wrong, we fix it for free, and you don’t send anything back. A misprint, a damaged shirt or a package that never shows up gets you a new one or your money back. <Link href={r.returns} className="font-bold text-violet">Read the whole promise</Link>
             </p>
           </section>
 
@@ -86,7 +86,7 @@ export default function About() {
             </h2>
             <ul className="mt-4 list-disc space-y-2 pl-6">
               <li>Make up reviews. You’ll only ever see reviews from real customers here.</li>
-              <li>Rush you with countdown clocks or “only 3 left!” We print to order, so there’s always one for you.</li>
+              <li>Rush you with countdown clocks or “only 3 left!” We print to order, so there’s always one for you. Take your time.</li>
               <li>Sell your email address.</li>
               <li>Hide our prices, shipping costs or delivery times.</li>
             </ul>

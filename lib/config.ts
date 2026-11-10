@@ -142,7 +142,7 @@ const MONEY: Record<Locale, [Intl.NumberFormat, Intl.NumberFormat]> = {
   en: [new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }), new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })],
   de: [new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }), new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })],
 };
-/** $29.95 / 29,95 €, but $50 / 50 € for round amounts. */
+/** $34.95 / 29,95 €, but $50 / 50 € for round amounts. */
 export function formatPrice(cents: number, locale: Locale = 'en') {
   const [money, whole] = MONEY[locale];
   return cents % 100 === 0 ? whole.format(cents / 100) : money.format(cents / 100);

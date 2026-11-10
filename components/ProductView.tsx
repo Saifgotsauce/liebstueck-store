@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { trackEvent } from '@/lib/analytics';
 import { OrderSteps, PaymentLogos, PromiseNote } from './Trust';
+import { SIZE_HELP } from '@/lib/promise';
 import { useConsent } from '@/lib/consent';
 import { GARMENTS, GARMENT_KEYS, colorLabel, defaultColor, garmentText, isAvailable, regularPriceCents, sizeExtraCents, unitPriceCents, type GarmentKey } from '@/lib/catalog';
 import { legalDe } from '@/lib/config';
@@ -436,6 +437,14 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             </p>
           )}
           <p className="mt-2 text-[0.95rem] text-ink-soft">{gt.fit}</p>
+          {locale === 'en' && (
+            <p className="mt-2 text-[0.95rem]">
+              {SIZE_HELP.note}{' '}
+              <Link href={ROUTES.en.returns} className="font-bold text-violet">
+                How swaps work
+              </Link>
+            </p>
+          )}
         </div>
 
         <fieldset className="mt-7">

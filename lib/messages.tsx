@@ -17,7 +17,7 @@ const en = {
   meta: {
     title: 'Seasoned – Funny shirts for women who are aging out loud',
     allTitle: 'All shirts',
-    allIntro: 'Every joke in the shop, on soft tees and cozy hoodies. Pick one, or bundle a few and save.',
+    allIntro: 'Every joke we’ve got, on soft tees and cozy hoodies. Pick one, or grab a few and pay less for each.',
     personalizedTitle: 'Personalize it',
     personalizedIntro: 'Her name, his name, every grandkid or the year that matters. Type it in, watch the shirt change, and we print exactly that.',
     personalizedMetaTitle: 'Personalized shirts',
@@ -40,7 +40,7 @@ const en = {
     cart: (n: number) => `Cart, ${n} items`,
   },
   footer: {
-    about: 'Funny shirts for women who are getting older out loud, and the people who love them. Printed to order, one at a time.',
+    about: 'Funny shirts for women who are getting older out loud and stopped asking permission years ago. Printed to order, one at a time.',
     questions: 'Questions?',
     shop: 'Shop',
     help: 'Help',
@@ -120,7 +120,7 @@ const en = {
     saleBadge: (label: string, p: number, ends?: string) => `${label}: ${p}% off${ends ? ` – ends ${ends}` : ''}`,
     buy2Badge: (p: number) => `Buy 2, save ${p}%`,
         benefitName: 'Printed with the name you type – see it live before you order',
-    benefitPrint: 'Big, bold print right across the front',
+    benefitPrint: 'Big, bold print they can read from across the room',
     benefitFabric: (g: GarmentKey): string => (g === 'tee' ? 'Soft, lightweight cotton in a relaxed unisex fit' : 'Warm, cozy fleece with a front pocket and hood'),
     benefitShipping: (free: string) => `Free US shipping on orders over ${free}`,
     features: (g: GarmentKey) => [g === 'tee' ? 'Super-soft cotton' : 'Cozy fleece', g === 'tee' ? 'Unisex relaxed fit' : 'Unisex classic fit', 'Printed to order', 'Machine washable'],
@@ -149,8 +149,8 @@ const en = {
       </>
     ),
     holiday: (label: string, name: string) => `Order by ${label} for ${name} delivery`,
-    addedOne: 'Added to your cart.',
-    addedSet: 'All 3 added to your cart.',
+    addedOne: 'In your cart. Good call.',
+    addedSet: 'All 3 are in your cart. Excellent decision.',
     addMore: (n: number, p: number) => `Add ${n} more and save ${p}% on everything.`,
     savingApplied: 'Your bundle saving is applied in the cart.',
     viewCart: 'View cart',
@@ -158,12 +158,12 @@ const en = {
     trust: (free: string) => [
       { title: 'Secure checkout', text: 'Apple Pay, Google Pay and cards' },
       { title: 'Free shipping', text: `On US orders over ${free}` },
-      { title: 'Wrong size? Easy swap', text: 'We send the right one, you keep the first.', link: 'Details' },
+      { title: 'Our mistake? Free fix', text: 'A new one or your money back.', link: 'Details' },
       { title: 'Made for you', text: 'Printed in 2–5 days, shipped with tracking' },
     ],
     setTitle: 'Complete the set',
     setSave: (p: number) => `– save ${p}%`,
-    setIntro: (plural: string, size: string | null) => `This one plus two more favorites, all as ${plural}${size ? ` in ${size}` : ''}.`,
+    setIntro: (plural: string, size: string | null) => `This one plus two more troublemakers, all as ${plural}${size ? ` in ${size}` : ''}.`,
     thisOne: 'This one',
     thisOneLabel: (title: string) => `${title} (this one)`,
     separately: 'separately',
@@ -198,7 +198,7 @@ const en = {
   cart: {
     loading: '',
     empty: 'Your cart is empty.',
-    emptyNote: 'The jokes are all still in the shop.',
+    emptyNote: 'That’s not like you. The jokes are waiting.',
     shopAll: 'Shop all shirts',
     title: 'Your cart',
     line: (garment: string, color: string, size: string) => `${garment}, ${color}, size ${size}`,
@@ -231,7 +231,7 @@ const en = {
       `Printed to order and delivered in about ${min}–${max} business days. Personalized items are printed exactly as entered, so please double-check the spelling.`,
   },
   thanks: {
-    title: 'Thank you! It’s being made.',
+    title: 'Thank you! Your shirt is being made.',
     sentTo: (email: string): ReactNode => (
       <>
         We sent your confirmation to <strong>{email}</strong>.

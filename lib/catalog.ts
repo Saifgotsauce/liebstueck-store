@@ -42,7 +42,7 @@ export const GARMENTS: Record<GarmentKey, Garment> = {
     model: 'Bella+Canvas 3001 unisex tee',
     material: '100% combed, ring-spun cotton – soft and light (heather colors are a cotton-poly blend)',
     fit: 'Unisex, relaxed fit. Women usually take their normal size, or one down for a closer fit.',
-    priceCents: 2995,
+    priceCents: 3495, // $34.95: covers ads, misprints and size swaps (Regular Mess charges ~$45)
     sizeExtraCents: { '2XL': 200, '3XL': 300, '4XL': 400 },
     sizes: ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'],
     colors: [

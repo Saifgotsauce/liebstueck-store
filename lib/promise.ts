@@ -6,14 +6,21 @@ const swap = formatPrice(promise.sizeSwapCents);
 const us = stores.en;
 
 export const PROMISE = {
-  short: `If we get it wrong, we fix it free. Wrong size? We'll send the right one for ${swap}, and you keep the first.`,
-  title: 'We’ll make it right',
+  // Next to Add to cart, in the cart and on the homepage: only what's free.
+  short: 'If we get it wrong, we fix it free. Misprint, damage or a lost package gets a new shirt or your money back, and you send nothing back.',
+  title: 'We mess up, we pay',
   points: [
-    { t: 'Our mistake? It’s free.', d: 'Misprint, damage or the wrong shirt: we send a new one or refund you, whichever you prefer. Nothing to send back.' },
-    { t: 'Wrong size? Keep it.', d: `We print the right size for a flat ${swap} and you keep the first one. Pass it to a friend or a sister. No trip to the post office.` },
-    { t: 'Lost package? We chase it.', d: `If tracking hasn’t moved for ${promise.lostAfterBusinessDays} business days, we sort it out with the carrier and send a replacement if it’s lost.` },
+    { t: 'Our mistake? It’s free.', d: 'Misprint, damage or the wrong shirt: we send a new one or refund you, your pick. Nothing to send back.' },
+    { t: 'Lost package? We chase it.', d: `If tracking hasn’t moved for ${promise.lostAfterBusinessDays} business days, we deal with the carrier and send a replacement if it’s lost.` },
+    { t: 'Changed your mind? Be quick.', d: 'Cancel before it goes to print, usually within a few hours, and you get every cent back.' },
   ],
   window: `Just write to us within ${promise.problemDays} days of delivery.`,
+};
+
+// Only shown next to the size picker, where the fit worry actually happens (and in the FAQ, the promise page
+// and the emails after she's bought). Not on the homepage: a price on a problem she hasn't had reads as a penalty.
+export const SIZE_HELP = {
+  note: `Wrong size when it arrives? We send the right one for ${swap} and you keep the first.`,
 };
 
 export const ORDER_STEPS = [

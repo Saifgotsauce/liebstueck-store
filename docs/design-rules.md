@@ -38,7 +38,7 @@ Most people over 50 need reading glasses for small type, and phone screens are w
 | Text contrast | 7:1 for body text, 4.5:1 minimum for anything else. No light grey text, no text on busy photos |
 | Headings | Sentence case. No all-caps paragraphs, no tiny letter-spaced "eyebrow" labels |
 | Links | Bold or underlined, never colour alone |
-| Buttons | At least 48px tall (ours are 54px), full words: "Add to cart – $29.95", not "→" |
+| Buttons | At least 48px tall (ours are 54px), full words: "Add to cart – $34.95", not "→" |
 | Tap targets | 48px minimum, 8px apart |
 | Forms | A visible label above every box. Placeholder text is an example, never the label |
 | Motion | None needed. If something moves, it must respect "reduce motion" and never block reading |
@@ -53,8 +53,21 @@ Most people over 50 need reading glasses for small type, and phone screens are w
 - Lifestyle photos are mood pictures. Never caption them as customers or use them as reviews.
 - Every photo has a plain alt text describing what's happening.
 
-## 4. Words
+## 4. Words: confident, a little rude, never mean
 
+She's in charge and she's done asking permission. What she actually buys is defiant and mildly rude
+("The older I get, the heller the no", "Good grandmas say bad words"). Safe, polite jokes (naps, "young at
+heart") are what she's seen a hundred times. The site talks the way she does.
+
+- **Attitude goes in headlines, product blurbs and shirt jokes.** "Buy more, pay less. Obviously."
+  "Mornings aren't happening." "The answer is still no." The joke is on everyone who thinks she's slowing
+  down, never on her.
+- **Facts stay plain.** Prices, sizes, shipping, payment and policies are clear and friendly, no jokes that
+  could blur what she's paying or getting.
+- **Allowed:** sarcasm, eye-rolls, spite, "hell no", "damn", mild "bad words" energy.
+  **Not allowed:** the f-word or worse, slurs, mocking other people's bodies, politics, religion, anything
+  mean to a group.
+- Never apologise, never beg, no filler ("the perfect gift for any occasion", "we're so excited").
 - Talk to her like a funny friend who respects her. Short sentences, everyday words.
 - **The joke is about independence, not decline.** She's the boss, the wild one, the one who says no.
   No bladder, memory-loss or "over the hill" jokes. No "elderly", "senior", "anti-aging", "golden years".
@@ -70,8 +83,10 @@ Most people over 50 need reading glasses for small type, and phone screens are w
 Show these without making her look for them:
 
 1. **Price, shipping cost and delivery time** next to every buy button.
-2. **The promise** ("If we get it wrong, we fix it free. Wrong size? We'll send the right one for $9.95,
-   and you keep the first.") next to Add to cart, in the cart and on the homepage.
+2. **The promise, free parts only** ("If we get it wrong, we fix it free: misprint, damage or a lost package
+   gets a new shirt or your money back") next to Add to cart, in the cart and on the homepage.
+   **The paid size swap** ($9.95, she keeps the first) only appears next to the size picker, in the FAQ, on the
+   promise page and in emails after she's bought. A price on a problem she hasn't had yet reads as a penalty.
 3. **What happens after you order**, step by step. Uncertainty is what scares her.
 4. **A real person to talk to:** email (and Facebook Messenger once the page is set up). Say "a real
    person answers, usually within a day". Sign as "The Seasoned team"; never invent a person.

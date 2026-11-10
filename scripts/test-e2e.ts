@@ -360,7 +360,7 @@ async function main() {
     const coJson = await co.json();
     ok(co.status === 200 && String(coJson.url).includes('cs_test_s1'), 'checkout returns Stripe URL');
     const p = state.sessions[0];
-    ok(p.get('line_items[0][price_data][unit_amount]') === '2995' && p.get('line_items[0][price_data][currency]') === 'usd', 'tee $29.95 from catalog');
+    ok(p.get('line_items[0][price_data][unit_amount]') === '3495' && p.get('line_items[0][price_data][currency]') === 'usd', 'tee $34.95 from catalog');
     ok(p.get('line_items[1][price_data][unit_amount]') === '4495', 'hoodie $44.95 from catalog');
     ok(p.get('discounts[0][coupon]') === 'BUNDLE10' && state.coupons.BUNDLE10 === 10, '2 items → 10% bundle coupon (created on first use)');
     ok(p.get('shipping_options[0][shipping_rate_data][fixed_amount][amount]') === '0', 'free shipping over $50 after savings');
@@ -371,7 +371,7 @@ async function main() {
     const one = await post(A, [{ design: 'not-old-seasoned', garment: 'tee', color: 'black', size: '2XL', values: {}, qty: 1 }]);
     ok(one.status === 200, 'single-item checkout');
     const p2 = state.sessions[1];
-    ok(p2.get('line_items[0][price_data][unit_amount]') === '3195', '2XL costs $2 more');
+    ok(p2.get('line_items[0][price_data][unit_amount]') === '3695', '2XL costs $2 more');
     ok(p2.get('shipping_options[0][shipping_rate_data][fixed_amount][amount]') === '495' && !p2.has('discounts[0][coupon]'), '$4.95 shipping, no bundle under 2 items');
 
     // Three items → 15%
@@ -392,9 +392,9 @@ async function main() {
     };
     ok(order && order.external_id.length === 32, 'Printful order created with 32-char external ID');
     ok(order?.recipient.city === 'Columbus' && order.recipient.country_code === 'US' && order.recipient.state_code === 'OH', 'US recipient address passed through');
-    ok(order?.items[0].variant_id === navyL.id && order.items[0].retail_price === '26.95', `tee: right variant + price paid after 10% (${order?.items[0].retail_price})`);
+    ok(order?.items[0].variant_id === navyL.id && order.items[0].retail_price === '31.45', `tee: right variant + price paid after 10% (${order?.items[0].retail_price})`);
     ok(order?.items[1].variant_id === synced.garments.hoodie.variants.forest.XL.id, 'hoodie: right variant');
-    ok(order?.retail_costs.currency === 'USD' && order.retail_costs.discount === '7.49' && order.retail_costs.total === '67.41', `retail costs in USD with discount (${JSON.stringify(order?.retail_costs)})`);
+    ok(order?.retail_costs.currency === 'USD' && order.retail_costs.discount === '7.99' && order.retail_costs.total === '71.91', `retail costs in USD with discount (${JSON.stringify(order?.retail_costs)})`);
 
     console.log('\n5) Print files');
     ok(order.items[0].files[0].type === 'front_large' && order.items[1].files[0].type === 'front', "order uses each garment's placement");
@@ -428,7 +428,7 @@ async function main() {
     ok(ownerMail && ownerMail.subject.startsWith('New order') && ownerMail.html.includes('bundle savings'), 'owner email');
     const wh2 = await deliver(A, 'cs_test_s2', 'evt_2');
     const order2 = state.printfulOrders[1] as { items: { retail_price: string }[]; retail_costs: { shipping: string } } | undefined;
-    ok(wh2.status === 200 && order2?.items[0].retail_price === '31.95' && order2.retail_costs.shipping === '4.95', 'single-item order: full price + shipping');
+    ok(wh2.status === 200 && order2?.items[0].retail_price === '36.95' && order2.retail_costs.shipping === '4.95', 'single-item order: full price + shipping');
 
     console.log('\n8) Other endpoints');
     const sum = await fetch(`${A}/api/order-summary?session_id=cs_test_s1`);
