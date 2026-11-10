@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-09T03:26:24.323Z",
+  "generatedAt": "2026-11-10T00:51:12.493Z",
   "garments": {
     "tee": {
       "productId": 71,
@@ -12,160 +12,648 @@
         "dpi": 150
       },
       "variants": {
-        "navy": {
-          "S": {
-            "id": 4111,
-            "cost": 17.25
-          },
-          "M": {
-            "id": 4112,
-            "cost": 17.25
-          },
-          "L": {
-            "id": 4113,
-            "cost": 17.25
-          },
-          "XL": {
-            "id": 4114,
-            "cost": 17.25
-          },
-          "2XL": {
-            "id": 4115,
-            "cost": 19.95
-          },
-          "3XL": {
-            "id": 12874,
-            "cost": 22.75
-          }
-        },
-        "white": {
-          "S": {
-            "id": 4011,
-            "cost": 17.25
-          },
-          "M": {
-            "id": 4012,
-            "cost": 17.25
-          },
-          "L": {
-            "id": 4013,
-            "cost": 17.25
-          },
-          "XL": {
-            "id": 4014,
-            "cost": 17.25
-          },
-          "2XL": {
-            "id": 4015,
-            "cost": 19.95
-          },
-          "3XL": {
-            "id": 5294,
-            "cost": 22.75
-          }
-        },
         "black": {
+          "XS": {
+            "id": 9527,
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP",
+              "BR"
+            ]
+          },
           "S": {
             "id": 4016,
-            "cost": 17.25
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP",
+              "BR"
+            ]
           },
           "M": {
             "id": 4017,
-            "cost": 17.25
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP"
+            ]
           },
           "L": {
             "id": 4018,
-            "cost": 17.25
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP"
+            ]
           },
           "XL": {
             "id": 4019,
-            "cost": 17.25
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU"
+            ]
           },
           "2XL": {
             "id": 4020,
-            "cost": 19.95
+            "cost": 19.95,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "BR"
+            ]
           },
           "3XL": {
             "id": 5295,
-            "cost": 22.75
+            "cost": 22.75,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU"
+            ]
+          },
+          "4XL": {
+            "id": 5310,
+            "cost": 25.75,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU"
+            ]
           }
         },
-        "maroon": {
+        "white": {
+          "XS": {
+            "id": 9526,
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "UK",
+              "AU",
+              "JP"
+            ]
+          },
           "S": {
-            "id": 4106,
-            "cost": 17.25
+            "id": 4011,
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP",
+              "BR"
+            ]
           },
           "M": {
-            "id": 4107,
-            "cost": 17.25
+            "id": 4012,
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU"
+            ]
           },
           "L": {
-            "id": 4108,
-            "cost": 17.25
+            "id": 4013,
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU"
+            ]
           },
           "XL": {
-            "id": 4109,
-            "cost": 17.25
+            "id": 4014,
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP"
+            ]
           },
           "2XL": {
-            "id": 4110,
-            "cost": 19.95
+            "id": 4015,
+            "cost": 19.95,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP",
+              "BR"
+            ]
           },
           "3XL": {
-            "id": 15792,
-            "cost": 22.75
-          }
-        },
-        "forest": {
-          "S": {
-            "id": 8451,
-            "cost": 17.25
+            "id": 5294,
+            "cost": 22.75,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU"
+            ]
           },
-          "M": {
-            "id": 8452,
-            "cost": 17.25
-          },
-          "L": {
-            "id": 8453,
-            "cost": 17.25
-          },
-          "XL": {
-            "id": 8454,
-            "cost": 17.25
-          },
-          "2XL": {
-            "id": 8455,
-            "cost": 19.95
-          },
-          "3XL": {
-            "id": 8456,
-            "cost": 22.75
+          "4XL": {
+            "id": 5309,
+            "cost": 25.75,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "UK"
+            ]
           }
         },
         "heather": {
+          "XS": {
+            "id": 9561,
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "JP",
+              "BR"
+            ]
+          },
           "S": {
             "id": 6948,
-            "cost": 17.25
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "BR"
+            ]
           },
           "M": {
             "id": 6949,
-            "cost": 17.25
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP",
+              "BR"
+            ]
           },
           "L": {
             "id": 6950,
-            "cost": 17.25
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP",
+              "BR"
+            ]
           },
           "XL": {
             "id": 6951,
-            "cost": 17.25
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP",
+              "BR"
+            ]
           },
           "2XL": {
             "id": 6952,
-            "cost": 19.95
+            "cost": 19.95,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP"
+            ]
           },
           "3XL": {
             "id": 6953,
-            "cost": 22.75
+            "cost": 22.75,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "CA",
+              "AU"
+            ]
+          },
+          "4XL": {
+            "id": 6954,
+            "cost": 25.75,
+            "regions": [
+              "US"
+            ]
+          }
+        },
+        "mauve": {
+          "XS": {
+            "id": 18634,
+            "cost": 17.25,
+            "regions": [
+              "US"
+            ]
+          },
+          "S": {
+            "id": 18635,
+            "cost": 17.25,
+            "regions": [
+              "US"
+            ]
+          },
+          "M": {
+            "id": 18636,
+            "cost": 17.25,
+            "regions": [
+              "US"
+            ]
+          },
+          "L": {
+            "id": 18637,
+            "cost": 17.25,
+            "regions": [
+              "US"
+            ]
+          },
+          "XL": {
+            "id": 18638,
+            "cost": 17.25,
+            "regions": [
+              "US"
+            ]
+          },
+          "2XL": {
+            "id": 18639,
+            "cost": 19.95,
+            "regions": [
+              "US"
+            ]
+          },
+          "3XL": {
+            "id": 18640,
+            "cost": 22.75,
+            "regions": [
+              "US"
+            ]
+          },
+          "4XL": {
+            "id": 18641,
+            "cost": 25.75,
+            "regions": [
+              "US"
+            ]
+          }
+        },
+        "navy": {
+          "XS": {
+            "id": 9546,
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "UK",
+              "AU",
+              "JP",
+              "BR"
+            ]
+          },
+          "S": {
+            "id": 4111,
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP",
+              "BR"
+            ]
+          },
+          "M": {
+            "id": 4112,
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "BR"
+            ]
+          },
+          "L": {
+            "id": 4113,
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU"
+            ]
+          },
+          "XL": {
+            "id": 4114,
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP",
+              "BR"
+            ]
+          },
+          "2XL": {
+            "id": 4115,
+            "cost": 19.95,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP",
+              "BR"
+            ]
+          },
+          "3XL": {
+            "id": 12874,
+            "cost": 22.75,
+            "regions": [
+              "US",
+              "CA",
+              "AU"
+            ]
+          },
+          "4XL": {
+            "id": 12875,
+            "cost": 25.75,
+            "regions": [
+              "US"
+            ]
+          }
+        },
+        "maroon": {
+          "XS": {
+            "id": 9545,
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV"
+            ]
+          },
+          "S": {
+            "id": 4106,
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "UK"
+            ]
+          },
+          "M": {
+            "id": 4107,
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "UK"
+            ]
+          },
+          "L": {
+            "id": 4108,
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "UK"
+            ]
+          },
+          "XL": {
+            "id": 4109,
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "UK"
+            ]
+          },
+          "2XL": {
+            "id": 4110,
+            "cost": 19.95,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "UK"
+            ]
+          },
+          "3XL": {
+            "id": 15792,
+            "cost": 22.75,
+            "regions": [
+              "US"
+            ]
+          },
+          "4XL": {
+            "id": 15793,
+            "cost": 25.75,
+            "regions": [
+              "US"
+            ]
+          }
+        },
+        "forest": {
+          "XS": {
+            "id": 9563,
+            "cost": 17.25,
+            "regions": [
+              "US"
+            ]
+          },
+          "S": {
+            "id": 8451,
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK"
+            ]
+          },
+          "M": {
+            "id": 8452,
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK"
+            ]
+          },
+          "L": {
+            "id": 8453,
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK"
+            ]
+          },
+          "XL": {
+            "id": 8454,
+            "cost": 17.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK"
+            ]
+          },
+          "2XL": {
+            "id": 8455,
+            "cost": 19.95,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "CA",
+              "UK"
+            ]
+          },
+          "3XL": {
+            "id": 8456,
+            "cost": 22.75,
+            "regions": [
+              "US"
+            ]
+          },
+          "4XL": {
+            "id": 8457,
+            "cost": 25.75,
+            "regions": [
+              "US"
+            ]
           }
         }
       }
@@ -181,160 +669,598 @@
         "dpi": 150
       },
       "variants": {
-        "navy": {
-          "S": {
-            "id": 5594,
-            "cost": 32.5
-          },
-          "M": {
-            "id": 5595,
-            "cost": 32.5
-          },
-          "L": {
-            "id": 5596,
-            "cost": 32.5
-          },
-          "XL": {
-            "id": 5597,
-            "cost": 32.5
-          },
-          "2XL": {
-            "id": 5598,
-            "cost": 35.25
-          },
-          "3XL": {
-            "id": 5599,
-            "cost": 38.25
-          }
-        },
         "black": {
           "S": {
             "id": 5530,
-            "cost": 32.5
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP",
+              "BR"
+            ]
           },
           "M": {
             "id": 5531,
-            "cost": 32.5
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP"
+            ]
           },
           "L": {
             "id": 5532,
-            "cost": 32.5
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP"
+            ]
           },
           "XL": {
             "id": 5533,
-            "cost": 32.5
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP"
+            ]
           },
           "2XL": {
             "id": 5534,
-            "cost": 35.25
+            "cost": 35.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU"
+            ]
           },
           "3XL": {
             "id": 5535,
-            "cost": 38.25
-          }
-        },
-        "maroon": {
-          "S": {
-            "id": 5586,
-            "cost": 32.5
+            "cost": 38.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU"
+            ]
           },
-          "M": {
-            "id": 5587,
-            "cost": 32.5
-          },
-          "L": {
-            "id": 5588,
-            "cost": 32.5
-          },
-          "XL": {
-            "id": 5589,
-            "cost": 32.5
-          },
-          "2XL": {
-            "id": 5590,
-            "cost": 35.25
-          },
-          "3XL": {
-            "id": 5591,
-            "cost": 38.25
-          }
-        },
-        "forest": {
-          "S": {
-            "id": 20570,
-            "cost": 32.5
-          },
-          "M": {
-            "id": 20571,
-            "cost": 32.5
-          },
-          "L": {
-            "id": 20572,
-            "cost": 32.5
-          },
-          "XL": {
-            "id": 20573,
-            "cost": 32.5
-          },
-          "2XL": {
-            "id": 20574,
-            "cost": 35.25
-          },
-          "3XL": {
-            "id": 20575,
-            "cost": 38.25
+          "4XL": {
+            "id": 5536,
+            "cost": 40.95,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "CA",
+              "UK",
+              "AU"
+            ]
           }
         },
         "heather": {
           "S": {
             "id": 5610,
-            "cost": 32.5
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP",
+              "BR"
+            ]
           },
           "M": {
             "id": 5611,
-            "cost": 32.5
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP"
+            ]
           },
           "L": {
             "id": 5612,
-            "cost": 32.5
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP",
+              "BR"
+            ]
           },
           "XL": {
             "id": 5613,
-            "cost": 32.5
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP",
+              "BR"
+            ]
           },
           "2XL": {
             "id": 5614,
-            "cost": 35.25
+            "cost": 35.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU"
+            ]
           },
           "3XL": {
             "id": 5615,
-            "cost": 38.25
+            "cost": 38.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "CA",
+              "UK",
+              "AU"
+            ]
+          },
+          "4XL": {
+            "id": 5616,
+            "cost": 40.95,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "UK",
+              "AU"
+            ]
+          }
+        },
+        "navy": {
+          "S": {
+            "id": 5594,
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP",
+              "BR"
+            ]
+          },
+          "M": {
+            "id": 5595,
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP"
+            ]
+          },
+          "L": {
+            "id": 5596,
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP",
+              "BR"
+            ]
+          },
+          "XL": {
+            "id": 5597,
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP",
+              "BR"
+            ]
+          },
+          "2XL": {
+            "id": 5598,
+            "cost": 35.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "BR"
+            ]
+          },
+          "3XL": {
+            "id": 5599,
+            "cost": 38.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "CA",
+              "UK"
+            ]
+          },
+          "4XL": {
+            "id": 5600,
+            "cost": 40.95,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "UK"
+            ]
+          }
+        },
+        "maroon": {
+          "S": {
+            "id": 5586,
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "JP"
+            ]
+          },
+          "M": {
+            "id": 5587,
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "JP"
+            ]
+          },
+          "L": {
+            "id": 5588,
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "JP"
+            ]
+          },
+          "XL": {
+            "id": 5589,
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "JP"
+            ]
+          },
+          "2XL": {
+            "id": 5590,
+            "cost": 35.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK"
+            ]
+          },
+          "3XL": {
+            "id": 5591,
+            "cost": 38.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "CA"
+            ]
+          }
+        },
+        "forest": {
+          "S": {
+            "id": 20570,
+            "cost": 32.5,
+            "regions": [
+              "US"
+            ]
+          },
+          "M": {
+            "id": 20571,
+            "cost": 32.5,
+            "regions": [
+              "US"
+            ]
+          },
+          "L": {
+            "id": 20572,
+            "cost": 32.5,
+            "regions": [
+              "US"
+            ]
+          },
+          "XL": {
+            "id": 20573,
+            "cost": 32.5,
+            "regions": [
+              "US"
+            ]
+          },
+          "2XL": {
+            "id": 20574,
+            "cost": 35.25,
+            "regions": [
+              "US"
+            ]
+          },
+          "3XL": {
+            "id": 20575,
+            "cost": 38.25,
+            "regions": [
+              "US"
+            ]
+          },
+          "4XL": {
+            "id": 20576,
+            "cost": 40.95,
+            "regions": [
+              "US"
+            ]
+          }
+        },
+        "pink": {
+          "S": {
+            "id": 10849,
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU"
+            ]
+          },
+          "M": {
+            "id": 10850,
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU"
+            ]
+          },
+          "L": {
+            "id": 10851,
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU"
+            ]
+          },
+          "XL": {
+            "id": 10852,
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU"
+            ]
+          },
+          "2XL": {
+            "id": 10853,
+            "cost": 35.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU"
+            ]
+          },
+          "3XL": {
+            "id": 10854,
+            "cost": 38.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "CA"
+            ]
+          },
+          "4XL": {
+            "id": 10855,
+            "cost": 40.95,
+            "regions": [
+              "US"
+            ]
           }
         },
         "white": {
           "S": {
             "id": 5522,
-            "cost": 32.5
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP"
+            ]
           },
           "M": {
             "id": 5523,
-            "cost": 32.5
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP"
+            ]
           },
           "L": {
             "id": 5524,
-            "cost": 32.5
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP"
+            ]
           },
           "XL": {
             "id": 5525,
-            "cost": 32.5
+            "cost": 32.5,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "JP",
+              "BR"
+            ]
           },
           "2XL": {
             "id": 5526,
-            "cost": 35.25
+            "cost": 35.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "EU_ES",
+              "CA",
+              "UK",
+              "AU",
+              "BR"
+            ]
           },
           "3XL": {
             "id": 5527,
-            "cost": 38.25
+            "cost": 38.25,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV",
+              "CA",
+              "UK"
+            ]
+          },
+          "4XL": {
+            "id": 5528,
+            "cost": 40.95,
+            "regions": [
+              "US",
+              "EU",
+              "EU_LV"
+            ]
           }
         }
       }

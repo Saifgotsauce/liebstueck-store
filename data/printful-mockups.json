@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-11-09T03:26:24.324Z",
+  "generatedAt": "2026-11-10T00:51:12.493Z",
   "garments": {
     "tee": {
       "placement": "front_large",
       "colors": {
-        "navy": {
+        "black": {
           "w": 3000,
           "h": 3000,
           "area": {
@@ -14,8 +14,8 @@
             "height": 1516
           },
           "bg": null,
-          "bgColor": "#212642",
-          "overlay": "/mockups/tee/150954-overlay.webp",
+          "bgColor": "#0c0c0c",
+          "overlay": "/mockups/tee/150919-overlay.webp",
           "overlayOnTop": true
         },
         "white": {
@@ -29,49 +29,7 @@
           },
           "bg": null,
           "bgColor": "#ffffff",
-          "overlay": "/mockups/tee/150954-overlay.webp",
-          "overlayOnTop": true
-        },
-        "black": {
-          "w": 3000,
-          "h": 3000,
-          "area": {
-            "left": 878,
-            "top": 530,
-            "width": 1264,
-            "height": 1516
-          },
-          "bg": null,
-          "bgColor": "#0c0c0c",
-          "overlay": "/mockups/tee/150954-overlay.webp",
-          "overlayOnTop": true
-        },
-        "maroon": {
-          "w": 3000,
-          "h": 3000,
-          "area": {
-            "left": 878,
-            "top": 530,
-            "width": 1264,
-            "height": 1516
-          },
-          "bg": null,
-          "bgColor": "#721d37",
-          "overlay": "/mockups/tee/150954-overlay.webp",
-          "overlayOnTop": true
-        },
-        "forest": {
-          "w": 3000,
-          "h": 3000,
-          "area": {
-            "left": 878,
-            "top": 530,
-            "width": 1264,
-            "height": 1516
-          },
-          "bg": null,
-          "bgColor": "#223e25",
-          "overlay": "/mockups/tee/150954-overlay.webp",
+          "overlay": "/mockups/tee/150919-overlay.webp",
           "overlayOnTop": true
         },
         "heather": {
@@ -85,7 +43,7 @@
           },
           "bg": "/mockups/tee/150915-bg.webp",
           "bgColor": "#cececc",
-          "overlay": "/mockups/tee/150954-overlay.webp",
+          "overlay": "/mockups/tee/150919-overlay.webp",
           "overlayOnTop": true
         },
         "mauve": {
@@ -97,9 +55,51 @@
             "width": 1264,
             "height": 1516
           },
+          "bg": "/mockups/tee/222292-bg.webp",
+          "bgColor": "#B2736F",
+          "overlay": "/mockups/tee/150919-overlay.webp",
+          "overlayOnTop": true
+        },
+        "navy": {
+          "w": 3000,
+          "h": 3000,
+          "area": {
+            "left": 878,
+            "top": 530,
+            "width": 1264,
+            "height": 1516
+          },
           "bg": null,
-          "bgColor": "#bf9aa0",
-          "overlay": "/mockups/tee/150954-overlay.webp",
+          "bgColor": "#212642",
+          "overlay": "/mockups/tee/150919-overlay.webp",
+          "overlayOnTop": true
+        },
+        "maroon": {
+          "w": 3000,
+          "h": 3000,
+          "area": {
+            "left": 878,
+            "top": 530,
+            "width": 1264,
+            "height": 1516
+          },
+          "bg": null,
+          "bgColor": "#721d37",
+          "overlay": "/mockups/tee/150919-overlay.webp",
+          "overlayOnTop": true
+        },
+        "forest": {
+          "w": 3000,
+          "h": 3000,
+          "area": {
+            "left": 878,
+            "top": 530,
+            "width": 1264,
+            "height": 1516
+          },
+          "bg": null,
+          "bgColor": "#223e25",
+          "overlay": "/mockups/tee/150919-overlay.webp",
           "overlayOnTop": true
         }
       }
@@ -107,20 +107,6 @@
     "hoodie": {
       "placement": "front",
       "colors": {
-        "navy": {
-          "w": 3000,
-          "h": 3000,
-          "area": {
-            "left": 927,
-            "top": 651,
-            "width": 1136,
-            "height": 1136
-          },
-          "bg": null,
-          "bgColor": "#131928",
-          "overlay": "/mockups/hoodie/149888-overlay.webp",
-          "overlayOnTop": true
-        },
         "black": {
           "w": 3000,
           "h": 3000,
@@ -132,35 +118,7 @@
           },
           "bg": null,
           "bgColor": "#0b0b0b",
-          "overlay": "/mockups/hoodie/149888-overlay.webp",
-          "overlayOnTop": true
-        },
-        "maroon": {
-          "w": 3000,
-          "h": 3000,
-          "area": {
-            "left": 927,
-            "top": 651,
-            "width": 1136,
-            "height": 1136
-          },
-          "bg": null,
-          "bgColor": "#47171c",
-          "overlay": "/mockups/hoodie/149888-overlay.webp",
-          "overlayOnTop": true
-        },
-        "forest": {
-          "w": 3000,
-          "h": 3000,
-          "area": {
-            "left": 927,
-            "top": 651,
-            "width": 1136,
-            "height": 1136
-          },
-          "bg": null,
-          "bgColor": "#222E1F",
-          "overlay": "/mockups/hoodie/149888-overlay.webp",
+          "overlay": "/mockups/hoodie/149880-overlay.webp",
           "overlayOnTop": true
         },
         "heather": {
@@ -174,7 +132,63 @@
           },
           "bg": "/mockups/hoodie/149891-bg.webp",
           "bgColor": "#9b969c",
-          "overlay": "/mockups/hoodie/149888-overlay.webp",
+          "overlay": "/mockups/hoodie/149880-overlay.webp",
+          "overlayOnTop": true
+        },
+        "navy": {
+          "w": 3000,
+          "h": 3000,
+          "area": {
+            "left": 927,
+            "top": 651,
+            "width": 1136,
+            "height": 1136
+          },
+          "bg": null,
+          "bgColor": "#131928",
+          "overlay": "/mockups/hoodie/149880-overlay.webp",
+          "overlayOnTop": true
+        },
+        "maroon": {
+          "w": 3000,
+          "h": 3000,
+          "area": {
+            "left": 927,
+            "top": 651,
+            "width": 1136,
+            "height": 1136
+          },
+          "bg": null,
+          "bgColor": "#47171c",
+          "overlay": "/mockups/hoodie/149880-overlay.webp",
+          "overlayOnTop": true
+        },
+        "forest": {
+          "w": 3000,
+          "h": 3000,
+          "area": {
+            "left": 927,
+            "top": 651,
+            "width": 1136,
+            "height": 1136
+          },
+          "bg": null,
+          "bgColor": "#222E1F",
+          "overlay": "/mockups/hoodie/149880-overlay.webp",
+          "overlayOnTop": true
+        },
+        "pink": {
+          "w": 3000,
+          "h": 3000,
+          "area": {
+            "left": 927,
+            "top": 651,
+            "width": 1136,
+            "height": 1136
+          },
+          "bg": null,
+          "bgColor": "#f3d4e3",
+          "overlay": "/mockups/hoodie/149880-overlay.webp",
           "overlayOnTop": true
         },
         "white": {
@@ -188,21 +202,7 @@
           },
           "bg": null,
           "bgColor": "#ffffff",
-          "overlay": "/mockups/hoodie/149888-overlay.webp",
-          "overlayOnTop": true
-        },
-        "pink": {
-          "w": 3000,
-          "h": 3000,
-          "area": {
-            "left": 927,
-            "top": 651,
-            "width": 1136,
-            "height": 1136
-          },
-          "bg": null,
-          "bgColor": "#f2cbd3",
-          "overlay": "/mockups/hoodie/149888-overlay.webp",
+          "overlay": "/mockups/hoodie/149880-overlay.webp",
           "overlayOnTop": true
         }
       }
