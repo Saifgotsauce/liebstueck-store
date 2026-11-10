@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { NextResponse } from 'next/server';
 import type Stripe from 'stripe';
-import { brand, formatPrice as fmtPrice, siteUrl } from '@/lib/config';
+import { brand, formatPrice as fmtPrice, promise, siteUrl } from '@/lib/config';
 import { colorLabel, garmentText, printPlacement } from '@/lib/catalog';
 import { agbHtml, widerrufsbelehrungHtml } from '@/lib/legal-de';
 import { ROUTES } from '@/lib/locale';
@@ -145,7 +145,8 @@ ${tax ? row('Sales tax', formatPrice(tax)) : ''}
 ${row('Total', formatPrice(total), true)}</table>
 <p>Shipping to: ${escapeHtml([shipping.name, a.line1, a.line2, `${a.city ?? ''}, ${a.state ?? ''} ${a.postal_code ?? ''}`].filter(Boolean).join(', '))}</p>
 <p>Your order is printed just for you and usually ships within 2–5 business days. We’ll email you the tracking link as soon as it’s on its way.</p>
-<p style="font-size:13px;color:#6B635B">Something not right when it arrives? Reply to this email within 30 days and we’ll make it right. <a href="${siteUrl}/returns/">Return policy</a> · <a href="${siteUrl}/terms/">Terms</a></p>`,
+<p style="color:#5E5468">Our promise: if we get it wrong, we fix it free. Wrong size? Reply to this email within ${promise.problemDays} days of delivery and we’ll send the right one for ${formatPrice(promise.sizeSwapCents)}. You keep the first.</p>
+<p style="font-size:14px;color:#5E5468"><a href="${siteUrl}/returns/">Our promise</a> · <a href="${siteUrl}/terms/">Terms</a></p>`,
     );
     await sendEmail(email, `Your ${brand.name} order ${ref}`, html);
   }

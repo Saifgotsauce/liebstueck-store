@@ -65,6 +65,13 @@ export const IconCalendar = ({ className }: P) => (
   </svg>
 );
 
+export const IconChat = ({ className }: P) => (
+  <svg {...base} className={className}>
+    <path d="M4.5 5.5h15a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H10l-4.5 3.5V16.5h-1a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z" />
+    <path d="M8 10h8M8 13h5" />
+  </svg>
+);
+
 /** Five stars filled to `value` (0–5). Decorative – always pair with the number in text. */
 export function Stars({ value, className }: { value: number; className?: string }) {
   return (

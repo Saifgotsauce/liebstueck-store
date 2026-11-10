@@ -36,7 +36,7 @@ async function tee(d: Design, px: number) {
   const photo = garmentPhoto('tee', colorKey);
   if (!photo) throw new Error(`No tee photo for ${colorKey}`);
   const t = getTemplate(d.slug);
-  const design = t.render(defaultValues(t), designPalette(d.slug, color.ink));
+  const design = t.render(defaultValues(t), designPalette(d.slug, color));
   const { d: r, viewBox } = mockupGeometry(photo, 'tee', 'main');
   const { w, h } = photo;
   const overlay = photo.overlay ? `<image href="${await uri(photo.overlay)}" x="0" y="0" width="${w}" height="${h}"/>` : '';

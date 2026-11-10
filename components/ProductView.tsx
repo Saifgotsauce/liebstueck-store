@@ -8,6 +8,8 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { trackEvent } from '@/lib/analytics';
+import { OrderSteps, PaymentLogos, PromiseNote } from './Trust';
+import { SIZE_HELP } from '@/lib/promise';
 import { useConsent } from '@/lib/consent';
 import { GARMENTS, GARMENT_KEYS, colorLabel, defaultColor, garmentText, isAvailable, regularPriceCents, sizeExtraCents, unitPriceCents, type GarmentKey } from '@/lib/catalog';
 import { legalDe } from '@/lib/config';
@@ -207,7 +209,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
     vibe.occasion,
     personalized ? T.benefitName : T.benefitPrint,
     T.benefitFabric(garment),
-    T.benefitShipping(fmt(store.freeShippingFromCents)),
+    locale === 'en' && garment === 'hoodie' ? 'Free US shipping on every hoodie' : T.benefitShipping(fmt(store.freeShippingFromCents)),
   ];
 
   const featureText = T.features(garment);
@@ -263,7 +265,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
           <button type="button" onClick={() => goTo(slide + 1)} disabled={slide === slides.length - 1} aria-label={T.next} className="absolute right-3 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-2xl font-bold text-violet shadow-md ring-1 ring-lilac-line disabled:opacity-0 sm:flex">
             ›
           </button>
-          <span className="pointer-events-none absolute bottom-3 right-3 rounded-full bg-ink/75 px-2.5 py-1 text-[0.8rem] font-bold text-white" aria-hidden="true">
+          <span className="pointer-events-none absolute bottom-3 right-3 rounded-full bg-ink/75 px-2.5 py-1 text-[0.85rem] font-bold text-white" aria-hidden="true">
             {slide + 1} / {slides.length}
           </span>
         </div>
@@ -340,7 +342,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
               <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-violet">
                 <Icon className="h-6 w-6" />
               </span>
-              <span className="text-[0.8rem] font-bold leading-tight sm:text-[0.86rem]">{label}</span>
+              <span className="text-[0.85rem] font-bold leading-tight sm:text-[0.9rem]">{label}</span>
             </li>
           ))}
         </ul>
@@ -424,7 +426,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
                   }}
                 >
                   {s}
-                  {extra ? <span className="text-[0.72rem] font-medium opacity-80">+{fmt(extra)}</span> : null}
+                  {extra ? <span className="text-[0.85rem] font-medium">+{fmt(extra)}</span> : null}
                 </button>
               );
             })}
@@ -435,6 +437,14 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             </p>
           )}
           <p className="mt-2 text-[0.95rem] text-ink-soft">{gt.fit}</p>
+          {locale === 'en' && (
+            <p className="mt-2 text-[0.95rem]">
+              {SIZE_HELP.note}{' '}
+              <Link href={ROUTES.en.returns} className="font-bold text-violet">
+                How swaps work
+              </Link>
+            </p>
+          )}
         </div>
 
         <fieldset className="mt-7">
@@ -452,7 +462,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
                     }} className="h-5 w-5 shrink-0 accent-violet" />
                   <span className="flex-1">
                     <span className="font-bold">{T.pieces(n, garment)}</span>
-                    {pct > 0 && <span className="ml-2 rounded-full bg-red px-2 py-0.5 text-[0.78rem] font-bold text-white">{T.save(pct)}</span>}
+                    {pct > 0 && <span className="ml-2 rounded-full bg-red px-2 py-0.5 text-[0.85rem] font-bold text-white">{T.save(pct)}</span>}
                     <span className="block text-[0.92rem] text-ink-soft">{n === 1 ? T.justThis : T.each(fmt(Math.round(t / n)))}</span>
                   </span>
                   <span className="text-right leading-tight">
@@ -464,7 +474,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
                       </s>
                     )}
                   </span>
-                  {n === TIERS[TIERS.length - 1] && <span className="absolute -top-2.5 right-4 rounded-full bg-violet px-2.5 py-0.5 text-[0.72rem] font-bold uppercase tracking-wide text-white">{T.bestValue}</span>}
+                  {n === TIERS[TIERS.length - 1] && <span className="absolute -top-2.5 right-4 rounded-full bg-violet px-2.5 py-0.5 text-[0.85rem] font-bold text-white">{T.bestValue}</span>}
                 </label>
               );
             })}
@@ -489,6 +499,12 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             </p>
           )}
         </div>
+        {locale === 'en' && (
+          <>
+            <PromiseNote className="mt-4" />
+            <PaymentLogos center className="mt-4" />
+          </>
+        )}
 
         {added && (
           <div ref={addedRef} tabIndex={-1} className="mt-4 rounded-2xl border-2 border-violet bg-white p-4 outline-none" role="status">
@@ -510,7 +526,9 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
         )}
 
         <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-4 border-y border-lilac-line py-5 text-[0.9rem]">
-          {T.trust(fmt(store.freeShippingFromCents)).map((x, i) => (
+          {T.trust(fmt(store.freeShippingFromCents))
+            .map((x, i) => (i === 1 && locale === 'en' && garment === 'hoodie' ? { ...x, text: 'On every hoodie' } : x))
+            .map((x, i) => (
             <Trust
               key={x.title}
               Icon={[IconLock, IconTruck, IconShield, IconCalendar][i]}
@@ -548,7 +566,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
                       <ShirtPreview design={x.d.slug} garment={garment} colorKey={x.color} values={defaultValues(getTemplate(x.d.slug))} label={x.d.title} className="block aspect-square w-full" view="tile" />
                     </Link>
                   )}
-                  <p className="mt-1.5 text-[0.82rem] font-bold leading-tight">{i === 0 ? T.thisOne : x.d.title}</p>
+                  <p className="mt-1.5 text-[0.88rem] font-bold leading-tight">{i === 0 ? T.thisOne : x.d.title}</p>
                 </SetTile>
               ))}
             </div>
@@ -591,6 +609,11 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
           <Details title={T.shipping}>
             <p>{T.shippingText(store.deliveryMinDays, store.deliveryMaxDays)}</p>
           </Details>
+          {locale === 'en' && (
+            <Details title="What happens after you order">
+              <OrderSteps />
+            </Details>
+          )}
           <Details title={T.returns}>
             <p>
               {T.returnsText} <Link href={ROUTES[locale].returns}>{T.returnsLink}</Link>

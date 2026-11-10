@@ -36,7 +36,7 @@ const cases: { d: string; v: Record<string, string | string[]>; name: string }[]
       continue;
     }
     for (const [ink, bg] of [['dark', '#ffffff'], ['light', '#212642']] as const) {
-      const png = renderPrintPng(t, res.values, designPalette(c.d, ink), 2250, 2700);
+      const png = renderPrintPng(t, res.values, designPalette(c.d, { ink, hex: bg }), 2250, 2700);
       fs.writeFileSync(path.join(out, `${c.name}-${ink}.png`), png);
       if (ink === 'light') {
         const full = await sharp({ create: { width: 2250, height: 2700, channels: 3, background: bg } }).composite([{ input: png }]).png().toBuffer();

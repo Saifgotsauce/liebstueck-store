@@ -20,10 +20,51 @@ export const ACCENTS: Record<InkTheme, Record<AccentKey, string>> = {
   light: { red: '#FF7A59', gold: '#F2B84B', pink: '#F6A5BD', teal: '#7FD1C1' },
 };
 
-export function palette(ink: InkTheme, accent: AccentKey = 'red'): Palette {
-  return ink === 'dark'
-    ? { ink: DARK_INK, accent: ACCENTS.dark[accent], knock: '#FFFFFF' }
-    : { ink: LIGHT_INK, accent: ACCENTS.light[accent], knock: '#141414' };
+// ── Contrast (WCAG formula) ─────────────────────────────────────────────────
+// Every colour printed on a shirt must reach MIN_PRINT_CONTRAST against the shirt, so the joke can be read
+// from across a room (docs/design-rules.md §6). The same palette feeds the preview and the print file.
+export const MIN_PRINT_CONTRAST = 4.5;
+
+const rgb = (hex: string) => {
+  const h = hex.replace('#', '');
+  return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
+};
+function luminance(hex: string) {
+  const [r, g, b] = rgb(hex).map((v) => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+export function contrast(a: string, b: string) {
+  const [x, y] = [luminance(a), luminance(b)].sort((m, n) => n - m);
+  return (x + 0.05) / (y + 0.05);
+}
+function mix(a: string, b: string, t: number) {
+  const [ca, cb] = [rgb(a), rgb(b)];
+  return `#${ca.map((v, i) => Math.round(v + (cb[i] - v) * t).toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+}
+
+/**
+ * The accent, deepened (on light shirts) or brightened (on dark shirts) just enough to stay readable on this
+ * shirt colour. If it would need more than half-way towards the ink to pass, it would turn muddy, so the
+ * design prints in the ink colour only (this is what happens on mid-tone shirts like Heather Mauve).
+ */
+export function readableAccent(accent: string, shirtHex: string, ink: string) {
+  for (let t = 0; t <= 0.5001; t += 0.05) {
+    const c = t === 0 ? accent : mix(accent, ink, t);
+    if (contrast(c, shirtHex) >= MIN_PRINT_CONTRAST) return c;
+  }
+  return ink;
+}
+
+/** Print palette. Pass the shirt colour so accents are checked against it (always do, except in tests). */
+export function palette(ink: InkTheme, accent: AccentKey = 'red', shirtHex?: string): Palette {
+  const base =
+    ink === 'dark'
+      ? { ink: DARK_INK, accent: ACCENTS.dark[accent], knock: '#FFFFFF' }
+      : { ink: LIGHT_INK, accent: ACCENTS.light[accent], knock: '#141414' };
+  return shirtHex ? { ...base, accent: readableAccent(base.accent, shirtHex, base.ink) } : base;
 }
 
 type BaseField = { key: string; label: string; help?: string };

@@ -35,22 +35,22 @@ export type Vibe = {
 export const VIBES: Vibe[] = [
   {
     key: 'aging', nav: 'Aging', name: 'Aging, Unbothered', blurb: 'Getting older? Getting louder.', searchTerm: 'funny shirts for women over 50',
-    hook: 'Getting older? Getting louder.', tagline: 'For women who refuse to act their age.',
+    hook: 'Getting older? Getting louder.', tagline: 'For women who stopped acting their age on purpose.',
     occasion: 'Perfect for birthdays, Mother’s Day or just because',
   },
   {
-    key: 'grandma', nav: 'Grandma', name: 'Grandma Era', blurb: 'Spoiling is a sport. These are the uniforms.', searchTerm: 'funny grandma shirts',
-    hook: 'Spoil them. Brag about it.', tagline: 'For grandmas with a sense of humor.',
+    key: 'grandma', nav: 'Grandma', name: 'Grandma Era', blurb: 'Spoil them rotten. Hand them back.', searchTerm: 'funny grandma shirts',
+    hook: 'Spoil them rotten. Send them home.', tagline: 'For grandmas who make the rules now.',
     occasion: 'Perfect for Mother’s Day, birthdays and new-grandma news',
   },
   {
-    key: 'retired', nav: 'Retired', name: 'Retired & Loving It', blurb: 'Out of office. Permanently.', searchTerm: 'funny retirement shirts',
-    hook: 'Off the clock. Forever.', tagline: 'For the newly retired and gloriously unbothered.',
+    key: 'retired', nav: 'Retired', name: 'Retired & Loving It', blurb: 'Out of office. Permanently. Don’t call.', searchTerm: 'funny retirement shirts',
+    hook: 'Off the clock. Forever.', tagline: 'For people who clocked out and aren’t clocking back in.',
     occasion: 'Perfect for retirement parties and the first Monday off',
   },
   {
-    key: 'birthday', nav: 'Birthdays', name: 'Milestone Birthdays', blurb: '50, 60, 70 and fabulously unbothered.', searchTerm: 'funny 50th, 60th and 70th birthday shirts',
-    hook: 'Make the big number look good.', tagline: 'For the milestone birthday girl.',
+    key: 'birthday', nav: 'Birthdays', name: 'Milestone Birthdays', blurb: '50, 60, 70 and not asking anyone’s permission.', searchTerm: 'funny 50th, 60th and 70th birthday shirts',
+    hook: 'Big number. Bigger attitude.', tagline: 'For the birthday girl who isn’t slowing down.',
     occasion: 'Perfect for 50th, 60th and 70th birthdays',
   },
   {
@@ -118,7 +118,7 @@ export const DESIGNS: Design[] = [
     accent: 'red',
     color: 'black',
     featured: true,
-    blurb: 'Some people get old. You got seasoned. For anyone who has earned every gray hair and isn’t apologizing for a single one.',
+    blurb: 'Some people get old. You got seasoned. Every gray hair earned, zero apologies issued.',
     spec: {
       layout: 'stack',
       lines: [
@@ -134,7 +134,7 @@ export const DESIGNS: Design[] = [
     accent: 'red',
     color: 'heather',
     featured: true,
-    blurb: 'The three things actually keeping this household running. Honest, warm and slightly dangerous.',
+    blurb: 'Coffee gets her up. Hot flashes keep her warm. Spite handles everything else.',
     spec: {
       layout: 'stack',
       lines: [
@@ -151,7 +151,7 @@ export const DESIGNS: Design[] = [
     vibe: 'aging',
     accent: 'gold',
     color: 'navy',
-    blurb: 'Decades of practice. Zero interest in a refresher course.',
+    blurb: 'Decades of practice, no plans to stop. Patience not included.',
     spec: {
       layout: 'stack',
       lines: [
@@ -167,7 +167,7 @@ export const DESIGNS: Design[] = [
     vibe: 'aging',
     accent: 'pink',
     color: 'maroon',
-    blurb: 'Classy on the label. A little unpredictable after the second glass.',
+    blurb: 'Classy on the label. Trouble after the second glass. Consider everyone warned.',
     spec: {
       layout: 'stack',
       lines: [
@@ -183,7 +183,7 @@ export const DESIGNS: Design[] = [
     vibe: 'aging',
     accent: 'red',
     color: 'white',
-    blurb: 'The knees have a few miles on them. The attitude is in mint condition.',
+    blurb: 'The knees have some miles on them. The attitude is in mint condition and not for sale.',
     spec: {
       layout: 'badge',
       top: 'Vintage knees',
@@ -201,7 +201,7 @@ export const DESIGNS: Design[] = [
     vibe: 'aging',
     accent: 'red',
     color: 'heather',
-    blurb: 'For the woman who took one look at “slowing down” and politely declined.',
+    blurb: 'For the woman who heard “slow down” and laughed. Peaked? Please. She’s just warming up.',
     spec: {
       layout: 'stack',
       lines: [
@@ -217,7 +217,7 @@ export const DESIGNS: Design[] = [
     vibe: 'aging',
     accent: 'pink',
     color: 'black',
-    blurb: 'A life philosophy, conveniently printed on cotton.',
+    blurb: 'Too old for drama. Too smart to waste good wine on the people who start it.',
     spec: {
       layout: 'stack',
       lines: [
@@ -234,7 +234,7 @@ export const DESIGNS: Design[] = [
     vibe: 'aging',
     accent: 'teal',
     color: 'heather',
-    blurb: 'All three boxes checked before breakfast.',
+    blurb: 'All three boxes checked before breakfast. Yes, she’s judging yours.',
     spec: { layout: 'checklist', title: [{ t: 'STATUS REPORT:', font: 'heavy', size: 150 }], items: ['Unbothered', 'Moisturized', 'Mildly judgmental'] },
   },
   {
@@ -243,7 +243,7 @@ export const DESIGNS: Design[] = [
     vibe: 'aging',
     accent: 'gold',
     color: 'navy',
-    blurb: 'Evenings are negotiable. Bring coffee and we’ll talk.',
+    blurb: 'Mornings aren’t happening. Afternoons are a maybe. Bring coffee and keep your voice down.',
     spec: {
       layout: 'quote',
       lines: [
@@ -260,7 +260,7 @@ export const DESIGNS: Design[] = [
     vibe: 'aging',
     accent: 'red',
     color: 'white',
-    blurb: 'Consider yourself warned. The filter left years ago and isn’t coming back.',
+    blurb: 'Consider yourself warned. The filter left years ago and nobody misses it.',
     spec: {
       layout: 'label',
       header: 'Warning',
@@ -278,9 +278,9 @@ export const DESIGNS: Design[] = [
     title: 'In My Grandma Era',
     vibe: 'grandma',
     accent: 'red',
-    color: 'mauve',
+    color: 'navy',
     featured: true,
-    blurb: 'Your name, your era. Type Nana, Gigi, Mimi or whatever the little ones call you – we print it big.',
+    blurb: 'Your name, your era. Nana, Gigi, Mimi or whatever the little ones call you, printed big enough to read from across the playground.',
     fields: [nickname('Grandma')],
     spec: {
       layout: 'stack',
@@ -312,7 +312,7 @@ export const DESIGNS: Design[] = [
     vibe: 'grandma',
     accent: 'red',
     color: 'heather',
-    blurb: 'Same love, better hours, way more snacks.',
+    blurb: 'Same love, better hours, way more snacks. And she gets to hand them back.',
     fields: [nickname('Grandma')],
     spec: {
       layout: 'stack',
@@ -330,7 +330,7 @@ export const DESIGNS: Design[] = [
     vibe: 'grandma',
     accent: 'pink',
     color: 'black',
-    blurb: 'Who needs a gym when there’s a toy aisle and a cookie jar?',
+    blurb: 'Who needs a gym when there’s a toy aisle and a cookie jar? Complaints go to Mom.',
     spec: {
       layout: 'stack',
       lines: [
@@ -363,7 +363,7 @@ export const DESIGNS: Design[] = [
     vibe: 'grandma',
     accent: 'gold',
     color: 'navy',
-    blurb: 'Licensed, experienced and fully stocked. Personalized with her name.',
+    blurb: 'Licensed, fully stocked and not answering to Mom. Personalized with her name.',
     fields: [nickname('Grandma')],
     spec: {
       layout: 'badge',
@@ -381,7 +381,7 @@ export const DESIGNS: Design[] = [
     vibe: 'grandma',
     accent: 'pink',
     color: 'maroon',
-    blurb: 'Sweet as pie, sharp as a tack, and absolutely the reason the kids came home with a drum set.',
+    blurb: 'Sweet as pie, sharp as a tack, and the reason the kids came home with a drum set. No regrets.',
     fields: [nickname('Grandma')],
     spec: {
       layout: 'stack',
@@ -624,7 +624,7 @@ export const DESIGNS: Design[] = [
     title: 'It Took Me 50 Years to Look This Good (Custom Age)',
     vibe: 'birthday',
     accent: 'red',
-    color: 'mauve',
+    color: 'black',
     blurb: 'Craftsmanship takes time. Change the number to match the masterpiece.',
     fields: [age('50')],
     spec: {
@@ -660,7 +660,7 @@ export const DESIGNS: Design[] = [
     vibe: 'birthday',
     accent: 'gold',
     color: 'maroon',
-    blurb: 'Limited run, no returns, highly collectible. Works for any milestone.',
+    blurb: 'Limited run, highly collectible, not retiring anytime soon. Works for any milestone.',
     fields: [age('70')],
     spec: {
       layout: 'badge',
@@ -678,7 +678,7 @@ export const DESIGNS: Design[] = [
     vibe: 'birthday',
     accent: 'teal',
     color: 'heather',
-    blurb: 'A birthday present and a boundary, all in one.',
+    blurb: 'A birthday present and a boundary, all in one. The answer is still no.',
     fields: [age('50')],
     spec: {
       layout: 'quote',
@@ -713,8 +713,8 @@ export const DESIGNS: Design[] = [
     title: '60 & Fabulously Unbothered (Custom Age)',
     vibe: 'birthday',
     accent: 'red',
-    color: 'mauve',
-    blurb: 'Six decades of not caring what anyone thinks, and still improving.',
+    color: 'navy',
+    blurb: 'Six decades of not caring what anyone thinks, and she’s only getting better at it.',
     fields: [age('60')],
     spec: {
       layout: 'stack',

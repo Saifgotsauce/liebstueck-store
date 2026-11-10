@@ -11,6 +11,20 @@ export const brand = {
   description:
     'Funny shirts for women who are getting older out loud: aging, grandma life, retirement and milestone birthdays. Personalize with names and years. Printed to order.',
   email: 'hello@oldseasoned.com', // public support address (shown on the site)
+  /** Facebook Messenger link for the shop's page, e.g. 'https://m.me/oldseasoned'. Hidden while empty. */
+  messengerUrl: '',
+  /** How support emails and pages sign off. Never invent a person (docs/design-rules.md §5). */
+  signOff: 'The Seasoned team',
+};
+
+/** The US store's customer promise (docs/design-rules.md §5). Wording lives in lib/promise.ts. */
+export const promise = {
+  /** Wrong size: we print and send the right one for this flat fee, she keeps the first one. */
+  sizeSwapCents: 995,
+  /** Days after delivery to report a problem (Printful needs reports within 30 days). */
+  problemDays: 30,
+  /** Tracking stuck this many business days = we treat it as lost. */
+  lostAfterBusinessDays: 7,
 };
 
 import type { Locale } from './locale';
@@ -25,6 +39,8 @@ export type Store = {
   vatIncluded: boolean;
   shippingCents: number;
   freeShippingFromCents: number;
+  /** Any order with a hoodie in it ships free, whatever the total. */
+  freeShippingWithHoodie: boolean;
   bundles: Bundle[];
   deliveryMinDays: number;
   deliveryMaxDays: number;
@@ -56,6 +72,7 @@ export const stores: Record<Locale, Store> = {
     vatIncluded: false,
     shippingCents: 495,
     freeShippingFromCents: 5000,
+    freeShippingWithHoodie: true,
     bundles: BUNDLES,
     deliveryMinDays: 5,
     deliveryMaxDays: 9,
@@ -73,6 +90,7 @@ export const stores: Record<Locale, Store> = {
     vatIncluded: true,
     shippingCents: 495,
     freeShippingFromCents: 5000,
+    freeShippingWithHoodie: false,
     bundles: BUNDLES,
     // printed in Printful's EU facilities (2–5 days) + 4–7 days to Germany
     deliveryMinDays: 6,
@@ -128,7 +146,7 @@ const MONEY: Record<Locale, [Intl.NumberFormat, Intl.NumberFormat]> = {
   en: [new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }), new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })],
   de: [new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }), new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })],
 };
-/** $29.95 / 29,95 €, but $50 / 50 € for round amounts. */
+/** $34.95 / 29,95 €, but $50 / 50 € for round amounts. */
 export function formatPrice(cents: number, locale: Locale = 'en') {
   const [money, whole] = MONEY[locale];
   return cents % 100 === 0 ? whole.format(cents / 100) : money.format(cents / 100);

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { trackEvent } from '@/lib/analytics';
 import ShirtPreview from '@/components/ShirtPreview';
+import { PaymentLogos, PromiseNote } from '@/components/Trust';
 import { GARMENTS, colorLabel, garmentText } from '@/lib/catalog';
 import { isDemo } from '@/lib/config';
 import { useCart } from '@/lib/cart';
@@ -154,7 +155,7 @@ export default function CartView() {
                 <dd>{formatPrice(totals.total)}</dd>
               </div>
             </dl>
-            {toFree > 0 && (
+            {toFree > 0 && totals.shipping > 0 && (
               <div className="mt-4">
                 <p className="text-[0.95rem]">{C.toFree(formatPrice(toFree))}</p>
                 <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-white" aria-hidden="true">
@@ -178,9 +179,11 @@ export default function CartView() {
                 {error}
               </p>
             )}
-            <p className="mt-4 text-center text-[0.92rem] text-ink-soft">{C.payNote}</p>
+            {locale === 'en' && <PaymentLogos center className="mt-4" />}
+            <p className="mt-3 text-center text-[0.95rem] text-ink-soft">{C.payNote}</p>
           </div>
-          <p className="mt-4 text-[0.95rem] text-ink-soft">{C.deliveryNote(shop.deliveryMinDays, shop.deliveryMaxDays)}</p>
+          {locale === 'en' && <PromiseNote className="mt-4 bg-white ring-2 ring-lilac-line" />}
+          <p className="mt-4 text-[1rem] text-ink-soft">{C.deliveryNote(shop.deliveryMinDays, shop.deliveryMaxDays)}</p>
         </aside>
       </div>
     </div>

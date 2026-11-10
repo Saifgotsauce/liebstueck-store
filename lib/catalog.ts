@@ -42,7 +42,7 @@ export const GARMENTS: Record<GarmentKey, Garment> = {
     model: 'Bella+Canvas 3001 unisex tee',
     material: '100% combed, ring-spun cotton – soft and light (heather colors are a cotton-poly blend)',
     fit: 'Unisex, relaxed fit. Women usually take their normal size, or one down for a closer fit.',
-    priceCents: 2995,
+    priceCents: 3495, // $34.95: covers ads, misprints and size swaps (Regular Mess charges ~$45)
     sizeExtraCents: { '2XL': 200, '3XL': 300, '4XL': 400 },
     sizes: ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'],
     colors: [
@@ -73,7 +73,7 @@ export const GARMENTS: Record<GarmentKey, Garment> = {
     model: 'Gildan 18500 unisex heavy blend hoodie',
     material: '50% cotton, 50% polyester fleece – warm and cozy',
     fit: 'Unisex, classic fit with front pouch pocket and drawstring hood.',
-    priceCents: 4495,
+    priceCents: 4995, // $49.95, and every order with a hoodie ships free (stores.en.freeShippingWithHoodie)
     sizeExtraCents: { '2XL': 300, '3XL': 400, '4XL': 500 },
     sizes: ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'],
     colors: [

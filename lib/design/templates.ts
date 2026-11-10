@@ -36,10 +36,10 @@ export function defaultValues(t: DesignTemplate): FieldValues {
   return Object.fromEntries(t.fields.map((f) => [f.key, Array.isArray(f.default) ? [...f.default] : f.default]));
 }
 
-/** The print palette for a design on a garment colour. */
-export function designPalette(slug: string, ink: InkTheme) {
+/** The print palette for a design on a garment colour (accent checked for contrast against the shirt). */
+export function designPalette(slug: string, color: InkTheme | { ink: InkTheme; hex: string }) {
   const d = ALL_DESIGNS.find((x) => x.slug === slug);
-  return palette(ink, d?.accent ?? 'red');
+  return typeof color === 'string' ? palette(color, d?.accent ?? 'red') : palette(color.ink, d?.accent ?? 'red', color.hex);
 }
 
 export { fillText };

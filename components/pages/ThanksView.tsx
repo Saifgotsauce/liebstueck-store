@@ -5,12 +5,13 @@ import { useEffect, useRef, useState } from 'react';
 import { useCart } from '@/lib/cart';
 import { useLocale } from '@/lib/i18n';
 import { track } from '@/lib/pixel';
+import { ContactCard, OrderSteps } from '@/components/Trust';
 
 type Summary = { email: string | null; amountTotal: number; orderRef: string; items: { name: string; quantity: number }[] };
 
 export default function ThanksView() {
   const { clear, ready } = useCart();
-  const { t, routes, store, price: formatPrice } = useLocale();
+  const { locale, t, routes, store, price: formatPrice } = useLocale();
   const T = t.thanks;
   const [summary, setSummary] = useState<Summary | null>(null);
   const done = useRef(false);
@@ -50,6 +51,15 @@ export default function ThanksView() {
           </ul>
           <p className="mt-3 font-bold">{T.total(formatPrice(summary.amountTotal))}</p>
         </div>
+      )}
+      {locale === 'en' && (
+        <section className="mt-10" aria-labelledby="next-steps">
+          <h2 id="next-steps" className="text-[2rem]">
+            What happens next
+          </h2>
+          <OrderSteps className="mt-5" />
+          <ContactCard className="mt-8" />
+        </section>
       )}
       <p className="mt-8">{T.questions}</p>
       <Link href={routes.shop} className="btn btn-line mt-6">

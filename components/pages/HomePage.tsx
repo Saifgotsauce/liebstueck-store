@@ -10,9 +10,14 @@ import { designsFor, designsInVibe, getDesign, vibesFor } from '@/lib/designs';
 import { defaultValues, getTemplate } from '@/lib/design/templates';
 import { ROUTES, productPath, shopPath, type Locale } from '@/lib/locale';
 import { MESSAGES } from '@/lib/messages';
+import HomeUS from './HomeUS';
 
-/** Home page of either store. Same layout, the store's own words, designs and prices. */
+/** Home page. The US store has its own photo-led page (HomeUS); the German store keeps this layout. */
 export default function HomePage({ locale }: { locale: Locale }) {
+  return locale === 'en' ? <HomeUS /> : <HomeClassic locale={locale} />;
+}
+
+function HomeClassic({ locale }: { locale: Locale }) {
   const t = MESSAGES[locale];
   const H = t.home;
   const store = stores[locale];
