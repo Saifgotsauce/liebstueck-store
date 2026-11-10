@@ -59,7 +59,11 @@ export function ConsentProvider({ children, mode = 'optout' }: { children: React
     },
     [KEY],
   );
-  const pixelLoaded = () => typeof window !== 'undefined' && Boolean((window as unknown as { fbq?: unknown }).fbq);
+  const pixelLoaded = () => {
+    if (typeof window === 'undefined') return false;
+    const w = window as unknown as { fbq?: unknown; gtag?: unknown; clarity?: unknown };
+    return Boolean(w.fbq || w.gtag || w.clarity);
+  };
 
   const setOptOut = useCallback(
     (value: boolean) => {

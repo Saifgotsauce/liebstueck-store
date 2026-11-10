@@ -6,6 +6,8 @@ import SkipLink from './SkipLink';
 import Header from './Header';
 import Footer from './Footer';
 import MetaPixel from './MetaPixel';
+import Analytics from './Analytics';
+import BehaviorTracker from './BehaviorTracker';
 import DemoBanner from './DemoBanner';
 import GeoBanner from './GeoBanner';
 import CookieBanner from './CookieBanner';
@@ -25,6 +27,8 @@ export default function StoreShell({ locale, children }: { locale: Locale; child
             <Footer />
             {locale === 'de' && <CookieBanner />}
             <MetaPixel />
+            <Analytics />
+            <BehaviorTracker />
           </div>
         </CartProvider>
       </ConsentProvider>
