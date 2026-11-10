@@ -13,7 +13,8 @@
     "test:e2e": "tsx scripts/test-e2e.ts",
     "build:demo": "bash scripts/build-demo.sh",
     "design:sheet": "tsx scripts/design-sheet.ts",
-    "render:mockups": "tsx scripts/render-mockups.ts"
+    "render:mockups": "tsx scripts/render-mockups.ts",
+    "check:contrast": "tsx scripts/check-contrast.ts"
   },
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",

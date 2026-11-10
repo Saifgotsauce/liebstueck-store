@@ -6,12 +6,14 @@ import { vibesFor } from '@/lib/designs';
 import { useLocale } from '@/lib/i18n';
 import { ROUTES, shopPath } from '@/lib/locale';
 import { Logo } from './Logo';
+import { PaymentLogos } from './Trust';
 
 const HELP = {
   en: [
-    { href: ROUTES.en.faq, label: 'FAQ' },
+    { href: ROUTES.en.about, label: 'About us' },
+    { href: ROUTES.en.faq, label: 'Questions & answers' },
     { href: ROUTES.en.shipping, label: 'Shipping' },
-    { href: ROUTES.en.returns, label: 'Returns & replacements' },
+    { href: ROUTES.en.returns, label: 'Our promise: swaps & replacements' },
     { href: ROUTES.en.privacy, label: 'Privacy policy' },
     { href: ROUTES.en.terms, label: 'Terms of service' },
     { href: ROUTES.en.privacyChoices, label: 'Your privacy choices' },
@@ -38,6 +40,19 @@ export default function Footer() {
           <p className="mt-4 text-white/80">
             {t.footer.questions} <a href={`mailto:${brand.email}`} className="font-bold text-white">{brand.email}</a>
           </p>
+          {locale === 'en' && (
+            <>
+              <p className="mt-2 text-white/80">A real person answers every message, usually within a day.</p>
+              {brand.messengerUrl && (
+                <p className="mt-2">
+                  <a href={brand.messengerUrl} className="font-bold text-white" target="_blank" rel="noopener noreferrer">
+                    Message us on Facebook
+                  </a>
+                </p>
+              )}
+              <PaymentLogos className="mt-5" />
+            </>
+          )}
           {locale === 'de' && (
             // Electronic withdrawal function (§ 356a BGB): always visible, set apart from the legal links
             <Link href={ROUTES.de.withdraw} className="btn mt-6 border-2 border-white bg-transparent text-white no-underline hover:bg-white hover:text-violet">

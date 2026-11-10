@@ -25,7 +25,7 @@ export async function GET(req: Request) {
   if (!v.ok) return new Response('Invalid design data', { status: 422 });
 
   const { width, height, dpi } = printfileSize(garment.key);
-  const png = renderPrintPng(template, v.values, designPalette(design.slug, color.ink), width, height, dpi);
+  const png = renderPrintPng(template, v.values, designPalette(design.slug, color), width, height, dpi);
   return new Response(new Uint8Array(png), {
     headers: {
       'Content-Type': 'image/png',

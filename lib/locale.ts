@@ -10,6 +10,7 @@ export const ROUTES = {
   en: {
     home: '/', shop: '/shop/', cart: '/cart/', checkout: '/cart/', thanks: '/thanks/', faq: '/faq/',
     shipping: '/shipping/', returns: '/returns/', privacy: '/privacy/', terms: '/terms/', privacyChoices: '/privacy-choices/',
+    about: '/about/',
   },
   de: {
     home: '/de/', shop: '/de/shop/', cart: '/de/warenkorb/', checkout: '/de/kasse/', thanks: '/de/danke/', faq: '/de/faq/',

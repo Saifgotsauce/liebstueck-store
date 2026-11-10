@@ -21,7 +21,7 @@ const only = process.argv[2];
   for (const d of list) {
     const t = getTemplate(d.slug);
     const c = COLORS[d.color];
-    const p = designPalette(d.slug, c.ink);
+    const p = designPalette(d.slug, c);
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 1200 1600"><rect width="1200" height="1600" fill="${c.hex}"/>${t.render(defaultValues(t), p)}<rect x="0" y="0" width="1200" height="1600" fill="none" stroke="#888" stroke-width="4"/></svg>`;
     const png = new Resvg(svg, { font: { fontFiles: FONT_FILES, loadSystemFonts: false, defaultFontFamily: 'Nunito Sans' } }).render().asPng();
     const label = Buffer.from(`<svg width="600" height="40"><rect width="600" height="40" fill="#fff"/><text x="10" y="28" font-size="22" font-family="sans-serif">${d.slug}</text></svg>`);

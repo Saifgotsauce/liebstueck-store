@@ -158,7 +158,7 @@ const en = {
     trust: (free: string) => [
       { title: 'Secure checkout', text: 'Apple Pay, Google Pay and cards' },
       { title: 'Free shipping', text: `On US orders over ${free}` },
-      { title: 'Misprint? Free fix', text: 'We replace or refund it.', link: 'Details' },
+      { title: 'Wrong size? Easy swap', text: 'We send the right one, you keep the first.', link: 'Details' },
       { title: 'Made for you', text: 'Printed in 2–5 days, shipped with tracking' },
     ],
     setTitle: 'Complete the set',
@@ -179,7 +179,7 @@ const en = {
       `Every shirt is printed to order, usually within 2–5 business days, then shipped with tracking. Most orders arrive ${min}–${max} business days after you order. We ship within the US.`,
     returns: 'Returns & replacements',
     returnsText:
-      'If your order arrives damaged, misprinted or wrong, tell us within 30 days and we’ll send a replacement or refund it. Because each shirt is made just for you, we can’t take back items for a change of mind or the wrong size, so please check the size guide.',
+      'If we get it wrong (misprint, damage, wrong item), tell us within 30 days and we send a new one or refund you, free. Wrong size? We print the right one for $9.95 and you keep the first. Nothing to send back, personalized shirts included.',
     returnsLink: 'Full policy',
     chooseSize: 'Choose size',
     addShort: 'Add to cart',

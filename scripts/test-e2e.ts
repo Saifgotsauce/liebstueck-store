@@ -30,7 +30,7 @@ const state = {
   amountCoupons: {} as Record<string, number>,
   printfulOrders: [] as Record<string, unknown>[],
   createOrderCalls: 0,
-  emails: [] as { to: string[]; subject: string; html: string }[],
+  emails: [] as { to: string[]; subject: string; html: string; scheduled_at?: string }[],
   mockupTasks: [] as { body: Record<string, unknown>; printFileStatus: number }[],
 };
 
@@ -440,7 +440,11 @@ async function main() {
       method: 'POST',
       body: JSON.stringify({ type: 'package_shipped', data: { shipment: { carrier: 'USPS', tracking_url: 'https://usps.example/1' }, order: { recipient: { name: 'Linda Carter', email: 'linda@example.com', country_code: 'US' } } } }),
     });
-    ok(pfGood.status === 200 && state.emails.at(-1)!.subject === 'Your order is on its way' && state.emails.at(-1)!.html.includes('Linda'), 'shipping email with tracking');
+    const shipMail = state.emails.find((e) => e.subject === 'Your order is on its way');
+    ok(pfGood.status === 200 && !!shipMail && shipMail.html.includes('Linda') && shipMail.html.includes('the right one for $9.95'), 'shipping email with tracking + size swap note');
+    const checkIn = state.emails.find((e) => e.subject === 'Did it fit?');
+    const days = checkIn?.scheduled_at ? (Date.parse(checkIn.scheduled_at) - Date.now()) / 86_400_000 : 0;
+    ok(!!checkIn && days > 6 && days < 8 && checkIn.html.includes('Linda'), 'check-in email scheduled a week after shipping');
     console.log('\n6) German store (/de/)');
     const addr = { firstName: 'Gisela', lastName: 'Schmidt', street: 'Lindenstraße 12', extra: '', zip: '10115', city: 'Berlin', email: 'gisela@example.de' };
     const deCart = [

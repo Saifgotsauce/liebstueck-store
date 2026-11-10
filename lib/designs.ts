@@ -278,7 +278,7 @@ export const DESIGNS: Design[] = [
     title: 'In My Grandma Era',
     vibe: 'grandma',
     accent: 'red',
-    color: 'mauve',
+    color: 'navy',
     featured: true,
     blurb: 'Your name, your era. Type Nana, Gigi, Mimi or whatever the little ones call you – we print it big.',
     fields: [nickname('Grandma')],
@@ -624,7 +624,7 @@ export const DESIGNS: Design[] = [
     title: 'It Took Me 50 Years to Look This Good (Custom Age)',
     vibe: 'birthday',
     accent: 'red',
-    color: 'mauve',
+    color: 'black',
     blurb: 'Craftsmanship takes time. Change the number to match the masterpiece.',
     fields: [age('50')],
     spec: {
@@ -713,7 +713,7 @@ export const DESIGNS: Design[] = [
     title: '60 & Fabulously Unbothered (Custom Age)',
     vibe: 'birthday',
     accent: 'red',
-    color: 'mauve',
+    color: 'navy',
     blurb: 'Six decades of not caring what anyone thinks, and still improving.',
     fields: [age('60')],
     spec: {

@@ -25,7 +25,7 @@ export default function ProductCard({ design, eager = false }: { design: Design;
             <ShirtPreview design={design.slug} garment="tee" colorKey={color} values={defaultValues(getTemplate(design.slug))} label={t.card.label(design.title, c ? colorLabel(c, locale) : '')} className="block aspect-square w-full" view="tile" />
           )}
           {isPersonalized(design) && (
-            <span className="absolute left-2.5 top-2.5 rounded-full bg-sun px-2.5 py-1 text-[0.8rem] font-bold text-ink">{t.card.badge}</span>
+            <span className="absolute left-2.5 top-2.5 rounded-full bg-sun px-2.5 py-1 text-[0.88rem] font-bold text-ink">{t.card.badge}</span>
           )}
         </div>
         <h3 className="mt-3 font-sans text-[1.02rem] font-bold leading-snug tracking-normal text-ink group-hover:text-violet">{design.title}</h3>

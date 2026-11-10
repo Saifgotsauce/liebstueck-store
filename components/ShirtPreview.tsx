@@ -19,7 +19,7 @@ type Props = {
 export default function ShirtPreview({ design, garment, colorKey, values, label, className, view = 'full' }: Props) {
   const t = getTemplate(design);
   const color = getColor(GARMENTS[garment], colorKey) ?? GARMENTS[garment].colors[0];
-  const markup = t.render(values, designPalette(design, color.ink));
+  const markup = t.render(values, designPalette(design, color));
   const photo = garmentPhoto(garment, color.key);
   if (photo) return <PhotoPreview photo={photo} garment={garment} design={markup} label={label} className={className} view={view} />;
   return <DrawnPreview garment={garment} hex={color.hex} light={color.ink === 'dark'} design={markup} label={label} className={className} />;

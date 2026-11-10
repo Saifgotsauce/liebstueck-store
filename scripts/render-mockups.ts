@@ -42,7 +42,7 @@ async function shirt(d: Design, garment: GarmentKey, view: MockupView, px: numbe
   const photo = garmentPhoto(garment, colorKey);
   if (!photo) throw new Error(`No garment photo for ${garment}/${colorKey} – run the Printful sync first.`);
   const t = getTemplate(d.slug);
-  const design = t.render(defaultValues(t), designPalette(d.slug, color.ink));
+  const design = t.render(defaultValues(t), designPalette(d.slug, color));
   const { d: r, viewBox } = mockupGeometry(photo, garment, view);
   const { w, h } = photo;
   const overlay = photo.overlay ? `<image href="${await asDataUri(photo.overlay)}" x="0" y="0" width="${w}" height="${h}"/>` : '';

@@ -87,10 +87,10 @@
   .prose-s { max-width: 42rem; }
   .prose-s h2 { font-size: 1.6rem; margin: 2.2rem 0 .7rem; }
   .prose-s h3 { font-size: 1.2rem; margin: 1.6rem 0 .5rem; font-family: var(--font-sans); font-weight: 700; letter-spacing: 0; color: var(--color-ink); }
-  .prose-s p, .prose-s ul { margin: 0 0 1rem; }
-  .prose-s ul { padding-left: 1.2rem; list-style: disc; }
-  .prose-s li { margin: .3rem 0; }
-  .prose-s a { color: var(--color-violet); font-weight: 700; }
+  .prose-s p, .prose-s ul:not([class]) { margin: 0 0 1rem; }
+  .prose-s ul:not([class]) { padding-left: 1.2rem; list-style: disc; }
+  .prose-s ul:not([class]) > li { margin: .3rem 0; }
+  .prose-s a:not(.btn) { color: var(--color-violet); font-weight: 700; }
   .prose-s .muted { color: var(--color-ink-soft); font-size: .95rem; }
   /* placeholder still to be filled in lib/config.ts */
   .prose-s .todo, .todo { background: var(--color-sun); padding: 0 .2em; border-radius: .2em; }

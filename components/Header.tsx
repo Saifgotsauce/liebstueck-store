@@ -7,7 +7,7 @@ import { useCart } from '@/lib/cart';
 import { holidayDeadline } from '@/lib/dates';
 import { vibeNav, vibesFor } from '@/lib/designs';
 import { useLocale } from '@/lib/i18n';
-import { shopPath } from '@/lib/locale';
+import { ROUTES, shopPath } from '@/lib/locale';
 import { Logo } from './Logo';
 
 export default function Header() {
@@ -50,6 +50,11 @@ export default function Header() {
               {vibeNav(v)}
             </Link>
           ))}
+          {locale === 'en' && (
+            <Link href={ROUTES.en.about} className="font-medium no-underline hover:text-violet" aria-current={pathname === ROUTES.en.about ? 'page' : undefined}>
+              About
+            </Link>
+          )}
         </nav>
         <Link href={routes.cart} className="relative -mr-2 flex h-12 w-12 items-center justify-center rounded-full no-underline hover:bg-lilac" aria-label={t.header.cart(ready ? totals.count : 0)}>
           <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -77,6 +82,19 @@ export default function Header() {
                 </Link>
               </li>
             ))}
+            {locale === 'en' && (
+              <li className="flex flex-wrap gap-x-6 gap-y-1 pt-3">
+                <Link href={ROUTES.en.about} className="flex min-h-12 items-center font-bold text-violet no-underline">
+                  About us
+                </Link>
+                <Link href={ROUTES.en.faq} className="flex min-h-12 items-center font-bold text-violet no-underline">
+                  Questions & answers
+                </Link>
+                <Link href={ROUTES.en.returns} className="flex min-h-12 items-center font-bold text-violet no-underline">
+                  Our promise
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
       )}
