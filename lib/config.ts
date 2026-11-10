@@ -10,7 +10,7 @@ export const brand = {
   // Browser tab + search results
   description:
     'Funny shirts for women who are getting older out loud: aging, grandma life, retirement and milestone birthdays. Personalize with names and years. Printed to order.',
-  email: 'hello@example.com', // public support address (shown on the site)
+  email: 'hello@oldseasoned.com', // public support address (shown on the site)
 };
 
 import type { Locale } from './locale';
