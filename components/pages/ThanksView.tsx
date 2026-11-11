@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import ReferSection from '@/components/ReferSection';
 import { useEffect, useRef, useState } from 'react';
 import { useCart } from '@/lib/cart';
 import { useLocale } from '@/lib/i18n';
@@ -51,6 +52,11 @@ export default function ThanksView() {
           </ul>
           <p className="mt-3 font-bold">{T.total(formatPrice(summary.amountTotal))}</p>
         </div>
+      )}
+      {locale === 'en' && (
+        <section className="mt-10 rounded-2xl bg-lilac p-5 sm:p-7" aria-labelledby="refer-thanks">
+          <ReferSection headingId="refer-thanks" compact />
+        </section>
       )}
       {locale === 'en' && (
         <section className="mt-10" aria-labelledby="next-steps">

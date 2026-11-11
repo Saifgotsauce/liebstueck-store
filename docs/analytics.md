@@ -28,6 +28,9 @@ funnel step can be split by campaign, ad set and ad. Name ads by creative (e.g. 
 Standard shopping events (Meta + GA4 + Clarity): `ViewContent` (view_item), `AddToCart`, `InitiateCheckout`
 (begin_checkout), `Purchase` (also sent server-side).
 
+Referral program: `ReferralSignup` (got a friend code), `ReferralShared` (method: sms, facebook, copy),
+`ReferralCodeApplied` (kind: referral or reward; source: link or cart).
+
 Custom events (Meta custom events, GA4 snake_case, Clarity events):
 
 | Event | Fires when | Useful params |

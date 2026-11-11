@@ -6,11 +6,12 @@ import { bundlePercent, shippingFor } from '@/lib/cart-math';
 import { ROUTES, isLocale, type Locale } from '@/lib/locale';
 import { env } from '@/lib/server/env';
 import { parseItems, toStored, type CleanItem } from '@/lib/server/order-items';
+import { findCode, type FoundCode } from '@/lib/server/referral';
 import { amountCoupon, bundleCoupon, stripe } from '@/lib/server/stripe';
 
 export const runtime = 'nodejs';
 
-type Body = { locale?: unknown; items?: unknown; address?: unknown; marketingConsent?: boolean; fbp?: string; fbc?: string };
+type Body = { locale?: unknown; items?: unknown; address?: unknown; code?: unknown; marketingConsent?: boolean; fbp?: string; fbc?: string };
 
 const MSG = {
   en: {
@@ -19,6 +20,7 @@ const MSG = {
     item: (n: number, m: string) => `Item ${n}: ${m}`,
     empty: 'Your cart is empty.',
     failed: 'Checkout couldn’t be opened. Please try again in a moment.',
+    badCode: 'That code doesn’t work anymore. Remove it and try again.',
   },
   de: {
     noStripe: 'Die Kasse ist noch nicht eingerichtet (Stripe-Schlüssel fehlt).',
@@ -49,6 +51,13 @@ export async function POST(req: Request) {
     address = a;
   }
 
+  // US: friend / reward code (checked again here – the cart only shows it)
+  let code: FoundCode | null = null;
+  if (locale === 'en' && body?.code) {
+    code = await findCode(stripe(), body.code).catch(() => null);
+    if (!code) return NextResponse.json({ error: MSG.en.badCode, badCode: true }, { status: 400 });
+  }
+
   const count = items.reduce((s, i) => s + i.qty, 0);
   const subtotal = items.reduce((s, i) => s + i.unitCents * i.qty, 0);
   const percent = bundlePercent(count, locale);
@@ -63,7 +72,7 @@ export async function POST(req: Request) {
 
   try {
     const s = stripe();
-    const params = address ? await germanSession(s, items, address, { percent, discount, shipping, tracking }) : await usSession(s, items, { percent, shipping, tracking });
+    const params = address ? await germanSession(s, items, address, { percent, discount, shipping, tracking }) : await usSession(s, items, { percent, discount, shipping, tracking, code });
     const session = await s.checkout.sessions.create(params);
     return NextResponse.json({ url: session.url });
   } catch (e) {
@@ -94,8 +103,21 @@ function lineItem(i: CleanItem, locale: Locale, taxBehavior: 'exclusive' | 'incl
 }
 
 // ── US store: Stripe collects the address, bundle saving as a % coupon ─────────
-async function usSession(s: Stripe, items: CleanItem[], o: { percent: number; shipping: number; tracking: Record<string, string> }): Promise<Stripe.Checkout.SessionCreateParams> {
+async function usSession(
+  s: Stripe,
+  items: CleanItem[],
+  o: { percent: number; discount: number; shipping: number; tracking: Record<string, string>; code: FoundCode | null },
+): Promise<Stripe.Checkout.SessionCreateParams> {
   const shop = stores.en;
+  // Stripe takes one discount per session: with a code, bundle saving + code become one exact amount.
+  // The code doesn't change the free-shipping threshold (that's worked out before it).
+  const subtotal = items.reduce((sum, i) => sum + i.unitCents * i.qty, 0);
+  const off = o.code ? Math.min(o.discount + o.code.cents, subtotal - 50) : 0;
+  const discounts = o.code
+    ? [{ coupon: await amountCoupon(s, off, 'usd', o.discount ? `Bundle savings + ${o.code.kind === 'reward' ? 'reward' : 'friend'} code` : `${o.code.kind === 'reward' ? 'Reward' : 'Friend'} code`, 'SAVINGS') }]
+    : o.percent
+      ? [{ coupon: await bundleCoupon(s, o.percent) }]
+      : [];
   const taxBehavior = env.stripeAutomaticTax ? ('exclusive' as const) : undefined;
   return {
     mode: 'payment',
@@ -124,8 +146,8 @@ async function usSession(s: Stripe, items: CleanItem[], o: { percent: number; sh
       submit: { message: 'Made just for you: we replace or refund anything that arrives damaged, misprinted or wrong. See our return policy for details.' },
     },
     ...(env.stripeRequireTerms ? { consent_collection: { terms_of_service: 'required' as const } } : {}),
-    ...(o.percent ? { discounts: [{ coupon: await bundleCoupon(s, o.percent) }] } : {}),
-    metadata: { store: 'en', ...o.tracking },
+    ...(discounts.length ? { discounts } : {}),
+    metadata: { store: 'en', ...o.tracking, ...(o.code ? { code: o.code.code, code_kind: o.code.kind } : {}) },
     success_url: `${siteUrl}${ROUTES.en.thanks}?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${siteUrl}${ROUTES.en.cart}`,
   };

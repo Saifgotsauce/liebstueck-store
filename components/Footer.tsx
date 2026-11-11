@@ -1,5 +1,6 @@
 'use client';
 
+import { FRIEND, REFERRAL, REWARD } from '@/lib/referral';
 import Link from 'next/link';
 import { brand } from '@/lib/config';
 import { vibesFor } from '@/lib/designs';
@@ -12,6 +13,7 @@ const HELP = {
   en: [
     { href: ROUTES.en.about, label: 'Our story' },
     { href: ROUTES.en.faq, label: 'Questions & answers' },
+    { href: REFERRAL.path, label: `Give ${FRIEND}, get ${REWARD}` },
     { href: ROUTES.en.shipping, label: 'Shipping' },
     { href: ROUTES.en.returns, label: 'Our promise: swaps & replacements' },
     { href: ROUTES.en.privacy, label: 'Privacy policy' },

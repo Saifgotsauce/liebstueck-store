@@ -11,6 +11,7 @@ import BehaviorTracker from './BehaviorTracker';
 import DemoBanner from './DemoBanner';
 import GeoBanner from './GeoBanner';
 import CookieBanner from './CookieBanner';
+import ReferralBanner from './ReferralBanner';
 
 /** Everything around the page content, for one store. */
 export default function StoreShell({ locale, children }: { locale: Locale; children: React.ReactNode }) {
@@ -22,6 +23,7 @@ export default function StoreShell({ locale, children }: { locale: Locale; child
             <SkipLink />
             <DemoBanner />
             <GeoBanner />
+            {locale === 'en' && <ReferralBanner />}
             <Header />
             <main id="main">{children}</main>
             <Footer />

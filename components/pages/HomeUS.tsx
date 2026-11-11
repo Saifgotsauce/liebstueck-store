@@ -3,6 +3,7 @@ import Coupons from '@/components/Coupons';
 import HeroTry from '@/components/HeroTry';
 import { IconChat, IconCheck, IconLock, IconShield, IconTruck } from '@/components/Icons';
 import ProductCard, { ProductGrid } from '@/components/ProductCard';
+import ReferSection from '@/components/ReferSection';
 import ShirtPreview from '@/components/ShirtPreview';
 import { ContactCard, OrderSteps, PaymentLogos, Photo } from '@/components/Trust';
 import { defaultColor, unitPriceCents } from '@/lib/catalog';
@@ -180,6 +181,11 @@ export default function HomeUS() {
             </Link>
           </div>
         </div>
+      </section>
+
+      {/* Give $5, get $5: she tells her friends anyway */}
+      <section className="wrap mt-20" aria-labelledby="refer">
+        <ReferSection />
       </section>
 
       {/* Shop by vibe */}

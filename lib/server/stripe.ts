@@ -37,8 +37,8 @@ export async function bundleCoupon(s: Stripe, percent: number) {
  * German store: the bundle saving as an exact euro amount (e.g. "MENGENRABATT-599" = 5,99 €),
  * so the charge matches the cart to the cent and the shipping line is never discounted.
  */
-export async function amountCoupon(s: Stripe, cents: number, currency: 'eur' | 'usd', name: string) {
-  const id = `MENGENRABATT-${currency.toUpperCase()}-${cents}`;
+export async function amountCoupon(s: Stripe, cents: number, currency: 'eur' | 'usd', name: string, prefix = 'MENGENRABATT') {
+  const id = `${prefix}-${currency.toUpperCase()}-${cents}`;
   try {
     const c = await s.coupons.retrieve(id);
     if (c.valid && c.amount_off === cents && c.currency === currency) return id;

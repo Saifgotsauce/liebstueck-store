@@ -15,6 +15,7 @@ import { getTemplate } from '@/lib/design/templates';
 import { useLocale } from '@/lib/i18n';
 import { productPath } from '@/lib/locale';
 import { metaIds, track } from '@/lib/pixel';
+import { checkCode, saveCode, useAppliedCode } from '@/lib/referral-client';
 
 /** The cart, for either store. The German one continues to its own order page (/de/kasse/). */
 export default function CartView() {
@@ -25,6 +26,27 @@ export default function CartView() {
   const { marketing } = useConsent();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  // US: friend / reward code ($5 off, on top of bundle savings)
+  const appliedCode = useAppliedCode();
+  const code = locale === 'en' ? appliedCode : null;
+  const codeOff = code ? Math.min(code.cents, totals.merchandise) : 0;
+  const grandTotal = totals.total - codeOff;
+  const [codeInput, setCodeInput] = useState('');
+  const [codeError, setCodeError] = useState('');
+  const [codeBusy, setCodeBusy] = useState(false);
+
+  async function applyCode(e: React.FormEvent) {
+    e.preventDefault();
+    if (!codeInput.trim()) return;
+    setCodeBusy(true);
+    setCodeError('');
+    const { info, error: err } = await checkCode(codeInput);
+    setCodeBusy(false);
+    if (!info) return setCodeError(err ?? '');
+    saveCode(info);
+    setCodeInput('');
+    trackEvent('ReferralCodeApplied', { kind: info.kind, source: 'cart' });
+  }
 
   useEffect(() => {
     if (ready && items.length) trackEvent('CartViewed', { items: totals.count, value: totals.total / 100 });
@@ -34,14 +56,15 @@ export default function CartView() {
   async function checkout() {
     setBusy(true);
     setError('');
-    track('InitiateCheckout', { value: totals.total / 100, currency: store.currency, num_items: totals.count });
+    track('InitiateCheckout', { value: grandTotal / 100, currency: store.currency, num_items: totals.count });
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locale, items, marketingConsent: marketing, ...(marketing ? metaIds() : {}) }),
+        body: JSON.stringify({ locale, items, ...(code ? { code: code.code } : {}), marketingConsent: marketing, ...(marketing ? metaIds() : {}) }),
       });
-      const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+      const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string; badCode?: boolean };
+      if (data.badCode) saveCode(null);
       if (!res.ok || !data.url) throw new Error(data.error || C.error);
       window.location.href = data.url;
     } catch (e) {
@@ -146,13 +169,24 @@ export default function CartView() {
                   <dd>−{formatPrice(totals.discount)}</dd>
                 </div>
               )}
+              {code && codeOff > 0 && (
+                <div className="flex items-start justify-between gap-3 text-red">
+                  <dt>
+                    {code.kind === 'reward' ? 'Reward code' : code.name ? `${code.name}’s friend code` : 'Friend code'} <span className="font-bold">{code.code}</span>
+                    <button type="button" className="ml-2 font-bold text-violet underline" onClick={() => saveCode(null)}>
+                      Remove
+                    </button>
+                  </dt>
+                  <dd className="whitespace-nowrap">−{formatPrice(codeOff)}</dd>
+                </div>
+              )}
               <div className="flex justify-between">
                 <dt>{C.shipping}</dt>
                 <dd>{totals.shipping ? formatPrice(totals.shipping) : C.free}</dd>
               </div>
               <div className="flex justify-between border-t border-lilac-line pt-3 text-[1.25rem] font-bold">
                 <dt>{C.total}</dt>
-                <dd>{formatPrice(totals.total)}</dd>
+                <dd>{formatPrice(grandTotal)}</dd>
               </div>
             </dl>
             {toFree > 0 && totals.shipping > 0 && (
@@ -162,6 +196,34 @@ export default function CartView() {
                   <div className="h-full rounded-full bg-violet" style={{ width: `${Math.min(100, (totals.merchandise / shop.freeShippingFromCents) * 100)}%` }} />
                 </div>
               </div>
+            )}
+            {locale === 'en' && !code && (
+              <form onSubmit={applyCode} className="mt-5">
+                <label htmlFor="cart-code" className="block font-bold">
+                  Have a code?
+                </label>
+                <div className="mt-1.5 flex gap-2">
+                  <input
+                    id="cart-code"
+                    className="field min-w-0 flex-1"
+                    value={codeInput}
+                    onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
+                    placeholder="e.g. LINDA7KQ"
+                    autoComplete="off"
+                    autoCapitalize="characters"
+                    aria-invalid={codeError ? true : undefined}
+                    aria-describedby={codeError ? 'cart-code-error' : undefined}
+                  />
+                  <button type="submit" className="btn btn-line shrink-0 px-5" disabled={codeBusy}>
+                    {codeBusy ? 'Checking…' : 'Apply'}
+                  </button>
+                </div>
+                {codeError && (
+                  <p id="cart-code-error" className="mt-2 font-bold text-red" role="alert">
+                    {codeError}
+                  </p>
+                )}
+              </form>
             )}
             <p className="mt-4 text-[0.92rem] text-ink-soft">{C.taxNote}</p>
             {locale === 'de' ? (

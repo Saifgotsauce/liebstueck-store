@@ -28,6 +28,10 @@ const state = {
   sessions: [] as URLSearchParams[], // one per created Checkout Session (cs_test_s1, cs_test_s2, …)
   coupons: {} as Record<string, number>,
   amountCoupons: {} as Record<string, number>,
+  couponCurrency: {} as Record<string, string>,
+  promos: [] as { id: string; code: string; active: boolean; expires_at: number | null; max_redemptions: number | null; metadata: Record<string, string>; coupon: string }[],
+  idem: {} as Record<string, unknown>,
+  customers: [] as { id: string; email: string; name: string; metadata: Record<string, string> }[],
   printfulOrders: [] as Record<string, unknown>[],
   createOrderCalls: 0,
   emails: [] as { to: string[]; subject: string; html: string; scheduled_at?: string }[],
@@ -90,17 +94,54 @@ const mock = http.createServer(async (req, res) => {
     const pct = state.coupons[coupon[1]];
     const amt = state.amountCoupons[coupon[1]];
     if (pct) return send(res, 200, { id: coupon[1], object: 'coupon', percent_off: pct, valid: true });
-    if (amt) return send(res, 200, { id: coupon[1], object: 'coupon', amount_off: amt, currency: 'eur', valid: true });
+    if (amt) return send(res, 200, { id: coupon[1], object: 'coupon', amount_off: amt, currency: state.couponCurrency[coupon[1]] ?? 'eur', valid: true });
     return send(res, 404, { error: { type: 'invalid_request_error', code: 'resource_missing', message: `No such coupon: '${coupon[1]}'` } });
   }
   if (url.pathname === '/v1/coupons' && req.method === 'POST') {
     const p = new URLSearchParams(raw);
     if (p.has('amount_off')) {
       state.amountCoupons[p.get('id')!] = Number(p.get('amount_off'));
+      state.couponCurrency[p.get('id')!] = p.get('currency') ?? 'eur';
       return send(res, 200, { id: p.get('id'), object: 'coupon', amount_off: Number(p.get('amount_off')), currency: p.get('currency'), valid: true });
     }
     state.coupons[p.get('id')!] = Number(p.get('percent_off'));
     return send(res, 200, { id: p.get('id'), object: 'coupon', percent_off: Number(p.get('percent_off')), valid: true });
+  }
+  // Stripe promotion codes + customers (referral program)
+  const md = (p: URLSearchParams) => Object.fromEntries([...p.entries()].filter(([k]) => k.startsWith('metadata[')).map(([k, v]) => [k.slice(9, -1), v]));
+  const promoJson = (x: (typeof state.promos)[number]) => ({ object: 'promotion_code', id: x.id, code: x.code, active: x.active, expires_at: x.expires_at, max_redemptions: x.max_redemptions, times_redeemed: 0, metadata: x.metadata, promotion: { type: 'coupon', coupon: x.coupon } });
+  if (url.pathname === '/v1/promotion_codes' && req.method === 'GET') {
+    const code = (url.searchParams.get('code') ?? '').toUpperCase();
+    return send(res, 200, { object: 'list', data: state.promos.filter((x) => x.code.toUpperCase() === code).map(promoJson), has_more: false, url: url.pathname });
+  }
+  if (url.pathname === '/v1/promotion_codes' && req.method === 'POST') {
+    const key = String(req.headers['idempotency-key'] ?? '');
+    if (key && state.idem[key]) return send(res, 200, state.idem[key]);
+    const p = new URLSearchParams(raw);
+    if (state.promos.some((x) => x.code === p.get('code'))) return send(res, 400, { error: { type: 'invalid_request_error', message: 'An active promotion code with `code` already exists.' } });
+    const x = { id: `promo_${state.promos.length + 1}`, code: p.get('code')!, active: true, expires_at: p.has('expires_at') ? Number(p.get('expires_at')) : null, max_redemptions: p.has('max_redemptions') ? Number(p.get('max_redemptions')) : null, metadata: md(p), coupon: p.get('promotion[coupon]') ?? '' };
+    state.promos.push(x);
+    const out = promoJson(x);
+    if (key) state.idem[key] = out;
+    return send(res, 200, out);
+  }
+  const promoUpd = url.pathname.match(/^\/v1\/promotion_codes\/(promo_\d+)$/);
+  if (promoUpd && req.method === 'POST') {
+    const x = state.promos.find((y) => y.id === promoUpd[1])!;
+    const p = new URLSearchParams(raw);
+    if (p.has('active')) x.active = p.get('active') === 'true';
+    Object.assign(x.metadata, md(p));
+    return send(res, 200, promoJson(x));
+  }
+  if (url.pathname === '/v1/customers' && req.method === 'GET') {
+    const email = url.searchParams.get('email');
+    return send(res, 200, { object: 'list', data: state.customers.filter((c) => c.email === email).map((c) => ({ object: 'customer', ...c })), has_more: false, url: url.pathname });
+  }
+  if (url.pathname === '/v1/customers' && req.method === 'POST') {
+    const p = new URLSearchParams(raw);
+    const c = { id: `cus_${state.customers.length + 1}`, email: p.get('email') ?? '', name: p.get('name') ?? '', metadata: md(p) };
+    state.customers.push(c);
+    return send(res, 200, { object: 'customer', ...c });
   }
   if (url.pathname === '/v1/checkout/sessions' && req.method === 'POST') {
     state.sessions.push(new URLSearchParams(raw));
@@ -429,7 +470,7 @@ async function main() {
     const cust = state.emails.find((e) => e.to[0] === 'linda@example.com');
     const ownerMail = state.emails.find((e) => e.to[0] === 'owner@example.com');
     ok(cust && /^Your Seasoned order SN-/.test(cust.subject) && cust.html.includes('Bundle savings') && cust.html.includes('Gigi'), `customer email (${cust?.subject})`);
-    ok(ownerMail && ownerMail.subject.startsWith('New order') && ownerMail.html.includes('bundle savings'), 'owner email');
+    ok(ownerMail && ownerMail.subject.startsWith('New order') && ownerMail.html.includes('(savings '), 'owner email');
     const wh2 = await deliver(A, 'cs_test_s2', 'evt_2');
     const order2 = state.printfulOrders[1] as { items: { retail_price: string }[]; retail_costs: { shipping: string } } | undefined;
     ok(wh2.status === 200 && order2?.items[0].retail_price === '36.95' && order2.retail_costs.shipping === '4.95', 'single-item order: full price + shipping');
@@ -449,6 +490,57 @@ async function main() {
     const checkIn = state.emails.find((e) => e.subject === 'Did it fit?');
     const days = checkIn?.scheduled_at ? (Date.parse(checkIn.scheduled_at) - Date.now()) / 86_400_000 : 0;
     ok(!!checkIn && days > 6 && days < 8 && checkIn.html.includes('Linda'), 'check-in email scheduled a week after shipping');
+    console.log('\n9) Give $5, get $5');
+    const signup = (body: Record<string, unknown>) => fetch(`${A}/api/referral`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    ok((await signup({ name: 'Carol', email: 'nope' })).status === 400, 'sign-up checks the email address');
+    ok((await signup({ name: 'Carol', email: 'carol@example.com', website: 'spam' })).status === 400, 'sign-up ignores bots (hidden field)');
+    const su = await (await signup({ name: 'Carol', email: 'Carol@Example.com' })).json();
+    ok(/^CAROL[A-Z2-9]{3}$/.test(su.code ?? '') && su.isNew === true, `sign-up returns a friend code (${su.code})`);
+    const friendPromo = state.promos.find((x) => x.code === su.code);
+    ok(friendPromo?.metadata.kind === 'referral' && friendPromo.metadata.email === 'carol@example.com' && friendPromo.coupon === 'FRIEND-USD-500', 'friend code stored in Stripe with owner email');
+    ok(state.emails.some((e) => e.to[0] === 'carol@example.com' && e.subject.includes(su.code) && e.html.includes(`?ref=${su.code}`)), 'friend code emailed with share link');
+    const again = await (await signup({ name: 'Carol', email: 'carol@example.com' })).json();
+    ok(again.code === su.code && again.isNew === false, 'same email → same code');
+    const look = await (await fetch(`${A}/api/referral?code=${su.code.toLowerCase()}`)).json();
+    ok(look.valid === true && look.kind === 'referral' && look.name === 'Carol' && look.cents === 500, 'code check: valid, first name, $5');
+    ok((await (await fetch(`${A}/api/referral?code=NOPE1234`)).json()).valid === false, 'unknown code → not valid');
+
+    const before = state.sessions.length;
+    const badCo = await post(A, [{ design: 'not-old-seasoned', garment: 'tee', color: 'black', size: 'L', values: {}, qty: 1 }], { code: 'NOPE1234' });
+    ok(badCo.status === 400 && (await badCo.json()).badCode === true && state.sessions.length === before, 'checkout refuses an invalid code');
+    const two = [{ design: 'grill-nap-repeat', garment: 'tee', color: 'black', size: 'L', values: {}, qty: 2 }];
+    const refCo = await post(A, two, { code: su.code });
+    ok(refCo.status === 200, 'checkout with friend code');
+    const rp = state.sessions.at(-1)!;
+    const unit = Number(rp.get('line_items[0][price_data][unit_amount]'));
+    const expectOff = Math.round((unit * 2 * 10) / 100) + 500;
+    ok(rp.get('discounts[0][coupon]') === `SAVINGS-USD-${expectOff}` && state.amountCoupons[`SAVINGS-USD-${expectOff}`] === expectOff, `bundle 10% + $5 folded into one coupon (${rp.get('discounts[0][coupon]')})`);
+    ok(rp.get('metadata[code]') === su.code && rp.get('metadata[code_kind]') === 'referral', 'code travels in session metadata');
+    const refSession = `cs_test_s${state.sessions.length}`;
+    const emailsBefore = state.emails.length;
+    ok((await deliver(A, refSession, 'evt_ref1')).status === 200, 'webhook for friend-code order');
+    const reward = state.promos.find((x) => x.metadata.kind === 'reward');
+    ok(reward && /^THANKS[A-Z2-9]{6}$/.test(reward.code) && reward.metadata.email === 'carol@example.com' && reward.max_redemptions === 1 && !!reward.expires_at, `referrer gets a single-use $5 reward code (${reward?.code})`);
+    const rewardMail = state.emails.slice(emailsBefore).find((e) => e.to[0] === 'carol@example.com');
+    ok(!!rewardMail && rewardMail.html.includes(reward?.code ?? '?') && rewardMail.subject.includes('Linda'), 'reward emailed to the referrer');
+    ok(state.emails.slice(emailsBefore).some((e) => e.to[0] === 'linda@example.com' && e.html.includes(`code ${su.code}`) && e.html.includes('/refer')), 'buyer confirmation shows the code + invites her to refer');
+
+    // Referrer uses her reward → retired after the order
+    const rwCo = await post(A, [{ design: 'not-old-seasoned', garment: 'tee', color: 'black', size: 'L', values: {}, qty: 1 }], { code: reward!.code });
+    ok(rwCo.status === 200 && state.sessions.at(-1)!.get('discounts[0][coupon]') === 'SAVINGS-USD-500' && state.sessions.at(-1)!.get('metadata[code_kind]') === 'reward', 'reward code: $5 off a single shirt');
+    await deliver(A, `cs_test_s${state.sessions.length}`, 'evt_rw1');
+    ok(reward!.active === false && reward!.metadata.used_session === `cs_test_s${state.sessions.length}`, 'reward code retired after use');
+    ok((await (await fetch(`${A}/api/referral?code=${reward!.code}`)).json()).valid === false, 'used reward code no longer valid');
+    ok(state.promos.filter((x) => x.metadata.kind === 'reward').length === 1, 'using a reward earns nothing extra');
+
+    // Self-referral: Linda signs up, then orders with her own code → discount, but no reward
+    const self = await (await signup({ name: 'Linda', email: 'linda@example.com' })).json();
+    await post(A, [{ design: 'not-old-seasoned', garment: 'tee', color: 'black', size: 'L', values: {}, qty: 1 }], { code: self.code });
+    await deliver(A, `cs_test_s${state.sessions.length}`, 'evt_self');
+    ok(state.promos.filter((x) => x.metadata.kind === 'reward').length === 1, 'own code: no reward for yourself');
+    ok((await fetch(`${A}/refer`)).status === 200 && (await (await fetch(`${A}/refer`)).text()).includes('The rules, in plain English'), '/refer page');
+    ok((await (await fetch(`${A}/`)).text()).includes('Get my code'), 'homepage has the friend-code form');
+
     console.log('\n6) German store (/de/)');
     const addr = { firstName: 'Gisela', lastName: 'Schmidt', street: 'Lindenstraße 12', extra: '', zip: '10115', city: 'Berlin', email: 'gisela@example.de' };
     const deCart = [

@@ -14,3 +14,5 @@ Those rules come from customer research on this exact audience and override gene
 - Store settings (prices, shipping, contact): `lib/config.ts`.
 - Analytics events: `docs/analytics.md`.
 - Never add fake reviews, ratings, urgency timers or stock counts.
+- Referral program ("Give $5, get $5", US only): rules + amounts in `lib/referral.ts`, Stripe logic in
+  `lib/server/referral.ts`, form `components/ReferForm.tsx`, page `/refer`. Codes are Stripe promotion codes.

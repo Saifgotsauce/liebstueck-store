@@ -5,12 +5,14 @@ import { brand, formatPrice as fmtPrice, promise, siteUrl } from '@/lib/config';
 import { colorLabel, garmentText, printPlacement } from '@/lib/catalog';
 import { agbHtml, widerrufsbelehrungHtml } from '@/lib/legal-de';
 import { ROUTES } from '@/lib/locale';
+import { FRIEND, REFERRAL, REWARD } from '@/lib/referral';
 import { emailLayout, escapeHtml, sendEmail } from '@/lib/server/email';
 import { env, requireEnv } from '@/lib/server/env';
 import { sendPurchaseEvent } from '@/lib/server/meta-capi';
 import { fromStored, type CleanItem, type StoredItem } from '@/lib/server/order-items';
 import { printFileUrl } from '@/lib/server/print-url';
 import { createOrder, findOrder } from '@/lib/server/printful';
+import { settleCode } from '@/lib/server/referral';
 import { orderRef, stripe } from '@/lib/server/stripe';
 
 export const runtime = 'nodejs';
@@ -121,6 +123,14 @@ async function fulfill(sessionId: string) {
     },
   });
 
+  // Friend / reward code: pay out the referrer's reward, or retire a used reward code.
+  // The print order already exists, so a problem here must not fail (and retry) the webhook.
+  if (!de && md.code) {
+    await settleCode(s, { code: md.code, buyerEmail: email, buyerName: shipping.name ?? undefined, sessionId }).catch((e) =>
+      notifyOwner('Referral code problem', `Code ${escapeHtml(md.code ?? '')} on ${orderRef(sessionId)}: ${escapeHtml(String((e as Error).message))}`),
+    );
+  }
+
   const ref = orderRef(sessionId);
   if (email && de) {
     await sendEmail(email, `Deine Bestellung ${ref} bei ${brand.name}`, germanConfirmation({ ref, items, discount, shippingCents, tax, total, shipping }), undefined);
@@ -139,13 +149,14 @@ async function fulfill(sessionId: string) {
       'Thanks for your order!',
       `<p>Order number: <strong>${ref}</strong></p>
 <table style="width:100%;border-collapse:collapse">${rows}
-${discount ? row('Bundle savings', `−${formatPrice(discount)}`) : ''}
+${discount ? row(md.code ? `Savings (incl. code ${escapeHtml(md.code)})` : 'Bundle savings', `−${formatPrice(discount)}`) : ''}
 ${row('Shipping', shippingCents ? formatPrice(shippingCents) : 'Free')}
 ${tax ? row('Sales tax', formatPrice(tax)) : ''}
 ${row('Total', formatPrice(total), true)}</table>
 <p>Shipping to: ${escapeHtml([shipping.name, a.line1, a.line2, `${a.city ?? ''}, ${a.state ?? ''} ${a.postal_code ?? ''}`].filter(Boolean).join(', '))}</p>
 <p>Your order is printed just for you and usually ships within 2–5 business days. We’ll email you the tracking link as soon as it’s on its way.</p>
 <p style="color:#5E5468">Our promise: if we get it wrong, we fix it free. Wrong size? Reply to this email within ${promise.problemDays} days of delivery and we’ll send the right one for ${formatPrice(promise.sizeSwapCents)}. You keep the first.</p>
+<p style="background:#F2ECF8;border-radius:10px;padding:12px 14px"><strong>Give ${FRIEND}, get ${REWARD}.</strong> Get your friend code and every friend who orders earns you ${REWARD} off. <a href="${siteUrl}${REFERRAL.path}">Get my code</a></p>
 <p style="font-size:14px;color:#5E5468"><a href="${siteUrl}/returns/">Our promise</a> · <a href="${siteUrl}/terms/">Terms</a></p>`,
     );
     await sendEmail(email, `Your ${brand.name} order ${ref}`, html);
@@ -160,7 +171,7 @@ ${row('Total', formatPrice(total), true)}</table>
       `New order ${ref} (${formatPrice(total)})`,
       emailLayout(
         'New order',
-        `<p>${ref}: ${formatPrice(total)}${discount ? ` (bundle savings ${formatPrice(discount)})` : ''}.</p><ul>${lines.map((l) => `<li>${l}</li>`).join('')}</ul><p>The print order is in Printful${env.printfulAutoConfirm ? ' and confirmed' : ' as a draft – please check and confirm it'}.</p>`,
+        `<p>${ref}: ${formatPrice(total)}${discount ? ` (savings ${formatPrice(discount)}${md.code ? `, code ${escapeHtml(md.code)}` : ''})` : ''}.</p><ul>${lines.map((l) => `<li>${l}</li>`).join('')}</ul><p>The print order is in Printful${env.printfulAutoConfirm ? ' and confirmed' : ' as a draft – please check and confirm it'}.</p>`,
       ),
     );
   }
