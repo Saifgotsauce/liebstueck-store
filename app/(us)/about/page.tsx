@@ -7,11 +7,12 @@ import { ROUTES } from '@/lib/locale';
 import { PROMISE } from '@/lib/promise';
 
 export const metadata: Metadata = {
-  title: 'About us',
-  description: 'Seasoned is a small, independent shop making funny shirts for women who are getting older out loud. Printed to order in the US, with a real person answering every message.',
+  title: 'Our story',
+  description: 'Seasoned is a small, independent shop making funny shirts for strong women who are getting older out loud. Printed to order in the US, with a real person answering every message.',
 };
 
-// No founder story on purpose: the page is about her, how the shirt is made and who answers when she writes.
+// No founder story on purpose: the page is about her, the small shop, how the shirt is made and who answers.
+// Giving back is stated as a plan only. No charity claims (who, how much) until a real program exists.
 export default function About() {
   const r = ROUTES.en;
   return (
@@ -48,6 +49,37 @@ export default function About() {
             <p className="mt-4">What you won’t find here: “over the hill” jokes, bladder jokes, or anything that makes getting older sound like a problem. It isn’t one. Other people’s opinions about it might be.</p>
           </section>
 
+          <section aria-labelledby="small">
+            <h2 id="small" className="text-[2.1rem] sm:text-[2.4rem]">
+              A small shop, and proud of it
+            </h2>
+            <p className="mt-4">
+              There’s no warehouse and no big company behind {brand.name}. Just a small shop, a printer we trust and a lot of jokes. Every order keeps us going, and we notice every single one.
+            </p>
+            <p className="mt-4">If you like what we do, wear it loud and tell a friend. That’s how small shops stay open.</p>
+          </section>
+
+          <section aria-labelledby="together">
+            <h2 id="together" className="text-[2.1rem] sm:text-[2.4rem]">
+              Strong women, together
+            </h2>
+            <p className="mt-4">
+              We’re building a community of women who refuse to shrink, slow down or sit quietly in the corner. Women who say what they think, laugh too loud and wear it on their chest. Put on a {brand.name} shirt and you’re in.
+            </p>
+            <p className="mt-4">
+              Send us a photo of you in yours. We’d love to see it, and with your OK we’ll share it so the next woman knows she’s in good company.{' '}
+              {brand.messengerUrl ? (
+                <a href={brand.messengerUrl} className="font-bold text-violet" target="_blank" rel="noopener noreferrer">
+                  Message us on Facebook
+                </a>
+              ) : (
+                <a href={`mailto:${brand.email}?subject=Me%20in%20my%20Seasoned%20shirt`} className="font-bold text-violet">
+                  Email us your photo
+                </a>
+              )}
+            </p>
+          </section>
+
           <section aria-labelledby="made">
             <h2 id="made" className="text-[2.1rem] sm:text-[2.4rem]">
               How your shirt is made
@@ -78,6 +110,16 @@ export default function About() {
             <p className="mt-4">
               If we get it wrong, we fix it for free, and you don’t send anything back. A misprint, a damaged shirt or a package that never shows up gets you a new one or your money back. <Link href={r.returns} className="font-bold text-violet">Read the whole promise</Link>
             </p>
+          </section>
+
+          <section aria-labelledby="giving">
+            <h2 id="giving" className="text-[2.1rem] sm:text-[2.4rem]">
+              Giving back, once we’re big enough
+            </h2>
+            <p className="mt-4">
+              Getting older out loud is a lot easier with people around you and money in the bank. Plenty of older people don’t have either. Once {brand.name} is big enough, we plan to give part of what we make to help them.
+            </p>
+            <p className="mt-4">We don’t make promises we can’t keep, so we’ll tell you exactly who we’re supporting and how much when we start.</p>
           </section>
 
           <section aria-labelledby="never">

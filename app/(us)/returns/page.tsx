@@ -54,6 +54,13 @@ export default function Returns() {
 
       <h2>How to reach us</h2>
       <ContactCard className="not-prose mt-4" />
+      <h2>Why we do it this way</h2>
+      <p>
+        Honest answer: our margins are small. Every shirt is printed just for you, and a shirt that comes back can’t be sold again, so a size swap means printing and shipping a brand-new one. That costs us more than the {swap} we ask, and we cover the rest. It’s also why we can’t take back a shirt you’ve simply changed your mind about.
+      </p>
+      <p>
+        We keep the fee small so you’re never stuck with a shirt that doesn’t fit, and we charge it so we can keep the lights on and keep making shirts. Thank you for understanding, and for shopping small.
+      </p>
       <p className="mt-6">
         Questions about sizes before you order? See the size chart on every product page, or our <Link href="/faq/">questions & answers</Link>.
       </p>

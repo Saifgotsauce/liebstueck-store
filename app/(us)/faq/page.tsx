@@ -14,7 +14,7 @@ const QA: { q: string; a: React.ReactNode }[] = [
     q: 'Is Seasoned a real shop?',
     a: (
       <>
-        Yes. Seasoned is a small, independent online shop. Every order is printed to order in the US and shipped with tracking, and a real person answers every message, usually within a day. <Link href="/about/">More about us</Link>
+        Yes. Seasoned is a small, independent online shop. Every order is printed to order in the US and shipped with tracking, and a real person answers every message, usually within a day. <Link href="/about/">Our story</Link>
       </>
     ),
   },
