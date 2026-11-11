@@ -114,7 +114,7 @@ export const legal = {
   // Where returns or legal letters can be sent (optional; leave the brackets to hide it)
   mailingAddress: '[Mailing address]',
   governingLaw: '[State], United States',
-  lastUpdated: 'November 9, 2026',
+  lastUpdated: 'November 10, 2026',
 };
 
 /**

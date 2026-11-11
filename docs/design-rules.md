@@ -93,7 +93,8 @@ Show these without making her look for them:
 5. **Payment logos** (Visa, Mastercard, Amex, Apple Pay, Google Pay) under checkout buttons.
 6. **Plain policies** written in her words, not legal speak. The FAQ starts with "Is Seasoned a real shop?"
 
-Never: fake countdown timers, "only 3 left" (it's print on demand), pop-ups, fake reviews, star ratings
+Never: charity or donation claims before a real program exists (name who gets what, and how much, or say
+nothing; many US states regulate cause marketing), fake countdown timers, "only 3 left" (it's print on demand), pop-ups, fake reviews, star ratings
 before there are real reviews (FTC 16 CFR 465), "as seen on", invented testimonials, pressure language.
 
 ## 6. The shirts (print designs)

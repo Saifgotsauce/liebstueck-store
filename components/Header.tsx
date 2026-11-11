@@ -52,7 +52,7 @@ export default function Header() {
           ))}
           {locale === 'en' && (
             <Link href={ROUTES.en.about} className="font-medium no-underline hover:text-violet" aria-current={pathname === ROUTES.en.about ? 'page' : undefined}>
-              About
+              Our story
             </Link>
           )}
         </nav>
@@ -85,7 +85,7 @@ export default function Header() {
             {locale === 'en' && (
               <li className="flex flex-wrap gap-x-6 gap-y-1 pt-3">
                 <Link href={ROUTES.en.about} className="flex min-h-12 items-center font-bold text-violet no-underline">
-                  About us
+                  Our story
                 </Link>
                 <Link href={ROUTES.en.faq} className="flex min-h-12 items-center font-bold text-violet no-underline">
                   Questions & answers

@@ -10,7 +10,7 @@ import { PaymentLogos } from './Trust';
 
 const HELP = {
   en: [
-    { href: ROUTES.en.about, label: 'About us' },
+    { href: ROUTES.en.about, label: 'Our story' },
     { href: ROUTES.en.faq, label: 'Questions & answers' },
     { href: ROUTES.en.shipping, label: 'Shipping' },
     { href: ROUTES.en.returns, label: 'Our promise: swaps & replacements' },
