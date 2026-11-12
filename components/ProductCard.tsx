@@ -30,7 +30,7 @@ export default function ProductCard({ design, eager = false }: { design: Design;
         </div>
         <h3 className="mt-3 font-sans text-[1.02rem] font-bold leading-snug tracking-normal text-ink group-hover:text-violet">{design.title}</h3>
         <p className="mt-1 text-[0.98rem] text-ink-soft">
-          {t.common.from} <span className="font-bold text-ink">{formatPrice(unitPriceCents('tee', undefined, locale), locale)}</span>
+          {t.common.from} <span className="font-bold text-ink">{formatPrice(unitPriceCents('tee', undefined, locale, design.slug), locale)}</span>
         </p>
       </Link>
     </li>

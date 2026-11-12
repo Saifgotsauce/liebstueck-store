@@ -69,7 +69,7 @@ export function parseItems(raw: unknown, locale: Locale = 'en'): { items: CleanI
       return errors.push({ index, message: m.stock(garmentText(gKey, locale).label, colorLabel(color, locale), size) });
     }
     const qty = Math.max(1, Math.min(shop.maxQuantityPerItem, Math.floor(Number(o.qty) || 1)));
-    items.push({ design, template, garment, color, size, values: v.values, qty, variantId: variant.id, unitCents: unitPriceCents(gKey, size, locale) });
+    items.push({ design, template, garment, color, size, values: v.values, qty, variantId: variant.id, unitCents: unitPriceCents(gKey, size, locale, design.slug) });
   });
 
   return { items, errors };

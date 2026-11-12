@@ -92,7 +92,7 @@ async function og(d: Design) {
     630,
     `<rect width="570" height="630" fill="${VIOLET}"/>${wordmark(56, 120, 64, '#fff')}
 <text x="56" y="470" font-family="DM Sans" font-weight="700" font-size="34" fill="#fff">${personal ? c.personal : c.general}</text>
-<text x="56" y="520" font-family="DM Sans" font-weight="500" font-size="30" fill="#E6DAF2">${esc(c.from(fmt(unitPriceCents('tee', undefined, loc))))}</text>
+<text x="56" y="520" font-family="DM Sans" font-weight="500" font-size="30" fill="#E6DAF2">${esc(c.from(fmt(unitPriceCents('tee', undefined, loc, d.slug))))}</text>
 <text x="56" y="565" font-family="DM Sans" font-weight="500" font-size="30" fill="#E6DAF2">${esc(c.free(fmt(stores[loc].freeShippingFromCents)))}</text>`,
   );
   await sharp({ create: { width: 1200, height: 630, channels: 3, background: '#fff' } })

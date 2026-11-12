@@ -4,10 +4,10 @@ import { unitPriceCents, type GarmentKey } from './catalog';
 import { stores } from './config';
 import type { Locale } from './locale';
 
-export type PricedLine = { garment: GarmentKey; size: string; qty: number };
+export type PricedLine = { garment: GarmentKey; size: string; qty: number; design?: string };
 
-export function itemPriceCents(item: { garment: GarmentKey; size?: string }, locale: Locale = 'en') {
-  return unitPriceCents(item.garment, item.size, locale);
+export function itemPriceCents(item: { garment: GarmentKey; size?: string; design?: string }, locale: Locale = 'en') {
+  return unitPriceCents(item.garment, item.size, locale, item.design);
 }
 
 /** Bundle saving for this many items, in percent (0 when none applies). */

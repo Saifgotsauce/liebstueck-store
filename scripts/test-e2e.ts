@@ -412,7 +412,7 @@ async function main() {
     const one = await post(A, [{ design: 'not-old-seasoned', garment: 'tee', color: 'black', size: '2XL', values: {}, qty: 1 }]);
     ok(one.status === 200, 'single-item checkout');
     const p2 = state.sessions[1];
-    ok(p2.get('line_items[0][price_data][unit_amount]') === '3695', '2XL costs $2 more');
+    ok(p2.get('line_items[0][price_data][unit_amount]') === '3195', '$29.95 shirt, 2XL costs $2 more');
     ok(p2.get('shipping_options[0][shipping_rate_data][fixed_amount][amount]') === '495' && !p2.has('discounts[0][coupon]'), '$4.95 shipping, no bundle under 2 items');
 
     // Three items → 15%
@@ -422,6 +422,8 @@ async function main() {
     // One hoodie on its own: under $50, but hoodies always ship free (US)
     const hood = await post(A, [{ design: 'grill-nap-repeat', garment: 'hoodie', color: 'black', size: 'L', values: {}, qty: 1 }]);
     ok(hood.status === 200 && state.sessions.at(-1)!.get('shipping_options[0][shipping_rate_data][fixed_amount][amount]') === '0', 'single hoodie ships free');
+    const mid = await post(A, [{ design: 'older-i-get-heller-no', garment: 'tee', color: 'black', size: 'M', values: {}, qty: 1 }]);
+    ok(mid.status === 200 && state.sessions.at(-1)!.get('line_items[0][price_data][unit_amount]') === '3295', 'per-design tee price ($32.95)');
 
     console.log('\n4) Stripe webhook → Printful order');
     const payload = JSON.stringify({ id: 'evt_1', object: 'event', type: 'checkout.session.completed', data: { object: { id: 'cs_test_s1', object: 'checkout.session', payment_status: 'paid' } } });
@@ -473,7 +475,7 @@ async function main() {
     ok(ownerMail && ownerMail.subject.startsWith('New order') && ownerMail.html.includes('(savings '), 'owner email');
     const wh2 = await deliver(A, 'cs_test_s2', 'evt_2');
     const order2 = state.printfulOrders[1] as { items: { retail_price: string }[]; retail_costs: { shipping: string } } | undefined;
-    ok(wh2.status === 200 && order2?.items[0].retail_price === '36.95' && order2.retail_costs.shipping === '4.95', 'single-item order: full price + shipping');
+    ok(wh2.status === 200 && order2?.items[0].retail_price === '31.95' && order2.retail_costs.shipping === '4.95', 'single-item order: full price + shipping');
 
     console.log('\n8) Other endpoints');
     const sum = await fetch(`${A}/api/order-summary?session_id=cs_test_s1`);

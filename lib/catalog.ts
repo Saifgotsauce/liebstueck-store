@@ -1,6 +1,7 @@
 // Garments (the blank shirts Printful prints on). The designs themselves live in
 // lib/designs.ts. After changing Printful products or colours, run the "Printful sync"
 // GitHub Action so the variant IDs in data/printful-variants.json match.
+import { TEE_PRICE_US } from './prices';
 import variantData from '@/data/printful-variants.json';
 import { stores } from './config';
 import type { Locale } from './locale';
@@ -110,21 +111,29 @@ const PRICES_DE: Record<GarmentKey, { base: number; sizeExtra: Record<string, nu
   hoodie: { base: 4995, sizeExtra: { '2XL': 300, '3XL': 400, '4XL': 500 } },
 };
 
-/** The everyday price, before any store-wide sale (US dollars or euros, in cents). */
-export function regularPriceCents(garment: GarmentKey, size?: string, locale: Locale = 'en') {
+/** The everyday price, before any store-wide sale (US dollars or euros, in cents).
+ *  US tees can have their own price per design (lib/prices.ts) – pass the design slug. */
+export function regularPriceCents(garment: GarmentKey, size?: string, locale: Locale = 'en', design?: string) {
   if (locale === 'de') {
     const p = PRICES_DE[garment];
     return p.base + (size ? p.sizeExtra[size] ?? 0 : 0);
   }
   const g = GARMENTS[garment];
-  return g.priceCents + (size ? g.sizeExtraCents[size] ?? 0 : 0);
+  const base = garment === 'tee' && design && TEE_PRICE_US[design] ? TEE_PRICE_US[design] : g.priceCents;
+  return base + (size ? g.sizeExtraCents[size] ?? 0 : 0);
 }
 
 /** What the shopper pays per item (before bundle savings). Includes the store-wide sale when one is on. */
-export function unitPriceCents(garment: GarmentKey, size?: string, locale: Locale = 'en') {
-  const regular = regularPriceCents(garment, size, locale);
+export function unitPriceCents(garment: GarmentKey, size?: string, locale: Locale = 'en', design?: string) {
+  const regular = regularPriceCents(garment, size, locale, design);
   const sale = stores[locale].sale;
   return sale ? Math.round((regular * (100 - sale.percent)) / 100) : regular;
+}
+
+/** The lowest tee price in the store ("T-shirts from $29.95"). */
+export function teeFromCents(locale: Locale = 'en') {
+  if (locale === 'de') return unitPriceCents('tee', undefined, 'de');
+  return Math.min(unitPriceCents('tee', undefined, 'en'), ...Object.keys(TEE_PRICE_US).map((slug) => unitPriceCents('tee', undefined, 'en', slug)));
 }
 
 /** Size extra for a size, for the "+$2" / "+2 €" hint on size buttons. */

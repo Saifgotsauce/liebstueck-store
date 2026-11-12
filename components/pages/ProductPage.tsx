@@ -67,7 +67,7 @@ export default function ProductPage({ slug, locale }: { slug: string; locale: Lo
     offers: {
       '@type': 'Offer',
       priceCurrency: stores[locale].currency,
-      price: (unitPriceCents('tee', undefined, locale) / 100).toFixed(2),
+      price: (unitPriceCents('tee', undefined, locale, d.slug) / 100).toFixed(2),
       availability: 'https://schema.org/InStock',
       url: `${siteUrl}${productPath(locale, d.slug)}`,
     },

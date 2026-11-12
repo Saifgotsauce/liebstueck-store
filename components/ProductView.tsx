@@ -96,7 +96,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   // so firing straight away would lose the view for anyone who lands directly on a product page (e.g. from an ad).
   useEffect(() => {
     if (!marketing) return;
-    track('ViewContent', { content_ids: [slug], content_type: 'product', value: unitPriceCents('tee', undefined, locale) / 100, currency: store.currency });
+    track('ViewContent', { content_ids: [slug], content_type: 'product', value: unitPriceCents('tee', undefined, locale, slug) / 100, currency: store.currency });
   }, [marketing, slug, locale, store.currency]);
 
   // Sticky add-to-cart bar on phones whenever the main button is off screen
@@ -109,8 +109,8 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   }, []);
 
   const check = useMemo(() => validateValues(template, values, locale), [template, values, locale]);
-  const price = unitPriceCents(garment, size ?? undefined, locale);
-  const regular = regularPriceCents(garment, size ?? undefined, locale);
+  const price = unitPriceCents(garment, size ?? undefined, locale, slug);
+  const regular = regularPriceCents(garment, size ?? undefined, locale, slug);
   const total = tierTotal(price, qty, locale);
   const gt = garmentText(garment, locale);
   const colorObj = g.colors.find((c) => c.key === color) ?? g.colors[0];
@@ -249,7 +249,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
                         pickGarment(altGarment);
                         goTo(slides.indexOf('hero'));
                       }} className="absolute bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-violet px-5 py-2.5 font-bold text-white shadow-lg hover:bg-violet-deep">
-                      {T.alsoAs(altName)} · {fmt(unitPriceCents(altGarment, undefined, locale))}
+                      {T.alsoAs(altName)} · {fmt(unitPriceCents(altGarment, undefined, locale, slug))}
                     </button>
                   </div>
                 ) : photos[s] ? (
@@ -366,7 +366,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             {GARMENT_KEYS.map((k) => (
               <button key={k} type="button" role="radio" aria-checked={garment === k} className="chip gap-2" onClick={() => pickGarment(k)}>
                 {garmentText(k, locale).label}
-                <span className="font-medium opacity-80">{fmt(unitPriceCents(k, undefined, locale))}</span>
+                <span className="font-medium opacity-80">{fmt(unitPriceCents(k, undefined, locale, slug))}</span>
               </button>
             ))}
           </div>

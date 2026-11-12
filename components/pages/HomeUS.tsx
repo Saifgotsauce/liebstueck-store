@@ -6,7 +6,7 @@ import ProductCard, { ProductGrid } from '@/components/ProductCard';
 import ReferSection from '@/components/ReferSection';
 import ShirtPreview from '@/components/ShirtPreview';
 import { ContactCard, OrderSteps, PaymentLogos, Photo } from '@/components/Trust';
-import { defaultColor, unitPriceCents } from '@/lib/catalog';
+import { defaultColor, teeFromCents, unitPriceCents } from '@/lib/catalog';
 import { formatPrice, stores } from '@/lib/config';
 import { holidayDeadline } from '@/lib/dates';
 import { designsFor, designsInVibe, getDesign, vibesFor } from '@/lib/designs';
@@ -55,7 +55,7 @@ export default function HomeUS() {
               </Link>
             </div>
             <ul className="mt-7 space-y-2 text-[1.05rem]">
-              {[`T-shirts ${fmt(unitPriceCents('tee', undefined, locale))}. Free US shipping over ${free}`, `Hoodies ${fmt(unitPriceCents('hoodie', undefined, locale))}, always shipped free`, `At your door in about a week, with tracking`, `We mess up, we fix it free`].map((x) => (
+              {[`T-shirts from ${fmt(teeFromCents(locale))}. Free US shipping over ${free}`, `Hoodies ${fmt(unitPriceCents('hoodie', undefined, locale))}, always shipped free`, `At your door in about a week, with tracking`, `We mess up, we fix it free`].map((x) => (
                 <li key={x} className="flex gap-2.5">
                   <IconCheck className="mt-1 h-5 w-5 shrink-0 text-red" />
                   <span>{x}</span>
