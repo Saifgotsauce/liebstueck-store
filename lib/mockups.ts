@@ -1,6 +1,7 @@
 // Real garment photos from Printful (layout templates), written by the Printful sync.
 // Until the first sync the shop falls back to drawn garments.
 import data from '@/data/printful-mockups.json';
+import variants from '@/data/image-variants.json';
 import { printfileSize, type GarmentKey } from './catalog';
 import { designRect } from './design/svg';
 
@@ -22,8 +23,20 @@ type MockupFile = {
 
 const mockups = data as unknown as MockupFile;
 
+// Written by scripts/optimize-images.ts: which files are the same picture under another name,
+// and which have a small copy for grid tiles.
+const files = (variants as unknown as { mockups: { same: Record<string, string>; small: Record<string, string> } }).mockups;
+const one = (src: string | null) => (src ? files.same[src] ?? src : null);
+const small = (src: string | null) => (src ? files.small[src] ?? src : null);
+
 export function garmentPhoto(garment: string, color: string): MockupColor | null {
-  return mockups.garments[garment]?.colors?.[color] ?? null;
+  const c = mockups.garments[garment]?.colors?.[color];
+  return c ? { ...c, bg: one(c.bg), overlay: one(c.overlay) } : null;
+}
+
+/** The same photo from the small files. For shop tiles, which show at a third of the size. */
+export function tilePhoto(photo: MockupColor): MockupColor {
+  return { ...photo, bg: small(photo.bg), overlay: small(photo.overlay) };
 }
 
 export function productPhotos(slug: string) {

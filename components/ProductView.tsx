@@ -19,7 +19,7 @@ import { legalDe } from '@/lib/config';
 import { useLocale } from '@/lib/i18n';
 import { ROUTES, productPath, shopPath, type Locale } from '@/lib/locale';
 import { useCart } from '@/lib/cart';
-import { bundlePercent, nextBundle } from '@/lib/cart-math';
+import { bundlePercent, nextBundle, shippingFor } from '@/lib/cart-math';
 import { deliveryWindow, holidayDeadline } from '@/lib/dates';
 import { designsFor, designsInVibe, getDesign, getVibe, isPersonalized, type Design } from '@/lib/designs';
 import { defaultValues, getTemplate } from '@/lib/design/templates';
@@ -27,7 +27,7 @@ import { validateValues } from '@/lib/design/validate';
 import type { FieldDef, FieldValues } from '@/lib/design/types';
 import { track } from '@/lib/pixel';
 import { productPhotos } from '@/lib/mockups';
-import { modelPhotos } from '@/lib/model-photos';
+import { modelPhotos, type ModelPhoto } from '@/lib/model-photos';
 import ShirtPreview from './ShirtPreview';
 import { IconBrush, IconCalendar, IconCheck, IconFeather, IconLock, IconShield, IconShirt, IconTruck, IconWash, Stars } from './Icons';
 
@@ -73,6 +73,11 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   // Where the main button is: on screen, further down, or scrolled past
   const [ctaPos, setCtaPos] = useState<'visible' | 'below' | 'above'>('below');
   const [sizeNudge, setSizeNudge] = useState(false);
+  // On a phone only the first photo loads with the page; the first screen (photo, name, price) must
+  // not queue behind pictures she hasn't asked for. `reach` is how far the gallery is filled in:
+  // the next photo once the page has settled, then always one ahead of where she has swiped.
+  const [reach, setReach] = useState(0);
+  const [wide, setWide] = useState(false);
   const [setMsg, alertSet] = useState('');
   const [dates, setDates] = useState<{ window: string; holiday: ReturnType<typeof holidayDeadline> } | null>(null);
   const addedRef = useRef<HTMLDivElement>(null);
@@ -82,7 +87,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const g = GARMENTS[garment];
   // Model photos first, then Printful photos; slides refer to them by index.
   const model = modelPhotos(slug);
-  const photos = [...model, ...productPhotos(slug)];
+  const photos: ModelPhoto[] = [...model, ...productPhotos(slug)];
   const companions = useMemo(() => companionsFor(design, locale), [design, locale]);
 
   // Prefill personalization from the link (e.g. ?nickname=Nana from the home page demo)
@@ -129,11 +134,32 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
     };
   }, []);
 
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)');
+    const sync = () => setWide(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    let timer = 0;
+    const settled = () => {
+      timer = window.setTimeout(() => setReach((r) => Math.max(r, 1)), 1500);
+    };
+    if (document.readyState === 'complete') settled();
+    else window.addEventListener('load', settled, { once: true });
+    return () => {
+      mq.removeEventListener('change', sync);
+      window.removeEventListener('load', settled);
+      window.clearTimeout(timer);
+    };
+  }, []);
+  /** Has this photo been asked for yet? Desktop shows the thumbnail strip, so all of them. */
+  const filled = (i: number) => wide || i <= reach;
+
   const sticky = ctaPos === 'above' || (ctaPos === 'below' && size !== null);
   const check = useMemo(() => validateValues(template, values, locale), [template, values, locale]);
   const price = unitPriceCents(garment, size ?? undefined, locale, slug);
   const regular = regularPriceCents(garment, size ?? undefined, locale, slug);
   const total = tierTotal(price, qty, locale);
+  const ship = shippingFor(total, locale, garment === 'hoodie');
   const gt = garmentText(garment, locale);
   const colorObj = g.colors.find((c) => c.key === color) ?? g.colors[0];
   const altGarment: GarmentKey = garment === 'tee' ? 'hoodie' : 'tee';
@@ -149,6 +175,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
     const el = trackRef.current;
     if (!el) return;
     const n = Math.max(0, Math.min(slides.length - 1, i));
+    setReach((r) => Math.max(r, n + 1));
     el.scrollTo({ left: n * el.clientWidth, behavior: 'smooth' });
     setSlide(n);
     trackEvent('PhotoViewed', { product: slug, photo: n + 1 });
@@ -156,7 +183,10 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
 
   const onScroll = useCallback(() => {
     const el = trackRef.current;
-    if (el && el.clientWidth) setSlide(Math.round(el.scrollLeft / el.clientWidth));
+    if (!el || !el.clientWidth) return;
+    setSlide(Math.round(el.scrollLeft / el.clientWidth));
+    // ceil: as soon as a swipe starts, the photo after the one coming in is fetched too
+    setReach((r) => Math.max(r, Math.ceil(el.scrollLeft / el.clientWidth) + 1));
   }, []);
 
   function pickGarment(k: GarmentKey) {
@@ -254,13 +284,15 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
           <div
             ref={trackRef}
             onScroll={onScroll}
+            onPointerDown={() => setReach((r) => Math.max(r, 1))}
+            onTouchStart={() => setReach((r) => Math.max(r, 1))}
             className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto bg-white md:rounded-[1.5rem] md:ring-1 md:ring-lilac-line"
             aria-roledescription="carousel"
             aria-label={T.photos}
           >
             {slides.map((s, i) => (
               <div key={String(s)} className="pdp-slide w-full shrink-0 snap-center" role="group" aria-roledescription="slide" aria-label={T.slideOf(i + 1, slides.length)}>
-                {s === 'hero' ? (
+                {!filled(i) ? null : s === 'hero' ? (
                   <div className="mx-auto aspect-square h-full">
                     <HeroSlide hook={vibe.hook} tagline={vibe.tagline} sticker={sticker}>
                       <ShirtPreview design={slug} garment={garment} colorKey={color} values={check.values} label={T.heroLabel(design.title, cLabel, gt.label)} className="block h-full w-full" view="main" />
@@ -284,7 +316,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
                   </div>
                 ) : photos[s] ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={photos[s].src} alt={T.examplePhoto(design.title)} className="block h-full w-full object-cover object-top" loading={i === 0 ? 'eager' : 'lazy'} fetchPriority={i === 0 ? 'high' : undefined} />
+                  <img src={photos[s].src} srcSet={photos[s].srcSet} sizes="(min-width: 1024px) 50vw, 100vw" alt={T.examplePhoto(design.title)} className="block h-full w-full object-cover object-top" loading={i === 0 ? 'eager' : 'lazy'} fetchPriority={i === 0 ? 'high' : undefined} />
                 ) : null}
               </div>
             ))}
@@ -300,8 +332,10 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
           </span>
         </div>
 
-        <div className="no-scrollbar mt-3 hidden gap-2.5 overflow-x-auto px-[1.1rem] py-1 md:flex md:px-1" role="group" aria-label={T.choosePhoto}>
-          {slides.map((s, i) => (
+        {/* Thumbnails are for tablets and desktops; phones swipe (and skip the downloads). */}
+        <div className="no-scrollbar mt-3 hidden gap-2.5 overflow-x-auto px-[1.1rem] py-1 md:flex md:min-h-[6.15rem] md:px-1" role="group" aria-label={T.choosePhoto}>
+          {wide &&
+            slides.map((s, i) => (
             <button key={String(s)} type="button" onClick={() => goTo(i)} aria-pressed={slide === i} aria-label={T.photoN(i + 1)} className={`w-[4.6rem] shrink-0 overflow-hidden rounded-xl bg-white ring-1 sm:w-[5.4rem] ${slide === i ? 'ring-[3px] ring-violet' : 'ring-lilac-line'}`}>
               {s === 'hero' ? (
                 <HeroSlide hook={vibe.hook} tagline="" sticker={null} thumb>
@@ -309,7 +343,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
                 </HeroSlide>
               ) : typeof s === 'number' ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={photos[s]?.src} alt="" className="block aspect-square w-full object-cover" loading="lazy" />
+                <img src={photos[s]?.src} srcSet={photos[s]?.srcSet} sizes="90px" alt="" className="block aspect-square w-full object-cover" loading="lazy" />
               ) : (
                 <ShirtPreview design={slug} garment={s === 'alt' ? altGarment : garment} colorKey={s === 'alt' ? altColor : color} values={check.values} label="" className="block aspect-square w-full" view={s === 'zoom' ? 'zoom' : 'tile'} />
               )}
@@ -496,7 +530,10 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
           {T.addToCart(fmt(total))}
         </button>
 
+        {/* What she pays on top and when it comes, right under the button (surprise costs at checkout
+            are the most common reason carts get left) */}
         <div className="mt-3 space-y-1 text-center text-[1rem]">
+          <p>{ship === 0 ? T.shipFree : T.shipPaid(fmt(ship), fmt(store.freeShippingFromCents), qty === 1 && shippingFor(tierTotal(price, 2, locale), locale, garment === 'hoodie') === 0)}</p>
           {dates && (
             <p className="flex items-center justify-center gap-2">
               <IconTruck className="h-5 w-5 text-violet" />
@@ -686,12 +723,12 @@ function HeroSlide({ hook, tagline, sticker, thumb, children }: { hook: string; 
       <div className="absolute bottom-[-4%] left-[14%] aspect-square w-[72%] overflow-hidden">{children}</div>
       <div className="absolute inset-x-[6%] top-[5.5%]">
         <p className={`font-display font-black leading-[0.98] tracking-[-0.01em] text-violet ${thumb ? 'text-[10.5cqw]' : hook.length > 30 ? 'text-[7cqw]' : hook.length > 26 ? 'text-[7.8cqw]' : 'text-[8.6cqw]'}`}>{hook}</p>
-        {tagline && <p className={`mt-[1.6cqw] font-bold text-red ${tagline.length > 52 ? 'text-[3.5cqw]' : 'text-[4.1cqw]'}`}>{tagline}</p>}
+        {tagline && <p className={`mt-[1.6cqw] font-bold leading-tight text-red ${tagline.length > 52 ? 'text-[max(15px,3.5cqw)]' : 'text-[max(15px,4.1cqw)]'}`}>{tagline}</p>}
       </div>
       {sticker && (
-        <span className="absolute bottom-[7%] left-[5%] flex h-[23cqw] w-[23cqw] rotate-[-10deg] flex-col items-center justify-center rounded-full bg-red text-center leading-[1.05] text-white shadow-lg" aria-hidden="true">
-          <span className="text-[5.4cqw] font-black">{sticker[0]}</span>
-          <span className="text-[3.4cqw] font-bold">{sticker[1]}</span>
+        <span className="absolute bottom-[7%] left-[5%] flex h-[max(92px,23cqw)] w-[max(92px,23cqw)] rotate-[-10deg] flex-col items-center justify-center rounded-full bg-red text-center leading-[1.05] text-white shadow-lg" aria-hidden="true">
+          <span className="text-[max(19px,5.4cqw)] font-black">{sticker[0]}</span>
+          <span className="text-[max(15px,3.4cqw)] font-bold">{sticker[1]}</span>
         </span>
       )}
     </div>
@@ -747,7 +784,7 @@ function SizeGuide({ garment, locale, T }: { garment: GarmentKey; locale: Locale
   const unit = (inches: number) => (T.inches ? `${inches}″` : `${Math.round(inches * 2.54)} cm`);
   return (
     <>
-      <button type="button" className="font-bold text-violet underline" onClick={() => {
+      <button type="button" className="-my-3 inline-flex min-h-12 items-center font-bold text-violet underline" onClick={() => {
             trackEvent('SizeGuideOpened', { garment });
             ref.current?.showModal();
           }}>
@@ -840,7 +877,7 @@ function Field({ f, value, error, onChange, T }: { f: FieldDef; value: string | 
           </div>
         ))}
         {list.length < f.max && (
-          <button type="button" className="font-bold text-violet underline" onClick={() => onChange([...list, ''])}>
+          <button type="button" className="inline-flex min-h-12 items-center font-bold text-violet underline" onClick={() => onChange([...list, ''])}>
             {T.addName}
           </button>
         )}

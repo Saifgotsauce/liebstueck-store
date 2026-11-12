@@ -64,21 +64,21 @@ export default function Footer() {
         </div>
         <div>
           <h2 className="font-sans text-base font-bold tracking-normal text-white">{t.footer.shop}</h2>
-          <ul className="mt-3 space-y-2 text-white/80">
-            <li><Link href={routes.shop} className="no-underline hover:text-white">{t.common.allShirts}</Link></li>
+          <ul className="mt-1 text-white/80">
+            <li><Link href={routes.shop} prefetch={false} className="flex min-h-12 items-center no-underline hover:text-white">{t.common.allShirts}</Link></li>
             {vibesFor(locale).map((v) => (
               <li key={v.key}>
-                <Link href={shopPath(locale, v.key)} className="no-underline hover:text-white">{v.name}</Link>
+                <Link href={shopPath(locale, v.key)} prefetch={false} className="flex min-h-12 items-center no-underline hover:text-white">{v.name}</Link>
               </li>
             ))}
           </ul>
         </div>
         <div>
           <h2 className="font-sans text-base font-bold tracking-normal text-white">{t.footer.help}</h2>
-          <ul className="mt-3 space-y-2 text-white/80">
+          <ul className="mt-1 text-white/80">
             {HELP[locale].map((l) => (
               <li key={l.href}>
-                <Link href={l.href} className="no-underline hover:text-white">{l.label}</Link>
+                <Link href={l.href} prefetch={false} className="flex min-h-12 items-center no-underline hover:text-white">{l.label}</Link>
               </li>
             ))}
           </ul>
@@ -87,7 +87,7 @@ export default function Footer() {
       <div className="border-t border-white/20">
         <p className="wrap flex flex-wrap justify-between gap-x-6 gap-y-2 py-5 text-sm text-white/70">
           <span>{t.footer.bottom(new Date().getFullYear())}</span>
-          <Link href={locale === 'de' ? ROUTES.en.home : ROUTES.de.home} className="text-white/80 hover:text-white" hrefLang={locale === 'de' ? 'en-US' : 'de-DE'}>
+          <Link href={locale === 'de' ? ROUTES.en.home : ROUTES.de.home} prefetch={false} className="-my-3 inline-flex min-h-12 items-center text-white/80 hover:text-white" hrefLang={locale === 'de' ? 'en-US' : 'de-DE'}>
             {locale === 'de' ? 'US store (English)' : 'Deutscher Shop'}
           </Link>
         </p>

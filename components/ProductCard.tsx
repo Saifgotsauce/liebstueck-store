@@ -20,7 +20,7 @@ export default function ProductCard({ design, eager = false }: { design: Design;
         <div className="relative overflow-hidden rounded-2xl bg-white ring-1 ring-lilac-line transition group-hover:ring-2 group-hover:ring-violet">
           {photo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={photo.src} alt={t.card.label(design.title, c ? colorLabel(c, locale) : '')} className="block aspect-square w-full object-cover" loading={eager ? 'eager' : 'lazy'} />
+            <img src={photo.src} srcSet={photo.srcSet} sizes="(min-width: 1024px) 290px, (min-width: 768px) 33vw, 50vw" alt={t.card.label(design.title, c ? colorLabel(c, locale) : '')} className="block aspect-square w-full object-cover" loading={eager ? 'eager' : 'lazy'} />
           ) : (
             <ShirtPreview design={design.slug} garment="tee" colorKey={color} values={defaultValues(getTemplate(design.slug))} label={t.card.label(design.title, c ? colorLabel(c, locale) : '')} className="block aspect-square w-full" view="tile" />
           )}

@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "tsx scripts/optimize-images.ts",
     "dev": "next dev",
+    "prebuild": "tsx scripts/optimize-images.ts",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
@@ -14,7 +16,8 @@
     "build:demo": "bash scripts/build-demo.sh",
     "design:sheet": "tsx scripts/design-sheet.ts",
     "render:mockups": "tsx scripts/render-mockups.ts",
-    "check:contrast": "tsx scripts/check-contrast.ts"
+    "check:contrast": "tsx scripts/check-contrast.ts",
+    "images": "tsx scripts/optimize-images.ts"
   },
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",

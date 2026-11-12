@@ -4,6 +4,8 @@ All fonts are used unmodified. Fraunces, Archivo Black, Courier Prime, DM Sans, 
 Dancing Script, Playfair Display and Nunito Sans are licensed under the SIL Open Font License 1.1
 (https://openfontlicense.org). Permanent Marker is licensed under the Apache License 2.0.
 Print fonts live in `assets/fonts` (print-file rendering) and `public/fonts` (website + live preview).
+Each `.ttf` in `public/fonts` has a `.woff2` copy next to it: the same font, only compressed for browsers
+(made with fontTools, `font.flavor = 'woff2'`). If a `.ttf` is replaced, remake its `.woff2`.
 
 | File | Family | Copyright |
 |---|---|---|

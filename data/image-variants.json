@@ -1,0 +1,92 @@
+{
+  "photos": {
+    "/photos/coffee-hot-flashes-spite-1.jpg": [
+      480,
+      800,
+      1200
+    ],
+    "/photos/dont-do-mornings-1.jpg": [
+      480,
+      800,
+      1200
+    ],
+    "/photos/fine-wine-cheap-tequila-1.jpg": [
+      480,
+      800,
+      1200
+    ],
+    "/photos/fluent-in-sarcasm-1.jpg": [
+      480,
+      800,
+      1200
+    ],
+    "/photos/not-old-seasoned-1.jpg": [
+      480,
+      800,
+      1200
+    ],
+    "/photos/peaked-honey-1.jpg": [
+      480,
+      800,
+      1200
+    ],
+    "/photos/say-what-im-thinking-1.jpg": [
+      480,
+      800,
+      1200
+    ],
+    "/photos/status-report-1.jpg": [
+      480,
+      800,
+      1200
+    ],
+    "/photos/too-old-for-drama-1.jpg": [
+      480,
+      800,
+      1200
+    ],
+    "/photos/too-old-for-drama-2.jpg": [
+      480,
+      800,
+      1200
+    ],
+    "/photos/vintage-knees-1.jpg": [
+      480,
+      800,
+      1200
+    ]
+  },
+  "mockups": {
+    "same": {
+      "/mockups/hoodie/149888-overlay.webp": "/mockups/hoodie/149880-overlay.webp",
+      "/mockups/tee/150954-overlay.webp": "/mockups/tee/150919-overlay.webp"
+    },
+    "small": {
+      "/mockups/hoodie/149880-overlay.webp": "/mockups/hoodie/149880-overlay-560.webp",
+      "/mockups/hoodie/149891-bg.webp": "/mockups/hoodie/149891-bg-560.webp",
+      "/mockups/tee/150915-bg.webp": "/mockups/tee/150915-bg-560.webp",
+      "/mockups/tee/150919-overlay.webp": "/mockups/tee/150919-overlay-560.webp",
+      "/mockups/tee/222292-bg.webp": "/mockups/tee/222292-bg-560.webp"
+    }
+  },
+  "sources": {
+    "/photos/coffee-hot-flashes-spite-1.jpg": "0310abc502c133fea011a291103b0886",
+    "/photos/dont-do-mornings-1.jpg": "e2192fddcbf0a70b41195a9c4f07866c",
+    "/photos/fine-wine-cheap-tequila-1.jpg": "f09af84de599a1f256f500855d03f5ed",
+    "/photos/fluent-in-sarcasm-1.jpg": "ba41c160583a210df499d2139db3b130",
+    "/photos/not-old-seasoned-1.jpg": "cf98a04e7a123ffa80d8c47825dbba13",
+    "/photos/peaked-honey-1.jpg": "ce6f2a187de6cfd3055360c2281669d9",
+    "/photos/say-what-im-thinking-1.jpg": "2b2b2ef64c0744e7b76175768ce91c0b",
+    "/photos/status-report-1.jpg": "a695afe0ad80c88482796d93f3b17d3e",
+    "/photos/too-old-for-drama-1.jpg": "3fc6bd513655d7598af090642cbfeef1",
+    "/photos/too-old-for-drama-2.jpg": "0bd5a5ac9c231c2d2384e25e85bc99f3",
+    "/photos/vintage-knees-1.jpg": "aa83d0da94023802ea1508787d1b14d4",
+    "/mockups/hoodie/149880-overlay.webp": "608d2ec0fed68f3137dab3658f1f8cca",
+    "/mockups/hoodie/149888-overlay.webp": "608d2ec0fed68f3137dab3658f1f8cca",
+    "/mockups/hoodie/149891-bg.webp": "33500d6742cd79017ec3a23de269bc87",
+    "/mockups/tee/150915-bg.webp": "99ea12e3238ae91498b173a8bc91f4f2",
+    "/mockups/tee/150919-overlay.webp": "ebbbbb7df2f02d89b7868460d284f392",
+    "/mockups/tee/150954-overlay.webp": "ebbbbb7df2f02d89b7868460d284f392",
+    "/mockups/tee/222292-bg.webp": "6e79a9bc1a02878bc624f369f92e5d32"
+  }
+}

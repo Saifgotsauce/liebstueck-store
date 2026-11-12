@@ -41,7 +41,7 @@ export default function Header() {
             {menu ? <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" /> : <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />}
           </svg>
         </button>
-        <Link href={routes.home} className="text-violet no-underline" aria-label={t.header.home}>
+        <Link href={routes.home} prefetch={false} className="flex min-h-12 items-center text-violet no-underline" aria-label={t.header.home}>
           <Logo />
         </Link>
         <nav aria-label={t.header.nav} className="hidden items-center gap-6 lg:flex">

@@ -12,10 +12,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        {/* The live shirt previews use these print fonts – load them early */}
-        <link rel="preload" href="/fonts/Fraunces_900Black.ttf" as="font" type="font/ttf" crossOrigin="anonymous" />
-        <link rel="preload" href="/fonts/ArchivoBlack_400Regular.ttf" as="font" type="font/ttf" crossOrigin="anonymous" />
-        <link rel="preload" href="/fonts/PermanentMarker_400Regular.ttf" as="font" type="font/ttf" crossOrigin="anonymous" />
+        {/* The two faces every first screen needs: headings and body text.
+            The print fonts for shirt previews load when a preview asks for them. */}
+        <link rel="preload" href="/fonts/Fraunces_900Black.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/DMSans_400Regular.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/DMSans_700Bold.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
       </head>
       <body className="min-h-screen bg-white antialiased">{children}</body>
     </html>

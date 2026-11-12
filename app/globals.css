@@ -2,19 +2,21 @@
 
 /* ── Fonts ───────────────────────────────────────────────────────────────────
    Site: Fraunces Black (display) + DM Sans (everything else).
-   Print designs (live preview) use the exact files the print renderer uses. */
-@font-face { font-family: "DM Sans"; src: url("/fonts/DMSans_400Regular.ttf") format("truetype"); font-weight: 400; font-display: swap; }
-@font-face { font-family: "DM Sans"; src: url("/fonts/DMSans_500Medium.ttf") format("truetype"); font-weight: 500; font-display: swap; }
-@font-face { font-family: "DM Sans"; src: url("/fonts/DMSans_700Bold.ttf") format("truetype"); font-weight: 700; font-display: swap; }
-@font-face { font-family: "Fraunces"; src: url("/fonts/Fraunces_900Black.ttf") format("truetype"); font-weight: 900; font-style: normal; font-display: block; }
-@font-face { font-family: "Fraunces"; src: url("/fonts/Fraunces_900Black_Italic.ttf") format("truetype"); font-weight: 900; font-style: italic; font-display: block; }
-@font-face { font-family: "Archivo Black"; src: url("/fonts/ArchivoBlack_400Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
-@font-face { font-family: "Permanent Marker"; src: url("/fonts/PermanentMarker_400Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
-@font-face { font-family: "Courier Prime"; src: url("/fonts/CourierPrime_700Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
-@font-face { font-family: "Bebas Neue"; src: url("/fonts/BebasNeue_400Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
-@font-face { font-family: "Dancing Script"; src: url("/fonts/DancingScript_700Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
-@font-face { font-family: "Playfair Display"; src: url("/fonts/PlayfairDisplay_700Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
-@font-face { font-family: "Nunito Sans"; src: url("/fonts/NunitoSans_700Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
+   Print designs (live preview) use the exact files the print renderer uses.
+   Browsers get the WOFF2 copy (same outlines, about 60% smaller); the .ttf stays
+   as the fallback and is what the print renderer reads on the server. */
+@font-face { font-family: "DM Sans"; src: url("/fonts/DMSans_400Regular.woff2") format("woff2"), url("/fonts/DMSans_400Regular.ttf") format("truetype"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "DM Sans"; src: url("/fonts/DMSans_500Medium.woff2") format("woff2"), url("/fonts/DMSans_500Medium.ttf") format("truetype"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "DM Sans"; src: url("/fonts/DMSans_700Bold.woff2") format("woff2"), url("/fonts/DMSans_700Bold.ttf") format("truetype"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Fraunces"; src: url("/fonts/Fraunces_900Black.woff2") format("woff2"), url("/fonts/Fraunces_900Black.ttf") format("truetype"); font-weight: 900; font-style: normal; font-display: block; }
+@font-face { font-family: "Fraunces"; src: url("/fonts/Fraunces_900Black_Italic.woff2") format("woff2"), url("/fonts/Fraunces_900Black_Italic.ttf") format("truetype"); font-weight: 900; font-style: italic; font-display: block; }
+@font-face { font-family: "Archivo Black"; src: url("/fonts/ArchivoBlack_400Regular.woff2") format("woff2"), url("/fonts/ArchivoBlack_400Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
+@font-face { font-family: "Permanent Marker"; src: url("/fonts/PermanentMarker_400Regular.woff2") format("woff2"), url("/fonts/PermanentMarker_400Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
+@font-face { font-family: "Courier Prime"; src: url("/fonts/CourierPrime_700Bold.woff2") format("woff2"), url("/fonts/CourierPrime_700Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
+@font-face { font-family: "Bebas Neue"; src: url("/fonts/BebasNeue_400Regular.woff2") format("woff2"), url("/fonts/BebasNeue_400Regular.ttf") format("truetype"); font-weight: 400; font-display: block; }
+@font-face { font-family: "Dancing Script"; src: url("/fonts/DancingScript_700Bold.woff2") format("woff2"), url("/fonts/DancingScript_700Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
+@font-face { font-family: "Playfair Display"; src: url("/fonts/PlayfairDisplay_700Bold.woff2") format("woff2"), url("/fonts/PlayfairDisplay_700Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
+@font-face { font-family: "Nunito Sans"; src: url("/fonts/NunitoSans_700Bold.woff2") format("woff2"), url("/fonts/NunitoSans_700Bold.ttf") format("truetype"); font-weight: 700; font-display: block; }
 
 /* Purple and red, worn together on purpose. */
 @theme {

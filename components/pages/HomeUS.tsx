@@ -36,25 +36,29 @@ export default function HomeUS() {
 
   return (
     <>
-      {/* ── Hero: three friends, the brand line, one red button ───────────────── */}
+      {/* ── Hero: three friends, the brand line, one red button ─────────────────
+          On a phone the photo, the headline, one line and the red button all fit the first screen
+          (390×664); the rest of the pitch comes after the button. */}
       <section className="bg-lilac" aria-labelledby="hero-title">
-        <div className="wrap grid items-center gap-7 pb-10 pt-5 sm:pt-8 lg:grid-cols-[0.95fr_1.25fr] lg:gap-12 lg:py-14">
+        <div className="wrap grid items-center gap-5 pb-10 pt-4 sm:gap-7 sm:pt-8 lg:grid-cols-[0.95fr_1.25fr] lg:gap-12 lg:py-14">
           <div className="order-2 lg:order-1">
-            <h1 id="hero-title" className="text-[3.3rem] leading-[0.95] sm:text-[4.4rem] lg:text-[5.2rem]">
+            <h1 id="hero-title" className="text-[2.8rem] leading-[0.95] sm:text-[4.4rem] lg:text-[5.2rem]">
               Not old. Seasoned.
             </h1>
-            <p className="mt-5 max-w-xl text-[1.2rem] leading-relaxed">
-              Funny shirts for women who stopped asking permission years ago. Big, loud print your friends can read across the room. Soft cotton. Zero apologies.
+            <p className="mt-3 max-w-xl text-[1.05rem] leading-snug sm:mt-5 sm:text-[1.2rem] sm:leading-relaxed">
+              Funny shirts for women who stopped asking permission years ago.
+              <span className="hidden sm:inline"> Big, loud print your friends can read across the room. Soft cotton. Zero apologies.</span>
             </p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Link href={routes.shop} className="btn btn-red">
+            <div className="mt-4 flex flex-wrap gap-3 sm:mt-7">
+              <Link href={routes.shop} className="btn btn-red w-full sm:w-auto">
                 Shop all {DESIGNS.length} shirts
               </Link>
-              <Link href={shopPath(locale, 'personalized')} className="btn btn-line">
+              <Link href={shopPath(locale, 'personalized')} prefetch={false} className="btn btn-line w-full sm:w-auto">
                 Put your name on one
               </Link>
             </div>
-            <ul className="mt-7 space-y-2 text-[1.05rem]">
+            <p className="mt-6 text-[1.1rem] leading-relaxed sm:hidden">Big, loud print your friends can read across the room. Soft cotton. Zero apologies.</p>
+            <ul className="mt-4 space-y-2 text-[1.05rem] sm:mt-7">
               {[`T-shirts from ${fmt(teeFromCents(locale))}. Free US shipping over ${free}`, `Hoodies ${fmt(unitPriceCents('hoodie', undefined, locale))}, always shipped free`, `At your door in about a week, with tracking`, `We mess up, we fix it free`].map((x) => (
                 <li key={x} className="flex gap-2.5">
                   <IconCheck className="mt-1 h-5 w-5 shrink-0 text-red" />
@@ -70,14 +74,31 @@ export default function HomeUS() {
               alt="Three women in their sixties laughing together, wearing Seasoned shirts: “I don’t do mornings”, “Powered by coffee, hot flashes & spite” and “Aging like fine wine”."
               sizes="(min-width: 1024px) 58vw, 100vw"
               eager
-              className="block h-auto w-full rounded-[1.75rem]"
+              className="block h-auto w-full rounded-[1.75rem] max-sm:aspect-[10/7] max-sm:object-cover max-sm:object-top"
             />
           </div>
         </div>
       </section>
 
-      {/* ── The promise, right under the hero ─────────────────────────────────── */}
-      <section className="border-b border-lilac-line bg-white" aria-labelledby="promise-strip">
+      {/* Shirts first: the ten with photos on real-looking women come straight after the hero */}
+      <section className="wrap mt-10 sm:mt-14" aria-labelledby="start">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h2 id="start" className="text-[2.2rem] sm:text-[2.6rem]">
+            Start here. Pick your attitude.
+          </h2>
+          <Link href={routes.shop} className="inline-flex min-h-12 items-center font-bold text-violet">
+            {H.seeAll(DESIGNS.length)}
+          </Link>
+        </div>
+        <ul className="mt-6 grid grid-cols-2 gap-x-3.5 gap-y-8 sm:gap-x-5 lg:grid-cols-5">
+          {featured.map((d, i) => (
+            <ProductCard key={d.slug} design={d} eager={i < 4} />
+          ))}
+        </ul>
+      </section>
+
+      {/* ── The promise, right after the first shirts ─────────────────────────── */}
+      <section className="mt-12 border-y border-lilac-line bg-white sm:mt-16" aria-labelledby="promise-strip">
         <h2 id="promise-strip" className="sr-only">
           Why shopping with us is safe
         </h2>
@@ -102,7 +123,7 @@ export default function HomeUS() {
           </ul>
           <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
             <PaymentLogos />
-            <Link href={routes.returns} className="font-bold text-violet">
+            <Link href={routes.returns} className="inline-flex min-h-12 items-center font-bold text-violet">
               Read our promise
             </Link>
           </div>
@@ -131,7 +152,7 @@ export default function HomeUS() {
               </h2>
               <p className="mt-2 text-lg">{H.holidayText(holiday.label, holiday.name)}</p>
             </div>
-            <Link href={shopPath(locale, 'holiday')} className="font-bold text-violet">
+            <Link href={shopPath(locale, 'holiday')} className="inline-flex min-h-12 items-center font-bold text-violet">
               {H.seeHoliday}
             </Link>
           </div>
@@ -140,22 +161,6 @@ export default function HomeUS() {
           </div>
         </section>
       )}
-
-      <section className="wrap mt-16" aria-labelledby="start">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 id="start" className="text-[2.2rem] sm:text-[2.6rem]">
-            Start here. Pick your attitude.
-          </h2>
-          <Link href={routes.shop} className="font-bold text-violet">
-            {H.seeAll(DESIGNS.length)}
-          </Link>
-        </div>
-        <ul className="mt-6 grid grid-cols-2 gap-x-3.5 gap-y-8 sm:gap-x-5 lg:grid-cols-5">
-          {featured.map((d, i) => (
-            <ProductCard key={d.slug} design={d} eager={i < 4} />
-          ))}
-        </ul>
-      </section>
 
       {/* ── Friends: the shirts are made to be worn together ───────────────────── */}
       <section className="mt-20 bg-lilac" aria-labelledby="friends">
@@ -181,11 +186,6 @@ export default function HomeUS() {
             </Link>
           </div>
         </div>
-      </section>
-
-      {/* Give $5, get $5: she tells her friends anyway */}
-      <section className="wrap mt-20" aria-labelledby="refer">
-        <ReferSection />
       </section>
 
       {/* Shop by vibe */}
@@ -317,6 +317,12 @@ export default function HomeUS() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Give $5, get $5: she tells her friends anyway. Low on the page: it's for someone who
+          already likes us, not a first-time visitor who hasn't seen a shirt yet. */}
+      <section className="wrap mt-20" aria-labelledby="refer">
+        <ReferSection />
       </section>
 
       {/* ── The questions she asks first ───────────────────────────────────────── */}

@@ -92,9 +92,10 @@ export default function CartView() {
   const toFree = shop.freeShippingFromCents - totals.merchandise;
 
   return (
-    <div className="wrap pt-8 sm:pt-12">
-      <h1 className="text-[2.6rem] sm:text-[3.2rem]">{C.title}</h1>
-      <div className="mt-8 grid gap-10 lg:grid-cols-[1.5fr_1fr]">
+    <div className="wrap pt-5 sm:pt-12">
+      {/* Phone: small heading and tight spacing, so the total and the checkout button come sooner */}
+      <h1 className="text-[2rem] sm:text-[3.2rem]">{C.title}</h1>
+      <div className="mt-4 grid gap-6 sm:mt-8 lg:grid-cols-[1.5fr_1fr] lg:gap-10">
         <ul className="divide-y divide-lilac-line border-y border-lilac-line">
           {items.map((i) => {
             const d = getDesign(i.design)!;
@@ -103,7 +104,7 @@ export default function CartView() {
             const personal = getTemplate(i.design).summarize(i.values);
             const href = productPath(locale, i.design);
             return (
-              <li key={i.id} className="flex gap-4 py-5">
+              <li key={i.id} className="flex gap-4 py-4 sm:py-5">
                 <Link href={href} className="w-24 shrink-0 self-start overflow-hidden rounded-xl bg-white ring-1 ring-lilac-line sm:w-32">
                   <ShirtPreview design={i.design} garment={i.garment} colorKey={i.color} values={i.values} label={d.title} className="block aspect-square w-full" view="tile" />
                 </Link>
@@ -118,23 +119,23 @@ export default function CartView() {
                     {C.line(garmentText(i.garment, locale).label, c ? colorLabel(c, locale) : '', i.size)}
                   </p>
                   {personal && <p className="mt-0.5 text-[0.95rem] text-ink-soft">{personal}</p>}
-                  <div className="mt-3 flex items-center gap-4">
+                  <div className="mt-2 flex items-center gap-4">
                     <div className="flex items-center rounded-full ring-2 ring-lilac-line" role="group" aria-label={C.qtyOf(d.title)}>
-                      <button type="button" className="h-10 w-10 text-lg font-bold" onClick={() => {
+                      <button type="button" className="h-11 w-11 text-lg font-bold" onClick={() => {
                           trackEvent('CartQuantityChanged', { direction: 'down' });
                           setQty(i.id, i.qty - 1);
                         }} aria-label={C.less}>
                         −
                       </button>
                       <span className="w-7 text-center font-bold">{i.qty}</span>
-                      <button type="button" className="h-10 w-10 text-lg font-bold" onClick={() => {
+                      <button type="button" className="h-11 w-11 text-lg font-bold" onClick={() => {
                           trackEvent('CartQuantityChanged', { direction: 'up' });
                           setQty(i.id, i.qty + 1);
                         }} aria-label={C.more}>
                         +
                       </button>
                     </div>
-                    <button type="button" className="font-bold text-ink-soft underline hover:text-red" onClick={() => {
+                    <button type="button" className="inline-flex min-h-12 items-center font-bold text-ink-soft underline hover:text-red" onClick={() => {
                         trackEvent('CartItemRemoved', { product: i.design });
                         remove(i.id);
                       }}>
@@ -158,7 +159,7 @@ export default function CartView() {
                 {C.saving(totals.percent)}
               </p>
             )}
-            <dl className="mt-5 space-y-2 text-[1.05rem]">
+            <dl className="mt-4 space-y-2 text-[1.05rem]">
               <div className="flex justify-between">
                 <dt>{C.subtotal}</dt>
                 <dd>{formatPrice(totals.subtotal)}</dd>
@@ -198,41 +199,46 @@ export default function CartView() {
               </div>
             )}
             {locale === 'en' && !code && (
-              <form onSubmit={applyCode} className="mt-5">
-                <label htmlFor="cart-code" className="block font-bold">
-                  Have a code?
-                </label>
-                <div className="mt-1.5 flex gap-2">
-                  <input
-                    id="cart-code"
-                    className="field min-w-0 flex-1"
-                    value={codeInput}
-                    onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
-                    placeholder="e.g. LINDA7KQ"
-                    autoComplete="off"
-                    autoCapitalize="characters"
-                    aria-invalid={codeError ? true : undefined}
-                    aria-describedby={codeError ? 'cart-code-error' : undefined}
-                  />
-                  <button type="submit" className="btn btn-line shrink-0 px-5" disabled={codeBusy}>
-                    {codeBusy ? 'Checking…' : 'Apply'}
-                  </button>
-                </div>
-                {codeError && (
-                  <p id="cart-code-error" className="mt-2 font-bold text-red" role="alert">
-                    {codeError}
-                  </p>
-                )}
-              </form>
+              // One quiet line until she opens it: an empty code box in front of the button sends
+              // people off to hunt for a code. Codes from a friend's link are filled in already.
+              <details className="mt-3">
+                <summary className="flex min-h-12 cursor-pointer list-none items-center font-bold text-violet underline [&::-webkit-details-marker]:hidden">Have a friend or reward code?</summary>
+                <form onSubmit={applyCode} className="pb-1">
+                  <label htmlFor="cart-code" className="sr-only">
+                    Your code
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      id="cart-code"
+                      className="field min-w-0 flex-1"
+                      value={codeInput}
+                      onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
+                      placeholder="e.g. LINDA7KQ"
+                      autoComplete="off"
+                      autoCapitalize="characters"
+                      aria-invalid={codeError ? true : undefined}
+                      aria-describedby={codeError ? 'cart-code-error' : undefined}
+                    />
+                    <button type="submit" className="btn btn-line shrink-0 px-5" disabled={codeBusy}>
+                      {codeBusy ? 'Checking…' : 'Apply'}
+                    </button>
+                  </div>
+                  {codeError && (
+                    <p id="cart-code-error" className="mt-2 font-bold text-red" role="alert">
+                      {codeError}
+                    </p>
+                  )}
+                </form>
+              </details>
             )}
-            <p className="mt-4 text-[0.92rem] text-ink-soft">{C.taxNote}</p>
+            {locale === 'de' && <p className="mt-4 text-[0.92rem] text-ink-soft">{C.taxNote}</p>}
             {locale === 'de' ? (
               // Germany: our own order page comes first (address, overview, "zahlungspflichtig bestellen")
               <Link href={routes.checkout} className="btn btn-red mt-5 w-full" onClick={() => track('InitiateCheckout', { value: totals.total / 100, currency: store.currency, num_items: totals.count })}>
                 {C.checkout}
               </Link>
             ) : (
-              <button type="button" className="btn btn-red mt-5 w-full" onClick={checkout} disabled={busy || isDemo}>
+              <button type="button" className="btn btn-red mt-3 w-full" onClick={checkout} disabled={busy || isDemo}>
                 {isDemo ? C.demo : busy ? C.opening : C.checkout}
               </button>
             )}
@@ -243,6 +249,7 @@ export default function CartView() {
             )}
             {locale === 'en' && <PaymentLogos center className="mt-4" />}
             <p className="mt-3 text-center text-[0.95rem] text-ink-soft">{C.payNote}</p>
+            {locale === 'en' && <p className="mt-2 text-center text-[0.92rem] text-ink-soft">{C.taxNote}</p>}
           </div>
           {locale === 'en' && <PromiseNote className="mt-4 bg-white ring-2 ring-lilac-line" />}
           <p className="mt-4 text-[1rem] text-ink-soft">{C.deliveryNote(shop.deliveryMinDays, shop.deliveryMaxDays)}</p>

@@ -116,6 +116,29 @@ header, the photo and a sticky bar; the name, price and size picker were one to 
 - Phone photo height is set in `.pdp-slide` (`app/globals.css`); model photos crop from the bottom, so keep
   the print in the top 75% of a model photo.
 
+## 5b. Speed and the other pages on a phone
+
+She comes from an ad on mobile data. Every extra second before the page shows costs visitors, and
+unexpected costs at checkout are the most common reason carts get abandoned (Baymard). Site audit,
+November 12, 2026: the pages weighed 1.8–3 MB; pictures and fonts alone were 1–2 MB.
+
+- **Photos:** never link a full-size file from a grid or a phone page. `npm run images` (runs before
+  every build) makes small WebP copies; `modelPhotos()` hands out a `srcSet`, shop tiles use the 560 px
+  shirt photo (`tilePhoto`). New photo → run it and commit the copies with `data/image-variants.json`.
+- **Fonts:** browsers get the `.woff2` files; only the heading face and DM Sans are preloaded.
+- **Product gallery:** only the first photo loads with the page; the next one loads once the page has
+  settled, the rest as she swipes. Thumbnails are for tablets and desktops.
+- **Home, first screen at 390 × 664:** photo, headline, one line, the red button. Shirts come straight
+  after the hero; the friend-code offer sits low on the page.
+- **Shop and collections:** the first row of shirts, with prices, shows on the first screen.
+- **Next to Add to cart:** what shipping costs for *this* order ("Shipping $4.95. Free when you buy 2."),
+  then the delivery date.
+- **Cart:** total and checkout button come before anything optional. The code box is one quiet link
+  until she opens it; an empty code box in front of the button sends people off to hunt for a code.
+- **Wrong link (404):** always inside the store, with header, cart and a way back to the shirts.
+- Links that stand alone ("See all shirts", "Remove", "Size guide", footer links) are 48 px tall, like
+  buttons.
+
 ## 6. The shirts (print designs)
 
 The shirt is read from across a room by her friends. If they can't read it, the joke is dead.
@@ -141,6 +164,8 @@ The shirt is read from across a room by her friends. If they can't read it, the 
 - [ ] Every shirt preview: can you read every word from the shop grid tile?
 - [ ] Product page at 390 × 664 and 375 × 548 (Facebook's in-app browser): whole slogan, name and price
       on the first screen; nothing covering the photo.
+- [ ] Home at 390 × 664: the red button is on the first screen. Shop: the first row of shirts is.
+- [ ] No picture over about 100 KB on a phone page (run `npm run images` after adding photos).
 - [ ] One red button per screen, and it says exactly what happens.
 - [ ] Price, delivery time and the promise visible near every buy button.
 - [ ] No fake urgency, no pop-ups, no invented reviews or customers.

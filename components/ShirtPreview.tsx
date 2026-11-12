@@ -3,7 +3,7 @@
 import { getTemplate, designPalette } from '@/lib/design/templates';
 import type { FieldValues } from '@/lib/design/types';
 import { GARMENTS, getColor, type GarmentKey } from '@/lib/catalog';
-import { garmentPhoto, mockupGeometry, type MockupColor, type MockupView } from '@/lib/mockups';
+import { garmentPhoto, mockupGeometry, tilePhoto, type MockupColor, type MockupView } from '@/lib/mockups';
 
 type Props = {
   design: string;
@@ -14,14 +14,17 @@ type Props = {
   className?: string;
   /** 'full' = whole photo, 'main' = product photo, 'tile' = tighter square for grids, 'zoom' = close-up of the print */
   view?: MockupView;
+  /** Use the small photo files. On by default for tiles; turn off where a tile is shown large. */
+  small?: boolean;
 };
 
-export default function ShirtPreview({ design, garment, colorKey, values, label, className, view = 'full' }: Props) {
+export default function ShirtPreview({ design, garment, colorKey, values, label, className, view = 'full', small = view === 'tile' }: Props) {
   const t = getTemplate(design);
   const color = getColor(GARMENTS[garment], colorKey) ?? GARMENTS[garment].colors[0];
   const markup = t.render(values, designPalette(design, color));
   const photo = garmentPhoto(garment, color.key);
-  if (photo) return <PhotoPreview photo={photo} garment={garment} design={markup} label={label} className={className} view={view} />;
+  // Grid tiles show at about a third of the photo's size: they get the small file.
+  if (photo) return <PhotoPreview photo={small ? tilePhoto(photo) : photo} garment={garment} design={markup} label={label} className={className} view={view} />;
   return <DrawnPreview garment={garment} hex={color.hex} light={color.ink === 'dark'} design={markup} label={label} className={className} />;
 }
 

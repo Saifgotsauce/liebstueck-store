@@ -150,6 +150,8 @@ const en = {
     bestValue: 'Best value',
     tierNote: 'Same size for each. Mixing sizes or designs? Add them one by one – the saving still counts in your cart.',
     addToCart: (price: string) => `Add to cart – ${price}`,
+    shipFree: 'Free shipping on this order',
+    shipPaid: (cost: string, free: string, twoShipFree: boolean) => `Shipping ${cost}. ${twoShipFree ? 'Free when you buy 2.' : `Free over ${free}.`}`,
     arrives: (w: string): ReactNode => (
       <>
         Order today, arrives <strong>about {w}</strong>
@@ -404,6 +406,8 @@ const de: Messages = {
     bestValue: 'Bester Preis',
     tierNote: 'Alle in derselben Größe. Verschiedene Größen oder Motive? Einfach einzeln in den Warenkorb legen – der Rabatt gilt trotzdem.',
     addToCart: (price) => `In den Warenkorb – ${price}`,
+    shipFree: 'Diese Bestellung liefern wir versandkostenfrei',
+    shipPaid: (cost, free, twoShipFree) => `zzgl. ${cost} Versand. ${twoShipFree ? 'Ab 2 Stück gratis.' : `Ab ${free} gratis.`}`,
     arrives: (w) => (
       <>
         Heute bestellt, bei dir <strong>ca. {w}</strong>
