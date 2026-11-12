@@ -272,6 +272,24 @@ export const DESIGNS: Design[] = [
     },
   },
 
+  {
+    slug: 'older-i-get-heller-no',
+    title: 'The Older I Get, the Heller the No',
+    vibe: 'aging',
+    accent: 'gold',
+    color: 'black',
+    famous: true,
+    blurb: 'Every year the answer gets shorter, louder and more final. She’s not sorry.',
+    spec: {
+      layout: 'stack',
+      lines: [
+        { t: 'THE OLDER I GET,', font: 'display', size: 300 },
+        { t: 'THE HELLER', font: 'display', size: 300 },
+        { t: 'THE NO', font: 'display', size: 300 },
+      ],
+    },
+  },
+
   // ── Grandma Era ─────────────────────────────────────────────────────────────
   {
     slug: 'grandma-era',
@@ -288,6 +306,23 @@ export const DESIGNS: Design[] = [
         { t: 'In my', font: 'script', size: 160 },
         { t: '{nickname}', font: 'retro', size: 300, upper: true, gap: -14 },
         { t: 'era', font: 'script', size: 400, tone: 'accent', gap: -80 },
+      ],
+    },
+  },
+  {
+    slug: 'good-grandmas-bad-words',
+    title: 'Good Grandmas Say Bad Words',
+    vibe: 'grandma',
+    accent: 'gold',
+    color: 'black',
+    famous: true,
+    blurb: 'She knows a few. She uses them well. The grandkids learned the good ones from her.',
+    spec: {
+      layout: 'stack',
+      lines: [
+        { t: 'GOOD GRANDMAS', font: 'display', size: 300 },
+        { t: 'SAY', font: 'display', size: 300 },
+        { t: 'BAD WORDS', font: 'display', size: 300 },
       ],
     },
   },
