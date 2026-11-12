@@ -75,7 +75,7 @@ export default function ProductPage({ slug, locale }: { slug: string; locale: Lo
     ...(rating ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: rating.average, reviewCount: rating.count } } : {}),
   };
   return (
-    <div className="wrap pt-6 sm:pt-10">
+    <div className="wrap pt-0 md:pt-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <ProductView slug={slug} rating={rating} />
       {reviews.length > 0 && rating && (

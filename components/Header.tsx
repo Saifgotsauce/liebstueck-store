@@ -22,10 +22,13 @@ export default function Header() {
 
   return (
     <header className="relative z-40 bg-white">
-      <p className="bg-violet px-4 py-2 text-center text-[0.92rem] font-medium text-white">
-        {deadline ? t.header.deadline(deadline.label, deadline.name, price(store.freeShippingFromCents)) : t.header.offer(price(store.freeShippingFromCents))}
+      <p className="bg-violet px-4 py-1.5 text-center text-[0.92rem] font-medium text-white sm:py-2">
+        <span className="sm:hidden">{deadline ? t.header.deadlineShort(deadline.label, deadline.name) : t.header.offerShort(price(store.freeShippingFromCents))}</span>
+        <span className="hidden sm:inline">
+          {deadline ? t.header.deadline(deadline.label, deadline.name, price(store.freeShippingFromCents)) : t.header.offer(price(store.freeShippingFromCents))}
+        </span>
       </p>
-      <div className="wrap flex h-[4.4rem] items-center justify-between gap-4">
+      <div className="wrap flex h-[3.6rem] items-center justify-between gap-4 sm:h-[4.4rem]">
         <button
           type="button"
           className="-ml-2 flex h-12 w-12 items-center justify-center rounded-full lg:hidden"

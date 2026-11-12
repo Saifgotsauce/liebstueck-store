@@ -79,6 +79,13 @@
   .chip[aria-pressed="true"], .chip[aria-checked="true"] { border-color: var(--color-violet); background: var(--color-violet); color: #fff; }
   .chip:disabled { opacity: .35; cursor: not-allowed; text-decoration: line-through; }
 
+  /* Product photos on phones: short enough that the shirt's name and price show on the first screen
+     (ad visitors arrive in Facebook's in-app browser, which is much shorter than the phone).
+     Never shorter than 80% of the width, so the print in a model photo isn't cut off. */
+  .pdp-slide { height: min(100vw, max(52vh, 80vw)); }
+  @supports (height: 1svh) { .pdp-slide { height: min(100vw, max(52svh, 80vw)); } }
+  @media (min-width: 768px) { .pdp-slide { height: auto; aspect-ratio: 1 / 1; } }
+
   /* Swipeable photo strip */
   .no-scrollbar { scrollbar-width: none; }
   .no-scrollbar::-webkit-scrollbar { display: none; }

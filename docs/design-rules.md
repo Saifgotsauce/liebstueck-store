@@ -97,6 +97,25 @@ Never: charity or donation claims before a real program exists (name who gets wh
 nothing; many US states regulate cause marketing), fake countdown timers, "only 3 left" (it's print on demand), pop-ups, fake reviews, star ratings
 before there are real reviews (FTC 16 CFR 465), "as seen on", invented testimonials, pressure language.
 
+## 5a. The product page on a phone (where every ad visitor lands)
+
+Ad visitors arrive on an iPhone inside Facebook's own browser, which shows about 390 × 664 px of page
+(less on small phones). In the first week of ads (Clarity, November 2026) 89% of phone visitors to the
+ad's product page never scrolled and nobody tapped anything. The first screen was a two-line banner, the
+header, the photo and a sticky bar; the name, price and size picker were one to three screens further down.
+
+- **First screen at 390 × 664:** the photo with the whole slogan readable, the shirt's name, its price and
+  the offer. Something is visibly cut off at the bottom, so she can see the page goes on.
+- **Order under the photo:** name, price, who it's for; personalising; style, colour, size; bundle; the red
+  button; delivery date, promise, payment logos. Benefits, trust badges, the set and the details come
+  *after* the button. Size picker within one scroll of the top, the button within about two.
+- **Announcement bar:** one line on phones.
+- **Sticky bar:** never on arrival (it covered the shirt and made the page look finished). It appears once
+  she has scrolled past the red button, or has picked a size. "Choose size" takes her to the sizes; it
+  is not an error.
+- Phone photo height is set in `.pdp-slide` (`app/globals.css`); model photos crop from the bottom, so keep
+  the print in the top 75% of a model photo.
+
 ## 6. The shirts (print designs)
 
 The shirt is read from across a room by her friends. If they can't read it, the joke is dead.
@@ -120,6 +139,8 @@ The shirt is read from across a room by her friends. If they can't read it, the 
 
 - [ ] Read every page on a phone at arm's length. Can you read all of it without zooming?
 - [ ] Every shirt preview: can you read every word from the shop grid tile?
+- [ ] Product page at 390 × 664 and 375 × 548 (Facebook's in-app browser): whole slogan, name and price
+      on the first screen; nothing covering the photo.
 - [ ] One red button per screen, and it says exactly what happens.
 - [ ] Price, delivery time and the promise visible near every buy button.
 - [ ] No fake urgency, no pop-ups, no invented reviews or customers.

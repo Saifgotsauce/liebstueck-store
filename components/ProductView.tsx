@@ -1,9 +1,12 @@
 'use client';
 
-// Product page, laid out like a high-converting mobile product page: a headline photo
-// first, then who it's for, quick benefits, price, options, bundle tiers, one big button,
-// trust badges and a "complete the set" bundle. Stars and crossed-out prices only appear
-// when they are real (data/reviews.json, the store's sale switch in lib/config.ts).
+// Product page. Most visitors land here from a Facebook ad on a phone, inside Facebook's own
+// (short) browser, so the order is: photo, name, price, then straight to style / colour / size
+// and one big button. The reasons to believe (benefits, trust, the set, details) come after it.
+// Session recordings (Nov 2026) showed nobody scrolled when the first screen was only a photo
+// and a sticky bar, with the size picker three screens down.
+// Stars and crossed-out prices only appear when they are real (data/reviews.json, the store's
+// sale switch in lib/config.ts).
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -67,7 +70,9 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const [sizeError, setSizeError] = useState(false);
   const [added, setAdded] = useState<null | 'one' | 'set'>(null);
   const [slide, setSlide] = useState(0);
-  const [sticky, setSticky] = useState(false);
+  // Where the main button is: on screen, further down, or scrolled past
+  const [ctaPos, setCtaPos] = useState<'visible' | 'below' | 'above'>('below');
+  const [sizeNudge, setSizeNudge] = useState(false);
   const [setMsg, alertSet] = useState('');
   const [dates, setDates] = useState<{ window: string; holiday: ReturnType<typeof holidayDeadline> } | null>(null);
   const addedRef = useRef<HTMLDivElement>(null);
@@ -99,15 +104,32 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
     track('ViewContent', { content_ids: [slug], content_type: 'product', value: unitPriceCents('tee', undefined, locale, slug) / 100, currency: store.currency });
   }, [marketing, slug, locale, store.currency]);
 
-  // Sticky add-to-cart bar on phones whenever the main button is off screen
+  // Sticky add-to-cart bar on phones. Not on arrival: there it covered the photo and made the page
+  // look finished. It shows once she has scrolled past the main button, or has picked a size.
   useEffect(() => {
     const el = ctaRef.current;
-    if (!el || typeof IntersectionObserver === 'undefined') return;
-    const io = new IntersectionObserver(([e]) => setSticky(!e.isIntersecting), { rootMargin: '0px 0px -40px 0px' });
-    io.observe(el);
-    return () => io.disconnect();
+    if (!el) return;
+    let frame = 0;
+    // Measured on scroll (not IntersectionObserver): a fast flick can jump straight past the button
+    const measure = () => {
+      frame = 0;
+      const r = el.getBoundingClientRect();
+      setCtaPos(r.bottom < 0 ? 'above' : r.top > window.innerHeight - 40 ? 'below' : 'visible');
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(measure);
+    };
+    measure();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
   }, []);
 
+  const sticky = ctaPos === 'above' || (ctaPos === 'below' && size !== null);
   const check = useMemo(() => validateValues(template, values, locale), [template, values, locale]);
   const price = unitPriceCents(garment, size ?? undefined, locale, slug);
   const regular = regularPriceCents(garment, size ?? undefined, locale, slug);
@@ -170,6 +192,12 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
     return true;
   }
 
+  /** "Choose size" in the sticky bar: take her to the sizes, without an error message. */
+  function jumpToSize() {
+    setSizeNudge(true);
+    sizeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
   function showAdded(kind: 'one' | 'set') {
     setAdded(kind);
     setTimeout(() => {
@@ -219,7 +247,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const cLabel = colorLabel(colorObj, locale);
 
   return (
-    <div className="grid grid-cols-1 gap-7 lg:grid-cols-[1.1fr_1fr] lg:gap-14">
+    <div className="grid grid-cols-1 gap-4 md:gap-7 lg:grid-cols-[1.1fr_1fr] lg:gap-14">
       {/* ── Gallery ─────────────────────────────────────────── */}
       <div className="-mx-[1.1rem] min-w-0 md:mx-0 lg:sticky lg:top-6 lg:self-start">
         <div className="relative">
@@ -231,38 +259,40 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             aria-label={T.photos}
           >
             {slides.map((s, i) => (
-              <div key={String(s)} className="w-full shrink-0 snap-center" role="group" aria-roledescription="slide" aria-label={T.slideOf(i + 1, slides.length)}>
+              <div key={String(s)} className="pdp-slide w-full shrink-0 snap-center" role="group" aria-roledescription="slide" aria-label={T.slideOf(i + 1, slides.length)}>
                 {s === 'hero' ? (
-                  <HeroSlide hook={vibe.hook} tagline={vibe.tagline} sticker={sticker}>
-                    <ShirtPreview design={slug} garment={garment} colorKey={color} values={check.values} label={T.heroLabel(design.title, cLabel, gt.label)} className="block h-full w-full" view="main" />
-                  </HeroSlide>
+                  <div className="mx-auto aspect-square h-full">
+                    <HeroSlide hook={vibe.hook} tagline={vibe.tagline} sticker={sticker}>
+                      <ShirtPreview design={slug} garment={garment} colorKey={color} values={check.values} label={T.heroLabel(design.title, cLabel, gt.label)} className="block h-full w-full" view="main" />
+                    </HeroSlide>
+                  </div>
                 ) : s === 'front' ? (
-                  <ShirtPreview design={slug} garment={garment} colorKey={color} values={check.values} label={T.front(gt.label)} className="block aspect-square w-full" view="main" />
+                  <ShirtPreview design={slug} garment={garment} colorKey={color} values={check.values} label={T.front(gt.label)} className="block h-full w-full" view="main" />
                 ) : s === 'zoom' ? (
-                  <ShirtPreview design={slug} garment={garment} colorKey={color} values={check.values} label={T.closeUp} className="block aspect-square w-full" view="zoom" />
+                  <ShirtPreview design={slug} garment={garment} colorKey={color} values={check.values} label={T.closeUp} className="block h-full w-full" view="zoom" />
                 ) : s === 'alt' ? (
-                  <div className="relative">
-                    <ShirtPreview design={slug} garment={altGarment} colorKey={altColor} values={check.values} label={T.alsoAs(altName)} className="block aspect-square w-full" view="main" />
+                  <div className="relative h-full">
+                    <ShirtPreview design={slug} garment={altGarment} colorKey={altColor} values={check.values} label={T.alsoAs(altName)} className="block h-full w-full" view="main" />
                     <button
                       type="button"
                       onClick={() => {
                         pickGarment(altGarment);
                         goTo(slides.indexOf('hero'));
-                      }} className="absolute bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-violet px-5 py-2.5 font-bold text-white shadow-lg hover:bg-violet-deep">
+                      }} className="absolute bottom-14 left-1/2 min-h-12 -translate-x-1/2 whitespace-nowrap rounded-full bg-violet px-5 py-2.5 font-bold text-white shadow-lg hover:bg-violet-deep md:bottom-4">
                       {T.alsoAs(altName)} · {fmt(unitPriceCents(altGarment, undefined, locale, slug))}
                     </button>
                   </div>
                 ) : photos[s] ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={photos[s].src} alt={T.examplePhoto(design.title)} className="block aspect-square w-full object-cover" loading={i === 0 ? 'eager' : 'lazy'} fetchPriority={i === 0 ? 'high' : undefined} />
+                  <img src={photos[s].src} alt={T.examplePhoto(design.title)} className="block h-full w-full object-cover object-top" loading={i === 0 ? 'eager' : 'lazy'} fetchPriority={i === 0 ? 'high' : undefined} />
                 ) : null}
               </div>
             ))}
           </div>
-          <button type="button" onClick={() => goTo(slide - 1)} disabled={slide === 0} aria-label={T.prev} className="absolute left-3 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-2xl font-bold text-violet shadow-md ring-1 ring-lilac-line disabled:opacity-0 sm:flex">
+          <button type="button" onClick={() => goTo(slide - 1)} disabled={slide === 0} aria-label={T.prev} className="absolute left-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white text-2xl font-bold text-violet shadow-md ring-1 ring-lilac-line disabled:opacity-0 md:left-3">
             ‹
           </button>
-          <button type="button" onClick={() => goTo(slide + 1)} disabled={slide === slides.length - 1} aria-label={T.next} className="absolute right-3 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-2xl font-bold text-violet shadow-md ring-1 ring-lilac-line disabled:opacity-0 sm:flex">
+          <button type="button" onClick={() => goTo(slide + 1)} disabled={slide === slides.length - 1} aria-label={T.next} className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white text-2xl font-bold text-violet shadow-md ring-1 ring-lilac-line disabled:opacity-0 md:right-3">
             ›
           </button>
           <span className="pointer-events-none absolute bottom-3 right-3 rounded-full bg-ink/75 px-2.5 py-1 text-[0.85rem] font-bold text-white" aria-hidden="true">
@@ -270,7 +300,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
           </span>
         </div>
 
-        <div className="no-scrollbar mt-3 flex gap-2.5 overflow-x-auto px-[1.1rem] py-1 md:px-1" role="group" aria-label={T.choosePhoto}>
+        <div className="no-scrollbar mt-3 hidden gap-2.5 overflow-x-auto px-[1.1rem] py-1 md:flex md:px-1" role="group" aria-label={T.choosePhoto}>
           {slides.map((s, i) => (
             <button key={String(s)} type="button" onClick={() => goTo(i)} aria-pressed={slide === i} aria-label={T.photoN(i + 1)} className={`w-[4.6rem] shrink-0 overflow-hidden rounded-xl bg-white ring-1 sm:w-[5.4rem] ${slide === i ? 'ring-[3px] ring-violet' : 'ring-lilac-line'}`}>
               {s === 'hero' ? (
@@ -286,7 +316,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             </button>
           ))}
         </div>
-        <p className="mt-2 px-[1.1rem] text-[0.95rem] text-ink-soft md:px-0">{T.previewNote}</p>
+        <p className={`mt-2 px-[1.1rem] text-[0.95rem] text-ink-soft md:block md:px-0 ${personalized ? '' : 'hidden'}`}>{T.previewNote}</p>
       </div>
 
       {/* ── Buy box ─────────────────────────────────────────── */}
@@ -298,13 +328,12 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             <span className="text-ink-soft underline">{T.reviews(rating.count)}</span>
           </a>
         )}
-        <Link href={shopPath(locale, vibe.key)} className="text-[0.95rem] font-bold uppercase tracking-wide text-violet no-underline hover:underline">
+        <Link href={shopPath(locale, vibe.key)} className="hidden text-[0.95rem] font-bold uppercase tracking-wide text-violet no-underline hover:underline md:inline-block">
           {vibe.name}
         </Link>
-        <h1 className="mt-1 text-[2.1rem] leading-[1.05] sm:text-[2.6rem]">{design.title}</h1>
-        <p className="mt-2 text-[1.15rem] font-bold text-red">{vibe.tagline}</p>
+        <h1 className="text-[1.65rem] leading-[1.08] md:mt-1 md:text-[2.6rem] md:leading-[1.05]">{design.title}</h1>
 
-        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+        <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
           <span className="text-[2rem] font-black leading-none">
             {store.sale && <span className="sr-only">{T.salePrice}</span>}
             {fmt(price)}
@@ -324,31 +353,10 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             inkl. MwSt., zzgl. <Link href={ROUTES.de.shipping}>Versand</Link>
           </p>
         )}
-
-        <ul className="mt-5 space-y-2.5">
-          {benefits.map((b) => (
-            <li key={b} className="flex gap-3">
-              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red text-white">
-                <IconCheck className="h-3.5 w-3.5" />
-              </span>
-              <span>{b}</span>
-            </li>
-          ))}
-        </ul>
-
-        <ul className="mt-6 grid grid-cols-4 gap-2 rounded-2xl bg-lilac p-3 text-center">
-          {features.map(({ Icon, label }) => (
-            <li key={label} className="flex flex-col items-center gap-1.5">
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-violet">
-                <Icon className="h-6 w-6" />
-              </span>
-              <span className="text-[0.85rem] font-bold leading-tight sm:text-[0.9rem]">{label}</span>
-            </li>
-          ))}
-        </ul>
+        <p className="mt-2.5 text-[1.1rem] font-bold leading-snug text-red">{vibe.tagline}</p>
 
         {personalized && (
-          <fieldset className="mt-7 rounded-2xl border-2 border-violet bg-white p-4 sm:p-5">
+          <fieldset className="mt-5 rounded-2xl border-2 border-violet bg-white p-4 sm:p-5">
             <legend className="sr-only">{T.personalize}</legend>
             <p className="font-display text-[1.45rem] font-black text-violet">{T.personalize}</p>
             <p className="text-[0.95rem] text-ink-soft">{T.personalizeNote}</p>
@@ -360,7 +368,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
           </fieldset>
         )}
 
-        <div className="mt-7">
+        <div className="mt-5">
           <p className="font-bold" id="style-label">{T.style}</p>
           <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-labelledby="style-label">
             {GARMENT_KEYS.map((k) => (
@@ -372,11 +380,11 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
           </div>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-5">
           <p className="font-bold" id="color-label">
             {T.color}: <span className="font-medium">{cLabel}</span>
           </p>
-          <div className="mt-2 flex flex-wrap gap-2.5" role="radiogroup" aria-labelledby="color-label">
+          <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-labelledby="color-label">
             {g.colors
               .filter((c) => isAvailable(garment, c.key, undefined, locale))
               .map((c) => (
@@ -398,7 +406,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
           </div>
         </div>
 
-        <div className="mt-6 scroll-mt-24" ref={sizeRef}>
+        <div className="mt-5 scroll-mt-24" ref={sizeRef}>
           <div className="flex items-baseline justify-between gap-4">
             <p className="font-bold" id="size-label">
               {T.size}
@@ -406,7 +414,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             </p>
             <SizeGuide garment={garment} locale={locale} T={T} />
           </div>
-          <div className={`mt-2 flex flex-wrap gap-2 rounded-2xl ${sizeError ? 'p-2 ring-2 ring-red' : ''}`} role="radiogroup" aria-labelledby="size-label" aria-describedby={sizeError ? 'size-error' : undefined}>
+          <div className={`mt-2 flex flex-wrap gap-2 rounded-2xl ${sizeError ? 'p-2 ring-2 ring-red' : sizeNudge && !size ? 'p-2 ring-2 ring-violet' : ''}`} role="radiogroup" aria-labelledby="size-label" aria-describedby={sizeError ? 'size-error' : undefined}>
             {g.sizes.map((s) => {
               const ok = isAvailable(garment, color, s, locale);
               const extra = sizeExtraCents(garment, s, locale);
@@ -422,6 +430,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
                     setSize(s);
                     trackEvent('SizeSelected', { product: slug, garment, size: s });
                     setSizeError(false);
+                    setSizeNudge(false);
                     alertSet('');
                   }}
                 >
@@ -447,34 +456,35 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
           )}
         </div>
 
-        <fieldset className="mt-7">
+        <fieldset className="mt-6">
           <legend className="font-bold">{T.bundleTitle}</legend>
-          <div className="mt-2 space-y-2.5">
+          <div className="mt-2 grid grid-cols-3 gap-2">
             {TIERS.map((n) => {
               const pct = bundlePercent(n, locale);
               const t = tierTotal(price, n, locale);
               const on = qty === n;
               return (
-                <label key={n} className={`relative flex cursor-pointer items-center gap-3 rounded-2xl border-2 px-4 py-3.5 ${on ? 'border-violet bg-lilac' : 'border-lilac-line bg-white hover:border-violet'}`}>
-                  <input type="radio" name="tier" checked={on} onChange={() => {
+                <label
+                  key={n}
+                  className={`flex cursor-pointer flex-col items-center rounded-2xl border-2 px-1 pb-3 pt-2.5 text-center leading-tight has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-violet ${on ? 'border-violet bg-lilac' : 'border-lilac-line bg-white hover:border-violet'}`}
+                >
+                  <input
+                    type="radio"
+                    name="tier"
+                    checked={on}
+                    onChange={() => {
                       setQty(n);
                       trackEvent('QuantitySelected', { product: slug, qty: n });
-                    }} className="h-5 w-5 shrink-0 accent-violet" />
-                  <span className="flex-1">
-                    <span className="font-bold">{T.pieces(n, garment)}</span>
-                    {pct > 0 && <span className="ml-2 rounded-full bg-red px-2 py-0.5 text-[0.85rem] font-bold text-white">{T.save(pct)}</span>}
-                    <span className="block text-[0.92rem] text-ink-soft">{n === 1 ? T.justThis : T.each(fmt(Math.round(t / n)))}</span>
-                  </span>
-                  <span className="text-right leading-tight">
-                    <span className="block text-[1.15rem] font-black">{fmt(t)}</span>
-                    {pct > 0 && (
-                      <s className="text-[0.9rem] text-ink-soft">
-                        <span className="sr-only">{T.withoutSaving}</span>
-                        {fmt(price * n)}
-                      </s>
-                    )}
-                  </span>
-                  {n === TIERS[TIERS.length - 1] && <span className="absolute -top-2.5 right-4 rounded-full bg-violet px-2.5 py-0.5 text-[0.85rem] font-bold text-white">{T.bestValue}</span>}
+                    }}
+                    className="h-5 w-5 shrink-0 accent-violet"
+                  />
+                  <span className="mt-1.5 text-[0.95rem] font-bold">{T.pieces(n, garment)}</span>
+                  <span className="mt-0.5 text-[1.15rem] font-black">{fmt(t)}</span>
+                  {pct > 0 ? (
+                    <span className="mt-1.5 rounded-full bg-red px-2 py-0.5 text-[0.85rem] font-bold text-white">{T.save(pct)}</span>
+                  ) : (
+                    <span className="mt-1.5 text-[0.85rem] text-ink-soft">{T.justThis}</span>
+                  )}
                 </label>
               );
             })}
@@ -524,6 +534,28 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             </div>
           </div>
         )}
+
+        <ul className="mt-8 space-y-2.5">
+          {benefits.map((b) => (
+            <li key={b} className="flex gap-3">
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red text-white">
+                <IconCheck className="h-3.5 w-3.5" />
+              </span>
+              <span>{b}</span>
+            </li>
+          ))}
+        </ul>
+
+        <ul className="mt-5 grid grid-cols-4 gap-2 rounded-2xl bg-lilac p-3 text-center">
+          {features.map(({ Icon, label }) => (
+            <li key={label} className="flex flex-col items-center gap-1.5">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-violet">
+                <Icon className="h-6 w-6" />
+              </span>
+              <span className="text-[0.85rem] font-bold leading-tight sm:text-[0.9rem]">{label}</span>
+            </li>
+          ))}
+        </ul>
 
         <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-4 border-y border-lilac-line py-5 text-[0.9rem]">
           {T.trust(fmt(store.freeShippingFromCents))
@@ -625,20 +657,20 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
 
       {/* ── Sticky add-to-cart on phones ───────────────────── */}
       <div
-        className={`fixed inset-x-0 bottom-0 z-40 border-t border-lilac-line bg-white/95 px-4 pt-3 shadow-[0_-6px_20px_rgba(30,22,38,.12)] backdrop-blur transition-transform duration-200 lg:hidden ${sticky ? 'translate-y-0' : 'pointer-events-none translate-y-full'}`}
+        className={`fixed inset-x-0 bottom-0 z-40 border-t-2 border-lilac-line bg-white px-4 pt-3 transition-transform duration-200 motion-reduce:transition-none lg:hidden ${sticky ? 'translate-y-0 shadow-[0_-6px_20px_rgba(30,22,38,.12)]' : 'pointer-events-none translate-y-full'}`}
         style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
         aria-hidden={!sticky}
       >
         <div className="mx-auto flex max-w-xl items-center gap-3">
           <div className="min-w-0 flex-1 leading-tight">
-            <p className="truncate font-bold">{design.title}</p>
-            <p className="text-[0.95rem] text-ink-soft">
+            <p className="text-[1.15rem] font-black">
               {fmt(total)}
               {qty > 1 ? T.forN(qty) : ''}
               {size ? ` · ${size}` : ''}
             </p>
+            <p className="truncate text-[0.95rem] text-ink-soft">{design.title}</p>
           </div>
-          <button type="button" tabIndex={sticky ? 0 : -1} className="btn btn-red min-h-[3.2rem] shrink-0 px-5" onClick={addToCart}>
+          <button type="button" tabIndex={sticky ? 0 : -1} className="btn btn-red min-h-[3.2rem] shrink-0 px-5" data-track={size ? 'sticky-add-to-cart' : 'sticky-choose-size'} onClick={size ? addToCart : jumpToSize}>
             {size ? T.addShort : T.chooseSize}
           </button>
         </div>

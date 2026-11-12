@@ -61,3 +61,12 @@ drop the Meta request; GA4 uses a beacon and Clarity records the exit itself, so
 6. **InitiateCheckout → Purchase low:** Stripe checkout and `CheckoutError`.
 
 Never put personal data (names, emails, typed values) in event params.
+
+## Site changes to compare against
+
+Note every change to a landing page here, so Clarity and GA can be compared before and after.
+Change one thing at a time: page **or** ad, never both in the same few days.
+
+| When (Mountain time) | What changed | Baseline before |
+| --- | --- | --- |
+| Nov 11, 2026, about 11:30 pm | Product page rebuilt for phones: one-line banner, shorter photo, name and price on the first screen, size picker and button moved up (from 3–4 screens down to 1–2), no sticky bar on arrival | `/p/say-what-im-thinking`, 27 phone visits from the ad: 89% never scrolled past the top 5%, nobody past 15%, 0 taps, 0 real add-to-carts |

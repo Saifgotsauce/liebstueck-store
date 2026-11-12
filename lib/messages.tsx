@@ -33,6 +33,13 @@ const en = {
       </>
     ),
     offer: (free: string) => `Free US shipping over ${free}. Buy 2, save 10%.`,
+    // Phones: one line, so the page itself starts higher
+    deadlineShort: (label: string, name: string): ReactNode => (
+      <>
+        Order by <strong>{label}</strong> for {name} delivery
+      </>
+    ),
+    offerShort: (free: string) => `Free US shipping over ${free}`,
     openMenu: 'Open menu',
     closeMenu: 'Close menu',
     home: 'Seasoned home',
@@ -281,6 +288,12 @@ const de: Messages = {
       </>
     ),
     offer: (free) => `Gratis Versand ab ${free}. Ab 2 Shirts 10 % sparen.`,
+    deadlineShort: (label, name) => (
+      <>
+        {name}: bis <strong>{label}</strong> bestellen
+      </>
+    ),
+    offerShort: (free) => `Gratis Versand ab ${free}`,
     openMenu: 'Menü öffnen',
     closeMenu: 'Menü schließen',
     home: 'Seasoned Startseite',
