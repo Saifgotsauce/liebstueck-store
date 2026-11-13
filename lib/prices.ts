@@ -21,10 +21,11 @@ export const TEE_PRICE_US: Record<string, number> = {
   'officially-not-my-problem': 2995,
   'grill-nap-repeat': 2995,
   'nice-ish': 2995,
+  // the video ad's shirt
+  'good-grandmas-bad-words': 2995,
 
   // In between
   'older-i-get-heller-no': 3295,
-  'good-grandmas-bad-words': 3295,
   'the-grandma-they-warned-you-about': 3295,
   'my-weekend-lasts-all-week': 3195,
   'dear-santa-define-good': 3195,
