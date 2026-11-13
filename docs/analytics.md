@@ -46,7 +46,14 @@ Custom events (Meta custom events, GA4 snake_case, Clarity events):
 | `PhotoViewed`, `GarmentSelected`, `ColorSelected`, `SizeSelected`, `QuantitySelected`, `SizeGuideOpened` | product page choices | `product`, choice |
 | `AddToCartBlocked` | "Add to cart" pressed but something is missing | `reason`: `no_size_chosen`, `missing_personalization`, `set_item_unavailable` |
 | `CartViewed`, `CartQuantityChanged`, `CartItemRemoved` | cart behaviour | |
+| `CartSizeChanged` | size changed with the picker in the cart | `product`, `from`, `to` |
+| `CartItemEdited` | "Save changes" on a shirt opened from the cart (`?edit=`) | `product`, `from` (`main` or `sticky`) |
+| `AddedOneMore` | "Add one more of this one" in the confirmation (also fires `AddToCart`) | `product` |
+| `PreviewEnlarged` | the large live preview is opened | `product`, `from` (`gallery` or `fields`) |
 | `CheckoutError` | checkout could not start | `message` |
+
+`UiClick` labels for the way to the cart: `sticky-go-to-cart` (product page bar after adding), `added-go-to-cart`
+(confirmation on the product page), `cart-bar-go-to-cart` (bar on shop, collection and home pages).
 
 `PageExit` with `exit=closed_or_external` is the page they actually left the shop from. On exit, browsers may
 drop the Meta request; GA4 uses a beacon and Clarity records the exit itself, so use those for exact exit pages.
@@ -71,3 +78,4 @@ Change one thing at a time: page **or** ad, never both in the same few days.
 | --- | --- | --- |
 | Nov 11, 2026, about 11:30 pm | Product page rebuilt for phones: one-line banner, shorter photo, name and price on the first screen, size picker and button moved up (from 3–4 screens down to 1–2), no sticky bar on arrival | `/p/say-what-im-thinking`, 27 phone visits from the ad: 89% never scrolled past the top 5%, nobody past 15%, 0 taps, 0 real add-to-carts |
 | Nov 12, 2026, early morning | Whole-site audit: pages made lighter (WebP photos in phone sizes, WOFF2 fonts, gallery loads one photo ahead), shipping cost shown under Add to cart, home page shows the red button on the first screen and shirts right after the hero, shorter shop header, cart code box collapsed and checkout button higher, 404 page inside the store | Page weight on a phone before → after: ad product page 1.87 → 1.14 MB (pictures + fonts 1.10 MB → 0.45 MB), home 2.41 → 1.30 MB, shop 2.62 → 1.34 MB, collection 3.00 → 1.05 MB. Clarity load time before: 3.7 s. Home red button at 780 px → 570 px; cart checkout button at 1045 px → 796 px |
+| Nov 12, 2026, afternoon | After "Add to cart" the button and the sticky bar turn into "In your cart" with the way to the cart (a repeat tap can no longer add a second shirt); confirmation shows the cart's count and total and sits where the button was; cart bar on phones while browsing with something in the cart; size can be changed in the cart, and every cart line opens the shirt for editing (`?edit=`); the personalised preview enlarges on tap and a print preview sits with the name fields | One real shopper from the video ad (Nov 12, 7:31 am, phone, 9 minutes, 23 pages): tapped the sticky Add to cart 4 times in 8 seconds and got 4 shirts, tapped the preview note 3 times with nothing happening, rebuilt a personalised shirt to fix it and removed the old one, viewed the cart 3 times, never tapped checkout, left from the shop page with about 6 shirts. Meta: 6 AddToCart, 0 InitiateCheckout |

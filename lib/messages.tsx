@@ -164,6 +164,19 @@ const en = {
     savingApplied: 'Your bundle saving is applied in the cart.',
     viewCart: 'View cart',
     keepShopping: 'Keep shopping',
+    cartNow: (n: number, total: string, shipFree: boolean) => `Your cart: ${n} ${n === 1 ? 'item' : 'items'} · ${total}${shipFree ? ', shipping is free' : ' with shipping'}`,
+    cartShort: (n: number, total: string) => `${n} ${n === 1 ? 'item' : 'items'} · ${total}`,
+    goToCart: 'Go to cart and check out',
+    goToCartShort: 'Go to cart',
+    inCart: 'In your cart',
+    addAnother: 'Add one more of this one',
+    saveChanges: 'Save changes',
+    editing: 'You’re changing a shirt in your cart.',
+    backToCart: 'Back to cart, no changes',
+    seeBigger: 'See it bigger',
+    yourPrint: 'This is what we print',
+    previewTitle: 'Your shirt',
+    closePreview: 'Close preview',
     trust: (free: string) => [
       { title: 'Secure checkout', text: 'Apple Pay, Google Pay and cards' },
       { title: 'Free shipping', text: `On US orders over ${free}` },
@@ -215,6 +228,11 @@ const en = {
     less: 'One less',
     more: 'One more',
     remove: 'Remove',
+    lineShort: (garment: string, color: string) => `${garment}, ${color}`,
+    sizeLabel: 'Size',
+    edit: (personal: boolean): string => (personal ? 'Change the text or color' : 'Change color or style'),
+    bar: (n: number, total: string) => `${n} ${n === 1 ? 'item' : 'items'} in your cart · ${total}`,
+    barGo: 'Go to cart',
     addMore: (n: number, p: number): ReactNode => (
       <>
         <span className="font-bold">
@@ -420,6 +438,19 @@ const de: Messages = {
     savingApplied: 'Dein Mengenrabatt wird im Warenkorb abgezogen.',
     viewCart: 'Zum Warenkorb',
     keepShopping: 'Weiter stöbern',
+    cartNow: (n, total, shipFree) => `Im Warenkorb: ${n} Artikel · ${total}${shipFree ? ', Versand gratis' : ' inkl. Versand'}`,
+    cartShort: (n, total) => `${n} Artikel · ${total}`,
+    goToCart: 'Zum Warenkorb und zur Kasse',
+    goToCartShort: 'Zum Warenkorb',
+    inCart: 'Liegt im Warenkorb',
+    addAnother: 'Noch eins davon dazu',
+    saveChanges: 'Änderungen speichern',
+    editing: 'Du änderst gerade ein Shirt aus deinem Warenkorb.',
+    backToCart: 'Zurück zum Warenkorb, nichts ändern',
+    seeBigger: 'Größer ansehen',
+    yourPrint: 'Das drucken wir',
+    previewTitle: 'Dein Shirt',
+    closePreview: 'Vorschau schließen',
     trust: (free) => [
       { title: 'Sicher bezahlen', text: 'Karte, Apple Pay, Google Pay & mehr' },
       { title: 'Gratis Versand', text: `In Deutschland ab ${free}` },
@@ -471,6 +502,11 @@ const de: Messages = {
     less: 'Eins weniger',
     more: 'Eins mehr',
     remove: 'Entfernen',
+    lineShort: (garment, color) => `${garment}, ${color}`,
+    sizeLabel: 'Größe',
+    edit: (personal) => (personal ? 'Text oder Farbe ändern' : 'Farbe oder Modell ändern'),
+    bar: (n, total) => `${n} Artikel im Warenkorb · ${total}`,
+    barGo: 'Zum Warenkorb',
     addMore: (n, p) => (
       <>
         <span className="font-bold">

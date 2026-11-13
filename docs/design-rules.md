@@ -113,6 +113,14 @@ header, the photo and a sticky bar; the name, price and size picker were one to 
 - **Sticky bar:** never on arrival (it covered the shirt and made the page look finished). It appears once
   she has scrolled past the red button, or has picked a size. "Choose size" takes her to the sizes; it
   is not an error.
+- **After Add to cart, nothing on the page still says "Add to cart".** The main button becomes the
+  confirmation (what's in her cart, the total with shipping, the red way to the cart, "Keep shopping");
+  the sticky bar becomes "In your cart" with "Go to cart". From the sticky bar the page must not move.
+  Adding the same shirt twice takes a deliberate tap on "Add one more of this one". Changing size, colour
+  or text brings the button back. (A shopper tapped an unchanged bar four times and got four shirts.)
+- **Personalised shirts:** a print preview sits with the name fields and updates as she types; it and
+  the note under the photos open the large preview. If text describes something she can look at, tapping
+  it shows it.
 - Phone photo height is set in `.pdp-slide` (`app/globals.css`); model photos crop from the bottom, so keep
   the print in the top 75% of a model photo.
 
@@ -133,6 +141,11 @@ November 12, 2026: the pages weighed 1.8–3 MB; pictures and fonts alone were 1
 - **Shop and collections:** the first row of shirts, with prices, shows on the first screen.
 - **Next to Add to cart:** what shipping costs for *this* order ("Shipping $4.95. Free when you buy 2."),
   then the delivery date.
+- **Cart on her mind:** on phones, shop, collection and home pages show a bar with the cart's count,
+  total and "Go to cart" whenever the cart isn't empty (never on product pages, which have their own bar).
+- **Cart lines can be changed in place:** size with a picker on the line; colour, style and printed text by
+  opening the shirt from the cart with her choices filled in and "Save changes". She never has to build a
+  shirt twice to fix a typo.
 - **Cart:** total and checkout button come before anything optional. The code box is one quiet link
   until she opens it; an empty code box in front of the button sends people off to hunt for a code.
 - **Wrong link (404):** always inside the store, with header, cart and a way back to the shirts.

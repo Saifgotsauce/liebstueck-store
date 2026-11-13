@@ -12,6 +12,7 @@ import DemoBanner from './DemoBanner';
 import GeoBanner from './GeoBanner';
 import CookieBanner from './CookieBanner';
 import ReferralBanner from './ReferralBanner';
+import CartBar from './CartBar';
 
 /** Everything around the page content, for one store. */
 export default function StoreShell({ locale, children }: { locale: Locale; children: React.ReactNode }) {
@@ -27,6 +28,7 @@ export default function StoreShell({ locale, children }: { locale: Locale; child
             <Header />
             <main id="main">{children}</main>
             <Footer />
+            <CartBar />
             {locale === 'de' && <CookieBanner />}
             <MetaPixel />
             <Analytics />

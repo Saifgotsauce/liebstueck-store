@@ -9,12 +9,13 @@
 // sale switch in lib/config.ts).
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { trackEvent } from '@/lib/analytics';
 import { OrderSteps, PaymentLogos, PromiseNote } from './Trust';
 import { SIZE_HELP } from '@/lib/promise';
 import { useConsent } from '@/lib/consent';
-import { GARMENTS, GARMENT_KEYS, colorLabel, defaultColor, garmentText, isAvailable, regularPriceCents, sizeExtraCents, unitPriceCents, type GarmentKey } from '@/lib/catalog';
+import { GARMENTS, GARMENT_KEYS, colorLabel, defaultColor, garmentText, getColor, isAvailable, regularPriceCents, sizeExtraCents, unitPriceCents, type GarmentKey } from '@/lib/catalog';
 import { legalDe } from '@/lib/config';
 import { useLocale } from '@/lib/i18n';
 import { ROUTES, productPath, shopPath, type Locale } from '@/lib/locale';
@@ -22,7 +23,7 @@ import { useCart } from '@/lib/cart';
 import { bundlePercent, nextBundle, shippingFor } from '@/lib/cart-math';
 import { deliveryWindow, holidayDeadline } from '@/lib/dates';
 import { designsFor, designsInVibe, getDesign, getVibe, isPersonalized, type Design } from '@/lib/designs';
-import { defaultValues, getTemplate } from '@/lib/design/templates';
+import { defaultValues, designPalette, getTemplate } from '@/lib/design/templates';
 import { validateValues } from '@/lib/design/validate';
 import type { FieldDef, FieldValues } from '@/lib/design/types';
 import { track } from '@/lib/pixel';
@@ -55,7 +56,8 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const vibe = getVibe(design.vibe)!;
   const template = getTemplate(slug);
   const personalized = template.fields.length > 0;
-  const { add, totals } = useCart();
+  const { add, update, items, ready: cartReady, totals } = useCart();
+  const router = useRouter();
   const { locale, t: M, store, price: fmt } = useLocale();
   const T = M.pdp;
   const SET_PERCENT = bundlePercent(3, locale);
@@ -69,6 +71,10 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [sizeError, setSizeError] = useState(false);
   const [added, setAdded] = useState<null | 'one' | 'set'>(null);
+  // Opened from the cart ("Change the text or color"): the button saves that cart line instead of adding a new one
+  const [editId, setEditId] = useState<string | null>(null);
+  const [addedFrom, setAddedFrom] = useState<'main' | 'sticky'>('main');
+  const [bigPreview, setBigPreview] = useState(false);
   const [slide, setSlide] = useState(0);
   // Where the main button is: on screen, further down, or scrolled past
   const [ctaPos, setCtaPos] = useState<'visible' | 'below' | 'above'>('below');
@@ -82,7 +88,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const [dates, setDates] = useState<{ window: string; holiday: ReturnType<typeof holidayDeadline> } | null>(null);
   const addedRef = useRef<HTMLDivElement>(null);
   const sizeRef = useRef<HTMLDivElement>(null);
-  const ctaRef = useRef<HTMLButtonElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const g = GARMENTS[garment];
   // Model photos first, then Printful photos; slides refer to them by index.
@@ -101,6 +107,22 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
     if (Object.keys(pre).length) setValues((cur) => ({ ...cur, ...pre }));
     setDates({ window: deliveryWindow(locale), holiday: holidayDeadline(locale) });
   }, [slug, template.fields, locale]);
+
+  // "Change" in the cart links here with ?edit=<line id>: start from what she already chose.
+  useEffect(() => {
+    if (!cartReady) return;
+    const id = new URLSearchParams(window.location.search).get('edit');
+    const line = id ? items.find((i) => i.id === id && i.design === slug) : undefined;
+    if (!line) return;
+    setEditId(line.id);
+    setGarment(line.garment);
+    setColor(line.color);
+    setSize(line.size);
+    setQty(1);
+    setValues((cur) => ({ ...cur, ...line.values }));
+    // only when the cart has loaded: later cart changes must not overwrite what she is typing
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartReady, slug]);
 
   // Waits for the visitor's tracking choice: the pixel isn't on the page yet when this component first mounts,
   // so firing straight away would lose the view for anyone who lands directly on a product page (e.g. from an ad).
@@ -191,6 +213,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
 
   function pickGarment(k: GarmentKey) {
     setGarment(k);
+    setAdded(null);
     trackEvent('GarmentSelected', { product: slug, garment: k });
     const keep = GARMENTS[k].colors.some((c) => c.key === color) && isAvailable(k, color, undefined, locale);
     if (!keep) setColor(defaultColor(design, k, locale));
@@ -222,25 +245,56 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
     return true;
   }
 
+  /** The live preview, large. She tapped the note under the photos expecting exactly this (dead clicks in recordings). */
+  function openPreview(from: 'gallery' | 'fields') {
+    setBigPreview(true);
+    trackEvent('PreviewEnlarged', { product: slug, from });
+  }
+
   /** "Choose size" in the sticky bar: take her to the sizes, without an error message. */
   function jumpToSize() {
     setSizeNudge(true);
     sizeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
-  function showAdded(kind: 'one' | 'set') {
+  /**
+   * After adding, every "Add to cart" on the page turns into "it's in your cart" with the way to the cart.
+   * A recording (Nov 12, 2026) showed a shopper tap the sticky bar four times in eight seconds: the bar
+   * still said "Add to cart", the confirmation was elsewhere on the page, and she ended up with four shirts.
+   * From the sticky bar the page stays where it is and the bar itself confirms; the main button, off screen
+   * above or below her, becomes a link of the same height, so nothing she is looking at moves (iPhones do
+   * not hold the scroll position when something above grows). From the main button the full confirmation
+   * takes the button's place.
+   */
+  function showAdded(kind: 'one' | 'set', from: 'main' | 'sticky' = 'main') {
     setAdded(kind);
+    setAddedFrom(from);
+    if (from === 'sticky') return;
     setTimeout(() => {
-      addedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      addedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       addedRef.current?.focus({ preventScroll: true });
     }, 0);
   }
 
-  function addToCart() {
+  function addToCart(from: 'main' | 'sticky' = 'main') {
     if (!ready() || !size) return;
+    if (editId) {
+      update(editId, { garment, color, size, values: check.values });
+      trackEvent('CartItemEdited', { product: slug, from });
+      router.push(ROUTES[locale].cart);
+      return;
+    }
     add({ design: slug, garment, color, size, values: check.values, qty });
     track('AddToCart', { content_ids: [slug], content_type: 'product', value: total / 100, currency: store.currency });
-    showAdded('one');
+    showAdded('one', from);
+  }
+
+  /** "Add one more of this one": the only way to add the same shirt twice without changing anything. */
+  function addAnother() {
+    if (!size) return;
+    add({ design: slug, garment, color, size, values: check.values, qty: 1 });
+    track('AddToCart', { content_ids: [slug], content_type: 'product', value: price / 100, currency: store.currency });
+    trackEvent('AddedOneMore', { product: slug });
   }
 
   const setItems = companions.map((d) => ({ d, color: defaultColor(d, garment, locale) }));
@@ -350,7 +404,17 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             </button>
           ))}
         </div>
-        <p className={`mt-2 px-[1.1rem] text-[0.95rem] text-ink-soft md:block md:px-0 ${personalized ? '' : 'hidden'}`}>{T.previewNote}</p>
+        {personalized ? (
+          <button type="button" onClick={() => openPreview('gallery')} className="mt-1 flex min-h-12 w-full items-center px-[1.1rem] text-left text-[0.95rem] text-ink-soft md:px-0">
+            {/* One line on a phone: the shirt's name and price must stay on the first screen */}
+            <span>
+              <span className="md:hidden">{T.yourPrint}.</span>
+              <span className="hidden md:inline">{T.previewNote}</span> <span className="font-bold text-violet underline">{T.seeBigger}</span>
+            </span>
+          </button>
+        ) : (
+          <p className="mt-2 hidden px-[1.1rem] text-[0.95rem] text-ink-soft md:block md:px-0">{T.previewNote}</p>
+        )}
       </div>
 
       {/* ── Buy box ─────────────────────────────────────────── */}
@@ -361,6 +425,14 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             <span className="font-bold">{rating.average.toFixed(1)}</span>
             <span className="text-ink-soft underline">{T.reviews(rating.count)}</span>
           </a>
+        )}
+        {editId && (
+          <div className="mb-3 rounded-2xl bg-lilac px-4 pb-1 pt-3.5">
+            <p className="font-bold">{T.editing}</p>
+            <Link href={ROUTES[locale].cart} className="inline-flex min-h-12 items-center font-bold text-violet underline">
+              {T.backToCart}
+            </Link>
+          </div>
         )}
         <Link href={shopPath(locale, vibe.key)} className="hidden text-[0.95rem] font-bold uppercase tracking-wide text-violet no-underline hover:underline md:inline-block">
           {vibe.name}
@@ -399,6 +471,14 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
                 <Field key={f.key} f={f} value={values[f.key]} error={errors[f.key]} onChange={(v) => setField(f.key, v)} T={T} />
               ))}
             </div>
+            {/* What she typed, on the shirt colour, right where she typed it: on a phone the photos are a screen away */}
+            <button type="button" onClick={() => openPreview('fields')} className="mt-4 flex w-full items-center gap-3.5 rounded-xl bg-lilac p-2.5 text-left">
+              <PrintPreview slug={slug} garment={garment} colorKey={color} values={check.values} label={T.heroLabel(design.title, cLabel, gt.label)} className="block w-24 shrink-0 rounded-lg ring-1 ring-lilac-line" />
+              <span className="leading-snug">
+                <span className="block font-bold">{T.yourPrint}</span>
+                <span className="font-bold text-violet underline">{T.seeBigger}</span>
+              </span>
+            </button>
           </fieldset>
         )}
 
@@ -431,6 +511,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
                   title={colorLabel(c, locale)}
                   onClick={() => {
                     setColor(c.key);
+                    setAdded(null);
                     trackEvent('ColorSelected', { product: slug, color: c.key });
                   }}
                   className={`h-11 w-11 rounded-full border-2 ${color === c.key ? 'border-violet ring-2 ring-violet ring-offset-2' : 'border-lilac-line'}`}
@@ -462,6 +543,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
                   className="chip flex-col leading-tight"
                   onClick={() => {
                     setSize(s);
+                    setAdded(null);
                     trackEvent('SizeSelected', { product: slug, garment, size: s });
                     setSizeError(false);
                     setSizeNudge(false);
@@ -490,6 +572,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
           )}
         </div>
 
+        {!editId && (
         <fieldset className="mt-6">
           <legend className="font-bold">{T.bundleTitle}</legend>
           <div className="mt-2 grid grid-cols-3 gap-2">
@@ -508,6 +591,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
                     checked={on}
                     onChange={() => {
                       setQty(n);
+                      setAdded(null);
                       trackEvent('QuantitySelected', { product: slug, qty: n });
                     }}
                     className="h-5 w-5 shrink-0 accent-violet"
@@ -525,10 +609,43 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
           </div>
           <p className="mt-2 text-[0.92rem] text-ink-soft">{T.tierNote}</p>
         </fieldset>
+        )}
 
-        <button ref={ctaRef} type="button" className="btn btn-red mt-6 min-h-[4rem] w-full text-[1.2rem] shadow-[0_6px_0_var(--color-red-deep)] active:shadow-none" onClick={addToCart}>
-          {T.addToCart(fmt(total))}
-        </button>
+        {/* One place for the button and for what replaces it once the shirt is in the cart */}
+        <div ref={ctaRef} className="mt-6">
+          {added && addedFrom === 'sticky' ? (
+            <Link href={ROUTES[locale].cart} className="btn btn-line min-h-[4rem] w-full text-[1.1rem]" data-track="added-go-to-cart">
+              <IconCheck className="h-5 w-5" />
+              {T.inCart} · {T.goToCartShort}
+            </Link>
+          ) : added ? (
+            <div ref={addedRef} tabIndex={-1} className="rounded-2xl border-2 border-violet bg-white p-4 outline-none" role="status">
+              <p className="flex items-center gap-2.5 text-[1.2rem] font-bold leading-snug">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet text-white">
+                  <IconCheck className="h-4 w-4" />
+                </span>
+                {added === 'set' ? T.addedSet : T.addedOne}
+              </p>
+              <p className="mt-2">{T.cartNow(totals.count, fmt(totals.total), totals.shipping === 0)}</p>
+              <p className="mt-1 text-ink-soft">{next ? T.addMore(next.minItems - totals.count, next.percent) : T.savingApplied}</p>
+              <Link href={ROUTES[locale].cart} className="btn btn-red mt-3 w-full" data-track="added-go-to-cart">
+                {T.goToCart}
+              </Link>
+              <Link href={shopPath(locale, vibe.key)} className="btn btn-line mt-2.5 w-full" data-track="added-keep-shopping">
+                {T.keepShopping}
+              </Link>
+              {added === 'one' && (
+                <button type="button" className="mt-1 inline-flex min-h-12 items-center font-bold text-violet underline" onClick={addAnother}>
+                  {T.addAnother}
+                </button>
+              )}
+            </div>
+          ) : (
+            <button type="button" className="btn btn-red min-h-[4rem] w-full text-[1.2rem] shadow-[0_6px_0_var(--color-red-deep)] active:shadow-none" onClick={() => addToCart('main')}>
+              {editId ? T.saveChanges : T.addToCart(fmt(total))}
+            </button>
+          )}
+        </div>
 
         {/* What she pays on top and when it comes, right under the button (surprise costs at checkout
             are the most common reason carts get left) */}
@@ -551,25 +668,6 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             <PromiseNote className="mt-4" />
             <PaymentLogos center className="mt-4" />
           </>
-        )}
-
-        {added && (
-          <div ref={addedRef} tabIndex={-1} className="mt-4 rounded-2xl border-2 border-violet bg-white p-4 outline-none" role="status">
-            <p className="font-bold">{added === 'set' ? T.addedSet : T.addedOne}</p>
-            {next ? (
-              <p className="mt-1 text-ink-soft">{T.addMore(next.minItems - totals.count, next.percent)}</p>
-            ) : (
-              <p className="mt-1 text-ink-soft">{T.savingApplied}</p>
-            )}
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Link href={ROUTES[locale].cart} className="btn btn-violet">
-                {T.viewCart}
-              </Link>
-              <Link href={shopPath(locale, vibe.key)} className="btn btn-line">
-                {T.keepShopping}
-              </Link>
-            </div>
-          </div>
         )}
 
         <ul className="mt-8 space-y-2.5">
@@ -698,21 +796,85 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
         style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
         aria-hidden={!sticky}
       >
-        <div className="mx-auto flex max-w-xl items-center gap-3">
-          <div className="min-w-0 flex-1 leading-tight">
-            <p className="text-[1.15rem] font-black">
-              {fmt(total)}
-              {qty > 1 ? T.forN(qty) : ''}
-              {size ? ` · ${size}` : ''}
-            </p>
-            <p className="truncate text-[0.95rem] text-ink-soft">{design.title}</p>
+        {added ? (
+          // It's in the cart: the bar says so and its button now leads to the cart, so a second tap can't add a second shirt
+          <div className="mx-auto flex max-w-xl items-center gap-3">
+            <div className="min-w-0 flex-1 leading-tight" role="status">
+              <p className="flex items-center gap-2 text-[1.1rem] font-black">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-violet text-white">
+                  <IconCheck className="h-3.5 w-3.5" />
+                </span>
+                {T.inCart}
+              </p>
+              <p className="truncate text-[0.95rem] text-ink-soft">{T.cartShort(totals.count, fmt(totals.total))}</p>
+            </div>
+            <Link href={ROUTES[locale].cart} tabIndex={sticky ? 0 : -1} className="btn btn-red min-h-[3.2rem] shrink-0 px-5" data-track="sticky-go-to-cart">
+              {T.goToCartShort}
+            </Link>
           </div>
-          <button type="button" tabIndex={sticky ? 0 : -1} className="btn btn-red min-h-[3.2rem] shrink-0 px-5" data-track={size ? 'sticky-add-to-cart' : 'sticky-choose-size'} onClick={size ? addToCart : jumpToSize}>
-            {size ? T.addShort : T.chooseSize}
+        ) : (
+          <div className="mx-auto flex max-w-xl items-center gap-3">
+            <div className="min-w-0 flex-1 leading-tight">
+              <p className="text-[1.15rem] font-black">
+                {fmt(total)}
+                {qty > 1 ? T.forN(qty) : ''}
+                {size ? ` · ${size}` : ''}
+              </p>
+              <p className="truncate text-[0.95rem] text-ink-soft">{design.title}</p>
+            </div>
+            <button type="button" tabIndex={sticky ? 0 : -1} className="btn btn-red min-h-[3.2rem] shrink-0 px-5" data-track={!size ? 'sticky-choose-size' : editId ? 'sticky-save-changes' : 'sticky-add-to-cart'} onClick={size ? () => addToCart('sticky') : jumpToSize}>
+              {!size ? T.chooseSize : editId ? T.saveChanges : T.addShort}
+            </button>
+          </div>
+        )}
+      </div>
+
+      <PreviewDialog open={bigPreview} onClose={() => setBigPreview(false)} title={T.previewTitle} closeLabel={T.closePreview} note={T.previewNote}>
+        <ShirtPreview design={slug} garment={garment} colorKey={color} values={check.values} label={T.closeUp} className="block aspect-square w-full" view="zoom" />
+      </PreviewDialog>
+    </div>
+  );
+}
+
+/** Just the print on the shirt's colour: no photo to download, so it can sit next to the name fields and update as she types. */
+function PrintPreview({ slug, garment, colorKey, values, label, className }: { slug: string; garment: GarmentKey; colorKey: string; values: FieldValues; label: string; className?: string }) {
+  const color = getColor(GARMENTS[garment], colorKey) ?? GARMENTS[garment].colors[0];
+  const markup = getTemplate(slug).render(values, designPalette(slug, color));
+  return (
+    <svg viewBox="0 0 1200 1600" role="img" aria-label={label} className={className} xmlns="http://www.w3.org/2000/svg">
+      <rect width="1200" height="1600" fill={color.hex} />
+      <g dangerouslySetInnerHTML={{ __html: markup }} />
+    </svg>
+  );
+}
+
+/** The live preview at full width. The photo inside is only fetched once it is opened. */
+function PreviewDialog({ open, onClose, title, closeLabel, note, children }: { open: boolean; onClose: () => void; title: string; closeLabel: string; note: string; children: React.ReactNode }) {
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (open && !el.open) el.showModal();
+    if (!open && el.open) el.close();
+  }, [open]);
+  return (
+    <dialog ref={ref} onClose={onClose} onClick={(e) => e.target === ref.current && onClose()} className="m-auto w-[min(34rem,94vw)] rounded-2xl p-0 backdrop:bg-ink/60">
+      {open && (
+        <div className="p-4 sm:p-5">
+          <div className="flex items-start justify-between gap-4">
+            <h2 className="text-[1.6rem]">{title}</h2>
+            <button type="button" className="-mr-1 -mt-1 h-12 w-12 rounded-full text-2xl hover:bg-lilac" onClick={onClose} aria-label={closeLabel}>
+              ×
+            </button>
+          </div>
+          <div className="mt-2 overflow-hidden rounded-xl ring-1 ring-lilac-line">{children}</div>
+          <p className="mt-3 text-[0.95rem] text-ink-soft">{note}</p>
+          <button type="button" className="btn btn-violet mt-3 w-full" onClick={onClose}>
+            {closeLabel}
           </button>
         </div>
-      </div>
-    </div>
+      )}
+    </dialog>
   );
 }
 

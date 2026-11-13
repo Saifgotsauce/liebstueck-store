@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { trackEvent } from '@/lib/analytics';
 import ShirtPreview from '@/components/ShirtPreview';
 import { PaymentLogos, PromiseNote } from '@/components/Trust';
-import { GARMENTS, colorLabel, garmentText } from '@/lib/catalog';
+import { GARMENTS, colorLabel, garmentText, isAvailable, sizeExtraCents } from '@/lib/catalog';
 import { isDemo } from '@/lib/config';
 import { useCart } from '@/lib/cart';
 import { itemPriceCents, nextBundle } from '@/lib/cart-math';
@@ -19,7 +19,7 @@ import { checkCode, saveCode, useAppliedCode } from '@/lib/referral-client';
 
 /** The cart, for either store. The German one continues to its own order page (/de/kasse/). */
 export default function CartView() {
-  const { items, ready, totals, setQty, remove } = useCart();
+  const { items, ready, totals, setQty, update, remove } = useCart();
   const { locale, t, routes, store, price: formatPrice } = useLocale();
   const C = t.cart;
   const shop = store;
@@ -102,7 +102,10 @@ export default function CartView() {
             const g = GARMENTS[i.garment];
             const c = g.colors.find((x) => x.key === i.color);
             const personal = getTemplate(i.design).summarize(i.values);
-            const href = productPath(locale, i.design);
+            // Name, photo and "Change" all open the shirt with her choices filled in, to save back to this line.
+            // (A shopper who wanted to fix a name had to build the shirt again and remove the old one.)
+            const href = `${productPath(locale, i.design)}?edit=${i.id}`;
+            const sizes = g.sizes.filter((s) => s === i.size || isAvailable(i.garment, i.color, s, locale));
             return (
               <li key={i.id} className="flex gap-4 py-4 sm:py-5">
                 <Link href={href} className="w-24 shrink-0 self-start overflow-hidden rounded-xl bg-white ring-1 ring-lilac-line sm:w-32">
@@ -116,10 +119,33 @@ export default function CartView() {
                     <span className="shrink-0 font-bold">{formatPrice(itemPriceCents(i, locale) * i.qty)}</span>
                   </div>
                   <p className="mt-1 text-[0.95rem] text-ink-soft">
-                    {C.line(garmentText(i.garment, locale).label, c ? colorLabel(c, locale) : '', i.size)}
+                    {C.lineShort(garmentText(i.garment, locale).label, c ? colorLabel(c, locale) : '')}
                   </p>
                   {personal && <p className="mt-0.5 text-[0.95rem] text-ink-soft">{personal}</p>}
-                  <div className="mt-2 flex items-center gap-4">
+                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+                    {/* Size and quantity share a row, so the total and the checkout button stay high on a phone */}
+                    <label className="flex items-center gap-2 font-bold">
+                      {C.sizeLabel}
+                      <select
+                        className="field w-auto min-w-[5.5rem] py-1.5 font-bold"
+                        value={i.size}
+                        aria-label={`${C.sizeLabel}: ${d.title}`}
+                        onChange={(e) => {
+                          trackEvent('CartSizeChanged', { product: i.design, from: i.size, to: e.target.value });
+                          update(i.id, { size: e.target.value });
+                        }}
+                      >
+                        {sizes.map((s) => {
+                          const extra = sizeExtraCents(i.garment, s, locale);
+                          return (
+                            <option key={s} value={s}>
+                              {s}
+                              {extra ? ` (+${formatPrice(extra)})` : ''}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </label>
                     <div className="flex items-center rounded-full ring-2 ring-lilac-line" role="group" aria-label={C.qtyOf(d.title)}>
                       <button type="button" className="h-11 w-11 text-lg font-bold" onClick={() => {
                           trackEvent('CartQuantityChanged', { direction: 'down' });
@@ -135,6 +161,11 @@ export default function CartView() {
                         +
                       </button>
                     </div>
+                  </div>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-x-5">
+                    <Link href={href} className="inline-flex min-h-12 items-center font-bold text-violet underline">
+                      {C.edit(Boolean(personal))}
+                    </Link>
                     <button type="button" className="inline-flex min-h-12 items-center font-bold text-ink-soft underline hover:text-red" onClick={() => {
                         trackEvent('CartItemRemoved', { product: i.design });
                         remove(i.id);

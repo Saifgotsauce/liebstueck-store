@@ -26,6 +26,8 @@ type CartCtx = {
   setOpen: (o: boolean) => void;
   add: (item: Omit<CartItem, 'id'>) => void;
   setQty: (id: string, qty: number) => void;
+  /** Change a line's size, colour, style or printed text; merges into an identical line if there is one. */
+  update: (id: string, patch: Partial<Omit<CartItem, 'id' | 'design'>>) => void;
   remove: (id: string) => void;
   clear: () => void;
 };
@@ -33,6 +35,10 @@ type CartCtx = {
 // one cart per store: US and German shirts never end up in the same order
 const KEYS: Record<Locale, string> = { en: 'seasoned-cart-v1', de: 'seasoned-de-cart-v1' };
 const Ctx = createContext<CartCtx | null>(null);
+
+type Line = Omit<CartItem, 'id'>;
+/** Same design with the same options: one line in the cart. */
+const sameLine = (a: Line, b: Line) => a.design === b.design && a.garment === b.garment && a.color === b.color && a.size === b.size && JSON.stringify(a.values) === JSON.stringify(b.values);
 
 export function CartProvider({ children, locale = 'en' }: { children: ReactNode; locale?: Locale }) {
   const KEY = KEYS[locale];
@@ -67,9 +73,7 @@ export function CartProvider({ children, locale = 'en' }: { children: ReactNode;
     const id = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : String(Date.now() + Math.random());
     setItems((prev) => {
       // same design + options → just bump the quantity
-      const same = prev.find(
-        (p) => p.design === item.design && p.garment === item.garment && p.color === item.color && p.size === item.size && JSON.stringify(p.values) === JSON.stringify(item.values),
-      );
+      const same = prev.find((p) => sameLine(p, item));
       if (same) return prev.map((p) => (p === same ? { ...p, qty: Math.min(shop.maxQuantityPerItem, p.qty + item.qty) } : p));
       return [...prev, { ...item, id }].slice(0, shop.maxItemsPerOrder);
     });
@@ -78,12 +82,25 @@ export function CartProvider({ children, locale = 'en' }: { children: ReactNode;
     (id: string, qty: number) => setItems((prev) => prev.map((i) => (i.id === id ? { ...i, qty: Math.max(1, Math.min(shop.maxQuantityPerItem, qty)) } : i))),
     [shop],
   );
+  const update = useCallback(
+    (id: string, patch: Partial<Omit<CartItem, 'id' | 'design'>>) =>
+      setItems((prev) => {
+        const cur = prev.find((i) => i.id === id);
+        if (!cur) return prev;
+        const changed = { ...cur, ...patch };
+        // The change made it identical to another line (e.g. both now XL): keep one line, add the quantities
+        const twin = prev.find((i) => i.id !== id && sameLine(i, changed));
+        if (twin) return prev.filter((i) => i.id !== id).map((i) => (i === twin ? { ...i, qty: Math.min(shop.maxQuantityPerItem, i.qty + changed.qty) } : i));
+        return prev.map((i) => (i.id === id ? changed : i));
+      }),
+    [shop],
+  );
   const remove = useCallback((id: string) => setItems((prev) => prev.filter((i) => i.id !== id)), []);
   const clear = useCallback(() => setItems([]), []);
 
   const value = useMemo(
-    () => ({ items, ready, totals: cartTotals(items, locale), open, setOpen, add, setQty, remove, clear }),
-    [items, ready, open, add, setQty, remove, clear, locale],
+    () => ({ items, ready, totals: cartTotals(items, locale), open, setOpen, add, setQty, update, remove, clear }),
+    [items, ready, open, add, setQty, update, remove, clear, locale],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
