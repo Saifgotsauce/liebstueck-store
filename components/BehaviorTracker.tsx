@@ -18,6 +18,7 @@ function pageType(path: string) {
   if (p === '/') return 'home';
   if (p.startsWith('/p/')) return 'product';
   if (p.startsWith('/shop')) return 'collection';
+  if (p.startsWith('/pair/')) return 'ad_landing';
   if (p.startsWith('/cart') || p.startsWith('/warenkorb')) return 'cart';
   if (p.startsWith('/kasse')) return 'checkout';
   if (p.startsWith('/thanks') || p.startsWith('/danke')) return 'thanks';

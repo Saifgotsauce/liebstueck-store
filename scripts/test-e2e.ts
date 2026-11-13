@@ -422,8 +422,8 @@ async function main() {
     // One hoodie on its own: under $50, but hoodies always ship free (US)
     const hood = await post(A, [{ design: 'grill-nap-repeat', garment: 'hoodie', color: 'black', size: 'L', values: {}, qty: 1 }]);
     ok(hood.status === 200 && state.sessions.at(-1)!.get('shipping_options[0][shipping_rate_data][fixed_amount][amount]') === '0', 'single hoodie ships free');
-    const mid = await post(A, [{ design: 'older-i-get-heller-no', garment: 'tee', color: 'black', size: 'M', values: {}, qty: 1 }]);
-    ok(mid.status === 200 && state.sessions.at(-1)!.get('line_items[0][price_data][unit_amount]') === '3295', 'per-design tee price ($32.95)');
+    const mid = await post(A, [{ design: 'my-weekend-lasts-all-week', garment: 'tee', color: 'black', size: 'M', values: {}, qty: 1 }]);
+    ok(mid.status === 200 && state.sessions.at(-1)!.get('line_items[0][price_data][unit_amount]') === '3195', 'per-design tee price ($31.95)');
 
     console.log('\n4) Stripe webhook → Printful order');
     const payload = JSON.stringify({ id: 'evt_1', object: 'event', type: 'checkout.session.completed', data: { object: { id: 'cs_test_s1', object: 'checkout.session', payment_status: 'paid' } } });
@@ -599,7 +599,7 @@ async function main() {
     ok(deProd.includes('Produktsicherheit') && deProd.includes('SINDEN VENTURES') && deProd.includes('inkl. MwSt.') && deProd.includes('"priceCurrency":"EUR"'), 'German product page: VAT note, product safety, euro price data');
     ok((await (await fetch(`${A}/api/geo`)).json()).country !== undefined, 'geo endpoint answers');
 
-    for (const page of ['/', '/shop/', '/shop/grandma/', '/shop/personalized/', '/p/not-old-seasoned/', '/p/loved-by-grandkids/', '/cart/', '/thanks/', '/faq/', '/shipping/', '/returns/', '/privacy/', '/terms/', '/privacy-choices/']) {
+    for (const page of ['/', '/shop/', '/shop/grandma/', '/shop/personalized/', '/p/not-old-seasoned/', '/p/loved-by-grandkids/', '/pair/say-what-they-think/', '/cart/', '/thanks/', '/faq/', '/shipping/', '/returns/', '/privacy/', '/terms/', '/privacy-choices/']) {
       const r = await fetch(`${A}${page}`);
       ok(r.status === 200, `page ${page}`);
     }

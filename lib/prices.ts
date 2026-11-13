@@ -22,8 +22,8 @@ export const TEE_PRICE_US: Record<string, number> = {
   'grill-nap-repeat': 2995,
   'nice-ish': 2995,
 
-  // In between. 'good-grandmas-bad-words' (the video ad, which says "Tees $34.95") costs the standard $34.95.
-  'older-i-get-heller-no': 3295,
+  // In between. 'good-grandmas-bad-words' and 'older-i-get-heller-no' (the video ad, which says
+  // "Tees $34.95") cost the standard $34.95.
   'the-grandma-they-warned-you-about': 3295,
   'my-weekend-lasts-all-week': 3195,
   'dear-santa-define-good': 3195,

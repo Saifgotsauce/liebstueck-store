@@ -148,6 +148,10 @@ November 12, 2026: the pages weighed 1.8–3 MB; pictures and fonts alone were 1
   shirt twice to fix a typo.
 - **Cart:** total and checkout button come before anything optional. The code box is one quiet link
   until she opens it; an empty code box in front of the button sends people off to hunt for a code.
+- **Ad landing pages (`/pair/<slug>/`, `lib/pairs.ts`):** when an ad shows two shirts, it links to a page
+  with just those two: the ad's own headline, both shirts and prices on the first screen, "Get both" (one size
+  for both, or one each) with the bundle total, then each shirt alone. The video ad's visitors landed on all
+  52 shirts, scrolled and tapped almost nothing.
 - **Wrong link (404):** always inside the store, with header, cart and a way back to the shirts.
 - Links that stand alone ("See all shirts", "Remove", "Size guide", footer links) are 48 px tall, like
   buttons.
