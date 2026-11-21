@@ -28,7 +28,7 @@ import { validateValues } from '@/lib/design/validate';
 import type { FieldDef, FieldValues } from '@/lib/design/types';
 import { track } from '@/lib/pixel';
 import { productPhotos } from '@/lib/mockups';
-import { photosFor, type ModelPhoto } from '@/lib/model-photos';
+import { modelPhotos, photosFor, type ModelPhoto } from '@/lib/model-photos';
 import ShirtPreview from './ShirtPreview';
 import { IconBrush, IconCalendar, IconCheck, IconFeather, IconLock, IconShield, IconShirt, IconTruck, IconWash, Stars } from './Icons';
 
@@ -99,7 +99,16 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const untouched = useMemo(() => JSON.stringify(values) === JSON.stringify(defaultValues(template)), [values, template]);
   const model = untouched ? photosFor(slug, garment, color, defaultColor(design, garment, locale)) : [];
   const modelKey = model.map((p) => p.src).join();
-  const photos: ModelPhoto[] = [...model, ...productPhotos(slug)];
+  // The real photos of other colours / the other garment stay in the gallery right after the
+  // preview, labelled with what they show: she can compare the drawn colour with a real shirt.
+  const others = modelPhotos(slug).filter((p) => !model.some((m) => m.src === p.src));
+  const photos: ModelPhoto[] = [...model, ...others, ...productPhotos(slug)];
+  const shownIn = (p: ModelPhoto) => {
+    const gk = p.garment ?? 'tee';
+    const c = getColor(GARMENTS[gk], p.color ?? defaultColor(design, gk, locale));
+    const what = `${c ? colorLabel(c, locale) : ''} ${garmentText(gk, locale).label}`.trim();
+    return locale === 'de' ? `Foto zeigt: ${what}` : `Photo shows: ${what}`;
+  };
   const companions = useMemo(() => companionsFor(design, locale), [design, locale]);
 
   // Prefill personalization from the link (e.g. ?nickname=Nana from the home page demo)
@@ -198,8 +207,9 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   // A model photo leads when there is one; the headline slide follows.
   // All photos of her choice first (flat lay, then the lifestyle shot), then the live preview slides.
   const modelIdx = model.map((_, i) => i);
-  const extra = photos.map((_, i) => i).filter((i) => i >= model.length);
-  const slides: SlideKey[] = [...modelIdx, 'hero', 'front', 'zoom', 'alt', ...extra];
+  const otherIdx = others.map((_, i) => model.length + i);
+  const extra = photos.map((_, i) => i).filter((i) => i >= model.length + others.length);
+  const slides: SlideKey[] = [...modelIdx, 'hero', ...otherIdx, 'front', 'zoom', 'alt', ...extra];
 
   function goTo(i: number) {
     const el = trackRef.current;
@@ -399,6 +409,9 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
                   <div className="group/photo relative h-full">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={photos[s].src} srcSet={photos[s].srcSet} sizes="(min-width: 1024px) 50vw, 100vw" alt={T.examplePhoto(design.title)} className="block h-full w-full object-cover object-top" loading={i === 0 ? 'eager' : 'lazy'} fetchPriority={i === 0 ? 'high' : undefined} />
+                    {s >= model.length && s < model.length + others.length && (
+                      <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1.5 text-[0.95rem] font-bold text-ink shadow-sm ring-1 ring-lilac-line">{shownIn(photos[s])}</span>
+                    )}
                     {/* Computers: the second photo of the same shirt fades in on hover (phones swipe to it). */}
                     {i === 0 && model.length > 1 && wide && (
                       // eslint-disable-next-line @next/next/no-img-element
