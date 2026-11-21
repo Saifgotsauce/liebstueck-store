@@ -11,7 +11,7 @@ const en = {
     shirts: (n: number) => `${n} ${n === 1 ? 'shirt' : 'shirts'}`,
     personalizeTab: 'Personalize it',
     collections: 'Collections',
-    from: 'From',
+    from: '', // no "From" on US cards: it reads like a hidden price; plus-size extras show at the size picker
     pct: (p: number) => `${p}%`,
   },
   meta: {
