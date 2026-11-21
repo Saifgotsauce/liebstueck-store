@@ -8,7 +8,8 @@ import { brand, stores, siteUrl } from '@/lib/config';
 import { designLocale, designsInVibe, getDesign, getVibe } from '@/lib/designs';
 import { productPath, type Locale } from '@/lib/locale';
 import { MESSAGES } from '@/lib/messages';
-import { ratingFor, reviewsFor } from '@/lib/reviews';
+import Reviews from '@/components/Reviews';
+import { allReviews, summarize } from '@/lib/server/reviews';
 
 /** A design only exists in its own store: German designs 404 on the US site and vice versa. */
 function find(slug: string, locale: Locale) {
@@ -47,15 +48,15 @@ const COPY = {
   },
 };
 
-export default function ProductPage({ slug, locale }: { slug: string; locale: Locale }) {
+export default async function ProductPage({ slug, locale }: { slug: string; locale: Locale }) {
   const d = find(slug, locale);
   if (!d) notFound();
   const v = getVibe(d.vibe)!;
   const t = MESSAGES[locale];
   const c = COPY[locale];
   const more = designsInVibe(d.vibe).filter((x) => x.slug !== slug).slice(0, 4);
-  const rating = ratingFor(slug);
-  const reviews = reviewsFor(slug);
+  const reviews = (await allReviews(locale)).filter((r) => r.design === slug);
+  const rating = summarize(reviews);
   // Product data for search engines
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -71,14 +72,17 @@ export default function ProductPage({ slug, locale }: { slug: string; locale: Lo
       availability: 'https://schema.org/InStock',
       url: `${siteUrl}${productPath(locale, d.slug)}`,
     },
-    // only real reviews (data/reviews.json)
+    // only real reviews (posted on the site or data/reviews.json)
     ...(rating ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: rating.average, reviewCount: rating.count } } : {}),
   };
   return (
     <div className="wrap pt-0 md:pt-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <ProductView slug={slug} rating={rating} />
-      {reviews.length > 0 && rating && (
+      {locale === 'en' ? (
+        <Reviews design={slug} designTitle={d.title} initial={reviews} rating={rating} />
+      ) : (
+        reviews.length > 0 && rating && (
         <section id="reviews" className="mt-16 scroll-mt-24" aria-labelledby="reviews-title">
           <h2 id="reviews-title" className="text-[2rem] sm:text-[2.4rem]">
             {c.reviewsTitle}
@@ -103,6 +107,7 @@ export default function ProductPage({ slug, locale }: { slug: string; locale: Lo
             ))}
           </ul>
         </section>
+      )
       )}
       {more.length > 0 && (
         <section className="mt-20" aria-labelledby="more">
