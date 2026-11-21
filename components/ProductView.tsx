@@ -28,7 +28,7 @@ import { validateValues } from '@/lib/design/validate';
 import type { FieldDef, FieldValues } from '@/lib/design/types';
 import { track } from '@/lib/pixel';
 import { productPhotos } from '@/lib/mockups';
-import { modelPhotos, type ModelPhoto } from '@/lib/model-photos';
+import { photosFor, type ModelPhoto } from '@/lib/model-photos';
 import ShirtPreview from './ShirtPreview';
 import { IconBrush, IconCalendar, IconCheck, IconFeather, IconLock, IconShield, IconShirt, IconTruck, IconWash, Stars } from './Icons';
 
@@ -75,6 +75,8 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const [editId, setEditId] = useState<string | null>(null);
   const [addedFrom, setAddedFrom] = useState<'main' | 'sticky'>('main');
   const [bigPreview, setBigPreview] = useState(false);
+  // a model photo opened large (index into photos), or null for the live preview
+  const [bigPhoto, setBigPhoto] = useState<number | null>(null);
   const [slide, setSlide] = useState(0);
   // Where the main button is: on screen, further down, or scrolled past
   const [ctaPos, setCtaPos] = useState<'visible' | 'below' | 'above'>('below');
@@ -92,7 +94,11 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const trackRef = useRef<HTMLDivElement>(null);
   const g = GARMENTS[garment];
   // Model photos first, then Printful photos; slides refer to them by index.
-  const model = modelPhotos(slug);
+  // Only the photos of the garment + colour she picked, and only while a personalised shirt still
+  // says what the photo says. Anything else shows the live preview, which exists in every colour.
+  const untouched = useMemo(() => JSON.stringify(values) === JSON.stringify(defaultValues(template)), [values, template]);
+  const model = untouched ? photosFor(slug, garment, color, defaultColor(design, garment, locale)) : [];
+  const modelKey = model.map((p) => p.src).join();
   const photos: ModelPhoto[] = [...model, ...productPhotos(slug)];
   const companions = useMemo(() => companionsFor(design, locale), [design, locale]);
 
@@ -190,8 +196,10 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const altName = T.single(altGarment);
 
   // A model photo leads when there is one; the headline slide follows.
-  const extra = photos.map((_, i) => i).filter((i) => i > 0 || !model.length);
-  const slides: SlideKey[] = [...(model.length ? [0] : []), 'hero', 'front', 'zoom', 'alt', ...extra];
+  // All photos of her choice first (flat lay, then the lifestyle shot), then the live preview slides.
+  const modelIdx = model.map((_, i) => i);
+  const extra = photos.map((_, i) => i).filter((i) => i >= model.length);
+  const slides: SlideKey[] = [...modelIdx, 'hero', 'front', 'zoom', 'alt', ...extra];
 
   function goTo(i: number) {
     const el = trackRef.current;
@@ -202,6 +210,15 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
     setSlide(n);
     trackEvent('PhotoViewed', { product: slug, photo: n + 1 });
   }
+
+  // A different colour or garment swaps the photos: show the first picture of the new choice.
+  const lastModelKey = useRef(modelKey);
+  useEffect(() => {
+    if (lastModelKey.current === modelKey) return;
+    lastModelKey.current = modelKey;
+    trackRef.current?.scrollTo({ left: 0 });
+    setSlide(0);
+  }, [modelKey]);
 
   const onScroll = useCallback(() => {
     const el = trackRef.current;
@@ -246,7 +263,8 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   }
 
   /** The live preview, large. She tapped the note under the photos expecting exactly this (dead clicks in recordings). */
-  function openPreview(from: 'gallery' | 'fields') {
+  function openPreview(from: 'gallery' | 'fields' | 'photo', photo: number | null = null) {
+    setBigPhoto(photo);
     setBigPreview(true);
     trackEvent('PreviewEnlarged', { product: slug, from });
   }
@@ -345,7 +363,16 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             aria-label={T.photos}
           >
             {slides.map((s, i) => (
-              <div key={String(s)} className="pdp-slide w-full shrink-0 snap-center" role="group" aria-roledescription="slide" aria-label={T.slideOf(i + 1, slides.length)}>
+              <div
+                key={String(s)}
+                className={`pdp-slide w-full shrink-0 snap-center ${s === 'alt' ? '' : 'cursor-zoom-in'}`}
+                role="group"
+                aria-roledescription="slide"
+                aria-label={T.slideOf(i + 1, slides.length)}
+                // Recordings (Nov 20) show women tapping the photo to see it closer and nothing happening.
+                // A swipe doesn't fire a click, so this only reacts to a tap. Keyboard users have "See it bigger".
+                onClick={s === 'alt' ? undefined : () => openPreview('photo', typeof s === 'number' ? s : null)}
+              >
                 {!filled(i) ? null : s === 'hero' ? (
                   <div className="mx-auto aspect-square h-full">
                     <HeroSlide hook={vibe.hook} tagline={vibe.tagline} sticker={sticker}>
@@ -369,8 +396,15 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
                     </button>
                   </div>
                 ) : photos[s] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={photos[s].src} srcSet={photos[s].srcSet} sizes="(min-width: 1024px) 50vw, 100vw" alt={T.examplePhoto(design.title)} className="block h-full w-full object-cover object-top" loading={i === 0 ? 'eager' : 'lazy'} fetchPriority={i === 0 ? 'high' : undefined} />
+                  <div className="group/photo relative h-full">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={photos[s].src} srcSet={photos[s].srcSet} sizes="(min-width: 1024px) 50vw, 100vw" alt={T.examplePhoto(design.title)} className="block h-full w-full object-cover object-top" loading={i === 0 ? 'eager' : 'lazy'} fetchPriority={i === 0 ? 'high' : undefined} />
+                    {/* Computers: the second photo of the same shirt fades in on hover (phones swipe to it). */}
+                    {i === 0 && model.length > 1 && wide && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={model[1].src} srcSet={model[1].srcSet} sizes="50vw" alt="" aria-hidden="true" className="absolute inset-0 block h-full w-full object-cover object-top opacity-0 transition-opacity duration-300 group-hover/photo:opacity-100 motion-reduce:transition-none" loading="lazy" />
+                    )}
+                  </div>
                 ) : null}
               </div>
             ))}
@@ -829,8 +863,13 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
         )}
       </div>
 
-      <PreviewDialog open={bigPreview} onClose={() => setBigPreview(false)} title={T.previewTitle} closeLabel={T.closePreview} note={T.previewNote}>
-        <ShirtPreview design={slug} garment={garment} colorKey={color} values={check.values} label={T.closeUp} className="block aspect-square w-full" view="zoom" />
+      <PreviewDialog open={bigPreview} onClose={() => setBigPreview(false)} title={T.previewTitle} closeLabel={T.closePreview} note={bigPhoto !== null ? '' : T.previewNote}>
+        {bigPhoto !== null && photos[bigPhoto] ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photos[bigPhoto].src} srcSet={photos[bigPhoto].srcSet} sizes="94vw" alt={T.examplePhoto(design.title)} className="block w-full" />
+        ) : (
+          <ShirtPreview design={slug} garment={garment} colorKey={color} values={check.values} label={T.closeUp} className="block aspect-square w-full" view="zoom" />
+        )}
       </PreviewDialog>
     </div>
   );
@@ -868,7 +907,7 @@ function PreviewDialog({ open, onClose, title, closeLabel, note, children }: { o
             </button>
           </div>
           <div className="mt-2 overflow-hidden rounded-xl ring-1 ring-lilac-line">{children}</div>
-          <p className="mt-3 text-[0.95rem] text-ink-soft">{note}</p>
+          {note && <p className="mt-3 text-[0.95rem] text-ink-soft">{note}</p>}
           <button type="button" className="btn btn-violet mt-3 w-full" onClick={onClose}>
             {closeLabel}
           </button>

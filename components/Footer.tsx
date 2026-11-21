@@ -12,6 +12,7 @@ import { PaymentLogos } from './Trust';
 const HELP = {
   en: [
     { href: ROUTES.en.about, label: 'Our story' },
+    { href: '/reviews/', label: 'Customer reviews' },
     { href: ROUTES.en.faq, label: 'Questions & answers' },
     { href: REFERRAL.path, label: `Give ${FRIEND}, get ${REWARD}` },
     { href: ROUTES.en.shipping, label: 'Shipping' },

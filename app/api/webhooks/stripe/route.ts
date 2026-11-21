@@ -50,7 +50,8 @@ export async function POST(req: Request) {
 
 async function fulfill(sessionId: string) {
   const externalId = crypto.createHash('sha256').update(sessionId).digest('hex').slice(0, 32);
-  if (await findOrder(externalId)) return; // already handled on an earlier delivery
+  // already handled on an earlier delivery (if Printful can't be reached, carry on: see below)
+  if (await findOrder(externalId).catch(() => null)) return;
 
   const s = stripe();
   const session = await s.checkout.sessions.retrieve(sessionId);
@@ -93,35 +94,43 @@ async function fulfill(sessionId: string) {
   const discount = session.total_details?.amount_discount ?? 0;
   const tax = session.total_details?.amount_tax ?? 0;
   const subtotal = (session.amount_subtotal ?? 0) - shippingLine.subtotal;
-  await createOrder({
-    externalId,
-    recipient: {
-      name: shipping.name ?? session.customer_details?.name ?? '',
-      address1: a.line1 ?? '',
-      address2: a.line2 ?? undefined,
-      city: a.city ?? '',
-      zip: a.postal_code ?? '',
-      country_code: a.country ?? '',
-      state_code: a.state ?? undefined,
-      email,
-      phone: session.customer_details?.phone ?? undefined,
-    },
-    items: items.map(({ clean, unitCents }) => ({
-      variant_id: clean.variantId,
-      quantity: clean.qty,
-      retail_price: (unitCents / 100).toFixed(2),
-      name: [clean.design.title, clean.template.summarize(clean.values)].filter(Boolean).join(' – ').slice(0, 200),
-      files: [{ type: printPlacement(clean.garment.key), url: printFileUrl({ p: clean.design.slug, g: clean.garment.key, c: clean.color.key, v: clean.values }) }],
-    })),
-    retailCosts: {
-      currency: de ? 'EUR' : 'USD',
-      subtotal: (subtotal / 100).toFixed(2),
-      discount: (discount / 100).toFixed(2),
-      shipping: (shippingCents / 100).toFixed(2),
-      tax: (tax / 100).toFixed(2),
-      total: (total / 100).toFixed(2),
-    },
-  });
+  // If Printful refuses the order (expired token, product changed), the customer has still paid:
+  // she still gets her confirmation, and the owner gets everything needed to place it by hand.
+  let printfulError: string | null = null;
+  try {
+    await createOrder({
+      externalId,
+      recipient: {
+        name: shipping.name ?? session.customer_details?.name ?? '',
+        address1: a.line1 ?? '',
+        address2: a.line2 ?? undefined,
+        city: a.city ?? '',
+        zip: a.postal_code ?? '',
+        country_code: a.country ?? '',
+        state_code: a.state ?? undefined,
+        email,
+        phone: session.customer_details?.phone ?? undefined,
+      },
+      items: items.map(({ clean, unitCents }) => ({
+        variant_id: clean.variantId,
+        quantity: clean.qty,
+        retail_price: (unitCents / 100).toFixed(2),
+        name: [clean.design.title, clean.template.summarize(clean.values)].filter(Boolean).join(' – ').slice(0, 200),
+        files: [{ type: printPlacement(clean.garment.key), url: printFileUrl({ p: clean.design.slug, g: clean.garment.key, c: clean.color.key, v: clean.values }) }],
+      })),
+      retailCosts: {
+        currency: de ? 'EUR' : 'USD',
+        subtotal: (subtotal / 100).toFixed(2),
+        discount: (discount / 100).toFixed(2),
+        shipping: (shippingCents / 100).toFixed(2),
+        tax: (tax / 100).toFixed(2),
+        total: (total / 100).toFixed(2),
+      },
+    });
+  } catch (e) {
+    printfulError = String((e as Error).message ?? e);
+    console.error('Fulfillment error (Printful)', e);
+  }
 
   // Friend / reward code: pay out the referrer's reward, or retire a used reward code.
   // The print order already exists, so a problem here must not fail (and retry) the webhook.
@@ -168,10 +177,16 @@ ${row('Total', formatPrice(total), true)}</table>
     );
     await sendEmail(
       env.ownerEmail,
-      `New order ${ref} (${formatPrice(total)})`,
+      `${printfulError ? 'ACTION NEEDED: ' : ''}New order ${ref} (${formatPrice(total)})${printfulError ? ' – place it by hand' : ''}`,
       emailLayout(
         'New order',
-        `<p>${ref}: ${formatPrice(total)}${discount ? ` (savings ${formatPrice(discount)}${md.code ? `, code ${escapeHtml(md.code)}` : ''})` : ''}.</p><ul>${lines.map((l) => `<li>${l}</li>`).join('')}</ul><p>The print order is in Printful${env.printfulAutoConfirm ? ' and confirmed' : ' as a draft – please check and confirm it'}.</p>`,
+        `<p>${ref}: ${formatPrice(total)}${discount ? ` (savings ${formatPrice(discount)}${md.code ? `, code ${escapeHtml(md.code)}` : ''})` : ''}.</p><ul>${lines.map((l) => `<li>${l}</li>`).join('')}</ul>${
+          printfulError
+            ? `<p style="color:#C2241C"><strong>This order did NOT reach Printful.</strong> Place it by hand. Printful said: ${escapeHtml(printfulError)}</p>`
+            : `<p>The print order is in Printful${env.printfulAutoConfirm ? ' and confirmed' : ' as a draft – please check and confirm it'}.</p>`
+        }<p><strong>Ship to:</strong> ${escapeHtml([shipping.name, a.line1, a.line2, `${a.city ?? ''}, ${a.state ?? ''} ${a.postal_code ?? ''}`, a.country].filter(Boolean).join(', '))}${email ? `<br>Email: ${escapeHtml(email)}` : ''}</p><p><strong>Print files (PNG, ready for any print shop):</strong><br>${items
+          .map(({ clean }) => `<a href="${printFileUrl({ p: clean.design.slug, g: clean.garment.key, c: clean.color.key, v: clean.values })}">${escapeHtml(clean.design.title)} – ${clean.color.label}</a>`)
+          .join('<br>')}</p>`,
       ),
     );
   }

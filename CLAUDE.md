@@ -16,6 +16,8 @@ Those rules come from customer research on this exact audience and override gene
 - After touching shirt colours or accents run `npm run check:contrast`; after copy/layout changes run `npm run test:e2e`.
 - Store settings (prices, shipping, contact): `lib/config.ts`.
 - Analytics events: `docs/analytics.md`.
-- Never add fake reviews, ratings, urgency timers or stock counts.
+- Never add fake reviews, ratings, urgency timers or stock counts. Reviews: customers post them on the product page
+  (`components/Reviews.tsx`, `app/api/reviews/`), stored in Vercel Blob (`lib/server/reviews.ts`); reviews collected
+  by hand go in `data/reviews.json`. The owner gets an email per review with a take-down link (spam/abuse only).
 - Referral program ("Give $5, get $5", US only): rules + amounts in `lib/referral.ts`, Stripe logic in
   `lib/server/referral.ts`, form `components/ReferForm.tsx`, page `/refer`. Codes are Stripe promotion codes.

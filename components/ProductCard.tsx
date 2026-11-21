@@ -5,7 +5,7 @@ import { designLocale, isPersonalized, type Design } from '@/lib/designs';
 import { defaultValues, getTemplate } from '@/lib/design/templates';
 import { productPath } from '@/lib/locale';
 import { MESSAGES } from '@/lib/messages';
-import { modelPhotos } from '@/lib/model-photos';
+import { photosFor } from '@/lib/model-photos';
 import ShirtPreview from './ShirtPreview';
 
 export default function ProductCard({ design, eager = false }: { design: Design; eager?: boolean }) {
@@ -13,14 +13,21 @@ export default function ProductCard({ design, eager = false }: { design: Design;
   const t = MESSAGES[locale];
   const color = defaultColor(design, 'tee', locale);
   const c = GARMENTS.tee.colors.find((x) => x.key === color);
-  const photo = modelPhotos(design.slug)[0];
+  const [photo, second] = photosFor(design.slug, 'tee', color, color);
   return (
     <li className="group">
       <Link href={productPath(locale, design.slug)} className="block no-underline" prefetch={eager ? undefined : false}>
         <div className="relative overflow-hidden rounded-2xl bg-white ring-1 ring-lilac-line transition group-hover:ring-2 group-hover:ring-violet">
           {photo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={photo.src} srcSet={photo.srcSet} sizes="(min-width: 1024px) 290px, (min-width: 768px) 33vw, 50vw" alt={t.card.label(design.title, c ? colorLabel(c, locale) : '')} className="block aspect-square w-full object-cover" loading={eager ? 'eager' : 'lazy'} />
+            <>
+              <img src={photo.src} srcSet={photo.srcSet} sizes="(min-width: 1024px) 290px, (min-width: 768px) 33vw, 50vw" alt={t.card.label(design.title, c ? colorLabel(c, locale) : '')} className="block aspect-square w-full object-cover" loading={eager ? 'eager' : 'lazy'} />
+              {second && (
+                // Computers: a second look at the same shirt on hover. Hover-only devices never fetch it before hover.
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={second.src} srcSet={second.srcSet} sizes="(min-width: 1024px) 290px, 33vw" alt="" aria-hidden="true" className="absolute inset-0 hidden aspect-square w-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:transition-none md:block" loading="lazy" />
+              )}
+            </>
           ) : (
             <ShirtPreview design={design.slug} garment="tee" colorKey={color} values={defaultValues(getTemplate(design.slug))} label={t.card.label(design.title, c ? colorLabel(c, locale) : '')} className="block aspect-square w-full" view="tile" />
           )}
