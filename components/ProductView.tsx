@@ -28,7 +28,7 @@ import { validateValues } from '@/lib/design/validate';
 import type { FieldDef, FieldValues } from '@/lib/design/types';
 import { track } from '@/lib/pixel';
 import { productPhotos } from '@/lib/mockups';
-import { modelPhotos, type ModelPhoto } from '@/lib/model-photos';
+import { photosFor, type ModelPhoto } from '@/lib/model-photos';
 import ShirtPreview from './ShirtPreview';
 import { IconBrush, IconCalendar, IconCheck, IconFeather, IconLock, IconShield, IconShirt, IconTruck, IconWash, Stars } from './Icons';
 
@@ -94,7 +94,11 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const trackRef = useRef<HTMLDivElement>(null);
   const g = GARMENTS[garment];
   // Model photos first, then Printful photos; slides refer to them by index.
-  const model = modelPhotos(slug);
+  // Only the photos of the garment + colour she picked, and only while a personalised shirt still
+  // says what the photo says. Anything else shows the live preview, which exists in every colour.
+  const untouched = useMemo(() => JSON.stringify(values) === JSON.stringify(defaultValues(template)), [values, template]);
+  const model = untouched ? photosFor(slug, garment, color, defaultColor(design, garment, locale)) : [];
+  const modelKey = model.map((p) => p.src).join();
   const photos: ModelPhoto[] = [...model, ...productPhotos(slug)];
   const companions = useMemo(() => companionsFor(design, locale), [design, locale]);
 
@@ -192,8 +196,10 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const altName = T.single(altGarment);
 
   // A model photo leads when there is one; the headline slide follows.
-  const extra = photos.map((_, i) => i).filter((i) => i > 0 || !model.length);
-  const slides: SlideKey[] = [...(model.length ? [0] : []), 'hero', 'front', 'zoom', 'alt', ...extra];
+  // All photos of her choice first (flat lay, then the lifestyle shot), then the live preview slides.
+  const modelIdx = model.map((_, i) => i);
+  const extra = photos.map((_, i) => i).filter((i) => i >= model.length);
+  const slides: SlideKey[] = [...modelIdx, 'hero', 'front', 'zoom', 'alt', ...extra];
 
   function goTo(i: number) {
     const el = trackRef.current;
@@ -204,6 +210,15 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
     setSlide(n);
     trackEvent('PhotoViewed', { product: slug, photo: n + 1 });
   }
+
+  // A different colour or garment swaps the photos: show the first picture of the new choice.
+  const lastModelKey = useRef(modelKey);
+  useEffect(() => {
+    if (lastModelKey.current === modelKey) return;
+    lastModelKey.current = modelKey;
+    trackRef.current?.scrollTo({ left: 0 });
+    setSlide(0);
+  }, [modelKey]);
 
   const onScroll = useCallback(() => {
     const el = trackRef.current;
@@ -381,8 +396,15 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
                     </button>
                   </div>
                 ) : photos[s] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={photos[s].src} srcSet={photos[s].srcSet} sizes="(min-width: 1024px) 50vw, 100vw" alt={T.examplePhoto(design.title)} className="block h-full w-full object-cover object-top" loading={i === 0 ? 'eager' : 'lazy'} fetchPriority={i === 0 ? 'high' : undefined} />
+                  <div className="group/photo relative h-full">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={photos[s].src} srcSet={photos[s].srcSet} sizes="(min-width: 1024px) 50vw, 100vw" alt={T.examplePhoto(design.title)} className="block h-full w-full object-cover object-top" loading={i === 0 ? 'eager' : 'lazy'} fetchPriority={i === 0 ? 'high' : undefined} />
+                    {/* Computers: the second photo of the same shirt fades in on hover (phones swipe to it). */}
+                    {i === 0 && model.length > 1 && wide && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={model[1].src} srcSet={model[1].srcSet} sizes="50vw" alt="" aria-hidden="true" className="absolute inset-0 block h-full w-full object-cover object-top opacity-0 transition-opacity duration-300 group-hover/photo:opacity-100 motion-reduce:transition-none" loading="lazy" />
+                    )}
+                  </div>
                 ) : null}
               </div>
             ))}
