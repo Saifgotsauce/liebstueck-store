@@ -75,6 +75,8 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const [editId, setEditId] = useState<string | null>(null);
   const [addedFrom, setAddedFrom] = useState<'main' | 'sticky'>('main');
   const [bigPreview, setBigPreview] = useState(false);
+  // a model photo opened large (index into photos), or null for the live preview
+  const [bigPhoto, setBigPhoto] = useState<number | null>(null);
   const [slide, setSlide] = useState(0);
   // Where the main button is: on screen, further down, or scrolled past
   const [ctaPos, setCtaPos] = useState<'visible' | 'below' | 'above'>('below');
@@ -246,7 +248,8 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   }
 
   /** The live preview, large. She tapped the note under the photos expecting exactly this (dead clicks in recordings). */
-  function openPreview(from: 'gallery' | 'fields') {
+  function openPreview(from: 'gallery' | 'fields' | 'photo', photo: number | null = null) {
+    setBigPhoto(photo);
     setBigPreview(true);
     trackEvent('PreviewEnlarged', { product: slug, from });
   }
@@ -345,7 +348,16 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             aria-label={T.photos}
           >
             {slides.map((s, i) => (
-              <div key={String(s)} className="pdp-slide w-full shrink-0 snap-center" role="group" aria-roledescription="slide" aria-label={T.slideOf(i + 1, slides.length)}>
+              <div
+                key={String(s)}
+                className={`pdp-slide w-full shrink-0 snap-center ${s === 'alt' ? '' : 'cursor-zoom-in'}`}
+                role="group"
+                aria-roledescription="slide"
+                aria-label={T.slideOf(i + 1, slides.length)}
+                // Recordings (Nov 20) show women tapping the photo to see it closer and nothing happening.
+                // A swipe doesn't fire a click, so this only reacts to a tap. Keyboard users have "See it bigger".
+                onClick={s === 'alt' ? undefined : () => openPreview('photo', typeof s === 'number' ? s : null)}
+              >
                 {!filled(i) ? null : s === 'hero' ? (
                   <div className="mx-auto aspect-square h-full">
                     <HeroSlide hook={vibe.hook} tagline={vibe.tagline} sticker={sticker}>
@@ -829,8 +841,13 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
         )}
       </div>
 
-      <PreviewDialog open={bigPreview} onClose={() => setBigPreview(false)} title={T.previewTitle} closeLabel={T.closePreview} note={T.previewNote}>
-        <ShirtPreview design={slug} garment={garment} colorKey={color} values={check.values} label={T.closeUp} className="block aspect-square w-full" view="zoom" />
+      <PreviewDialog open={bigPreview} onClose={() => setBigPreview(false)} title={T.previewTitle} closeLabel={T.closePreview} note={bigPhoto !== null ? '' : T.previewNote}>
+        {bigPhoto !== null && photos[bigPhoto] ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photos[bigPhoto].src} srcSet={photos[bigPhoto].srcSet} sizes="94vw" alt={T.examplePhoto(design.title)} className="block w-full" />
+        ) : (
+          <ShirtPreview design={slug} garment={garment} colorKey={color} values={check.values} label={T.closeUp} className="block aspect-square w-full" view="zoom" />
+        )}
       </PreviewDialog>
     </div>
   );
@@ -868,7 +885,7 @@ function PreviewDialog({ open, onClose, title, closeLabel, note, children }: { o
             </button>
           </div>
           <div className="mt-2 overflow-hidden rounded-xl ring-1 ring-lilac-line">{children}</div>
-          <p className="mt-3 text-[0.95rem] text-ink-soft">{note}</p>
+          {note && <p className="mt-3 text-[0.95rem] text-ink-soft">{note}</p>}
           <button type="button" className="btn btn-violet mt-3 w-full" onClick={onClose}>
             {closeLabel}
           </button>

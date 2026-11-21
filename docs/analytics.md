@@ -50,7 +50,7 @@ Custom events (Meta custom events, GA4 snake_case, Clarity events):
 | `CartItemEdited` | "Save changes" on a shirt opened from the cart (`?edit=`) | `product`, `from` (`main` or `sticky`) |
 | `AddedOneMore` | "Add one more of this one" in the confirmation (also fires `AddToCart`) | `product` |
 | `PairAdded` | Add to cart on an ad landing page (`/pair/<slug>/`, also fires `AddToCart`) | `pair`, `which` (`both` or the shirt) |
-| `PreviewEnlarged` | the large live preview is opened | `product`, `from` (`gallery` or `fields`) |
+| `PreviewEnlarged` | the large preview or photo is opened | `product`, `from` (`gallery`, `fields` or `photo` = tapped the photo itself) |
 | `CheckoutError` | checkout could not start | `message` |
 | `ReviewFormOpened`, `ReviewPosted` | review form opened / a review went live | `product`, `rating`, `photo` |
 
@@ -83,3 +83,4 @@ Change one thing at a time: page **or** ad, never both in the same few days.
 | Nov 12, 2026, afternoon | After "Add to cart" the button and the sticky bar turn into "In your cart" with the way to the cart (a repeat tap can no longer add a second shirt); confirmation shows the cart's count and total and sits where the button was; cart bar on phones while browsing with something in the cart; size can be changed in the cart, and every cart line opens the shirt for editing (`?edit=`); the personalised preview enlarges on tap and a print preview sits with the name fields | One real shopper from the video ad (Nov 12, 7:31 am, phone, 9 minutes, 23 pages): tapped the sticky Add to cart 4 times in 8 seconds and got 4 shirts, tapped the preview note 3 times with nothing happening, rebuilt a personalised shirt to fix it and removed the old one, viewed the cart 3 times, never tapped checkout, left from the shop page with about 6 shirts. Meta: 6 AddToCart, 0 InitiateCheckout |
 | Nov 13, 2026, evening | Ad landing page `/pair/say-what-they-think/` with only the two shirts from the video (The Older I Get, Good Grandmas), "Get both" first; Heller No to $34.95 to match the video; new campaign optimised for Add to cart at $12/day | Video ad landed on /shop: 17 phone visits, 9 taps in 3 days; CPM $121 (today $166); 1 purchase, $63.80 spent |
 | Nov 21, 2026 | Reviews: no-account review form (stars, name, text, photo) under every US product, `/reviews/` page, footer link. No reviews shown yet | before any reviews existed |
+| Nov 21, 2026 | Tapping a product photo opens it large (Clarity: dead taps on the photo, Nov 20) | 3 dead taps on the Good Grandmas photo in 20 phone visits |
