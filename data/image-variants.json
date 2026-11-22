@@ -35,6 +35,11 @@
       800,
       1200
     ],
+    "/photos/good-grandmas-bad-words-4.jpg": [
+      480,
+      800,
+      1200
+    ],
     "/photos/not-old-seasoned-1.jpg": [
       480,
       800,
@@ -89,9 +94,10 @@
     "/photos/dont-do-mornings-1.jpg": "e2192fddcbf0a70b41195a9c4f07866c",
     "/photos/fine-wine-cheap-tequila-1.jpg": "f09af84de599a1f256f500855d03f5ed",
     "/photos/fluent-in-sarcasm-1.jpg": "ba41c160583a210df499d2139db3b130",
-    "/photos/good-grandmas-bad-words-1.jpg": "2cecb874dcc9c398c64ac916f288f635",
-    "/photos/good-grandmas-bad-words-2.jpg": "12568e949569ad35df0e14a16b45bcb3",
-    "/photos/good-grandmas-bad-words-3.jpg": "099e7a1638a1e7924037f7c63d80e85a",
+    "/photos/good-grandmas-bad-words-1.jpg": "49ce5048e66e70fefbfb59286d770fb7",
+    "/photos/good-grandmas-bad-words-2.jpg": "2cecb874dcc9c398c64ac916f288f635",
+    "/photos/good-grandmas-bad-words-3.jpg": "12568e949569ad35df0e14a16b45bcb3",
+    "/photos/good-grandmas-bad-words-4.jpg": "099e7a1638a1e7924037f7c63d80e85a",
     "/photos/not-old-seasoned-1.jpg": "cf98a04e7a123ffa80d8c47825dbba13",
     "/photos/peaked-honey-1.jpg": "ce6f2a187de6cfd3055360c2281669d9",
     "/photos/say-what-im-thinking-1.jpg": "2b2b2ef64c0744e7b76175768ce91c0b",
