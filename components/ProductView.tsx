@@ -30,7 +30,7 @@ import { track } from '@/lib/pixel';
 import { productPhotos } from '@/lib/mockups';
 import { modelPhotos, photosFor, type ModelPhoto } from '@/lib/model-photos';
 import ShirtPreview from './ShirtPreview';
-import { IconBrush, IconCalendar, IconCheck, IconFeather, IconLock, IconShield, IconShirt, IconTruck, IconWash, Stars } from './Icons';
+import { IconCalendar, IconCheck, IconLock, IconShield, IconTruck, Stars } from './Icons';
 
 type Rating = { average: number; count: number } | null;
 type SlideKey = 'hero' | 'front' | 'zoom' | 'alt' | number;
@@ -67,6 +67,9 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const [color, setColor] = useState(() => defaultColor(design, 'tee', locale));
   const [size, setSize] = useState<string | null>(null);
   const [qty, setQty] = useState(1);
+  // Sizes of shirt 2 and 3 in a bundle (null = same as the first). She asked for one size for
+  // herself and another for her sister: the bundle saving counts either way (Nov 22).
+  const [moreSizes, setMoreSizes] = useState<(string | null)[]>([null, null]);
   const [values, setValues] = useState<FieldValues>(() => defaultValues(template));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [sizeError, setSizeError] = useState(false);
@@ -195,7 +198,10 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const check = useMemo(() => validateValues(template, values, locale), [template, values, locale]);
   const price = unitPriceCents(garment, size ?? undefined, locale, slug);
   const regular = regularPriceCents(garment, size ?? undefined, locale, slug);
-  const total = tierTotal(price, qty, locale);
+  const holidayLater = !store.sale && store.holidayPrice && garment === 'tee' ? store.holidayPrice.teeCents + (size ? sizeExtraCents('tee', size, locale) : 0) : 0;
+  const bundleSizes = size ? [size, ...moreSizes.slice(0, qty - 1).map((s) => s ?? size)] : [];
+  const bundleSub = size ? bundleSizes.reduce((sum, s) => sum + unitPriceCents(garment, s, locale, slug), 0) : price * qty;
+  const total = bundleSub - Math.round((bundleSub * bundlePercent(qty, locale)) / 100);
   const ship = shippingFor(total, locale, garment === 'hoodie');
   const gt = garmentText(garment, locale);
   const colorObj = g.colors.find((c) => c.key === color) ?? g.colors[0];
@@ -209,7 +215,11 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const modelIdx = model.map((_, i) => i);
   const otherIdx = others.map((_, i) => model.length + i);
   const extra = photos.map((_, i) => i).filter((i) => i >= model.length + others.length);
-  const slides: SlideKey[] = [...modelIdx, 'hero', ...otherIdx, 'front', 'zoom', 'alt', ...extra];
+  // With real photos of her choice, the gallery is just photos plus one close-up of the print:
+  // the drawn headline, front and other-garment slides repeated the photos (Nov 22).
+  const slides: SlideKey[] = model.length
+    ? [...modelIdx, ...otherIdx, 'zoom', ...extra]
+    : ['hero', ...otherIdx, 'front', 'zoom', 'alt', ...extra];
 
   function goTo(i: number) {
     const el = trackRef.current;
@@ -312,7 +322,9 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
       router.push(ROUTES[locale].cart);
       return;
     }
-    add({ design: slug, garment, color, size, values: check.values, qty });
+    const counts = new Map<string, number>();
+    for (const s of bundleSizes) counts.set(s, (counts.get(s) ?? 0) + 1);
+    for (const [s, n] of counts) add({ design: slug, garment, color, size: s, values: check.values, qty: n });
     track('AddToCart', { content_ids: [slug], content_type: 'product', value: total / 100, currency: store.currency });
     showAdded('one', from);
   }
@@ -352,8 +364,6 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
     locale === 'en' && garment === 'hoodie' ? 'Free US shipping on every hoodie' : T.benefitShipping(fmt(store.freeShippingFromCents)),
   ];
 
-  const featureText = T.features(garment);
-  const features = [IconFeather, IconShirt, IconBrush, IconWash].map((Icon, i) => ({ Icon, label: featureText[i] }));
 
   const sticker = personalized ? T.stickerName : T.stickerBundle(twoFor);
   const cLabel = colorLabel(colorObj, locale);
@@ -460,7 +470,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             </span>
           </button>
         ) : (
-          <p className="mt-2 hidden px-[1.1rem] text-[0.95rem] text-ink-soft md:block md:px-0">{T.previewNote}</p>
+          !model.length && <p className="mt-2 hidden px-[1.1rem] text-[0.95rem] text-ink-soft md:block md:px-0">{T.previewNote}</p>
         )}
       </div>
 
@@ -488,25 +498,36 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
 
         <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
           <span className="text-[2rem] font-black leading-none">
-            {store.sale && <span className="sr-only">{T.salePrice}</span>}
+            {(store.sale || holidayLater > 0) && <span className="sr-only">{T.salePrice}</span>}
             {fmt(price)}
           </span>
-          {store.sale && (
+          {store.sale ? (
             <s className="text-[1.15rem] text-ink-soft">
               <span className="sr-only">{T.regularPrice}</span>
               {fmt(regular)}
             </s>
+          ) : (
+            holidayLater > 0 && (
+              <s className="text-[1.15rem] text-ink-soft">
+                <span className="sr-only">{T.holidayRegular}</span>
+                {fmt(holidayLater)}
+              </s>
+            )
           )}
           <span className="rounded-full bg-red px-3 py-1 text-[0.92rem] font-bold text-white">
-            {store.sale ? T.saleBadge(store.sale.label, store.sale.percent, store.sale.ends) : T.buy2Badge(twoFor)}
+            {store.sale ? T.saleBadge(store.sale.label, store.sale.percent, store.sale.ends) : holidayLater > 0 ? T.holidayBadge : T.buy2Badge(twoFor)}
           </span>
         </div>
+        {/* The crossed-out price is the price from the date below, said in plain words next to it */}
+        {holidayLater > 0 && store.holidayPrice && (
+          <p className="mt-2 text-[1rem]">{T.holidayPrice(fmt(holidayLater), store.holidayPrice.from)}</p>
+        )}
         {store.vatIncluded && (
           <p className="mt-2 text-[0.92rem] text-ink-soft">
             inkl. MwSt., zzgl. <Link href={ROUTES.de.shipping}>Versand</Link>
           </p>
         )}
-        <p className="mt-2.5 text-[1.1rem] font-bold leading-snug text-red">{vibe.tagline}</p>
+        <p className="mt-2.5 text-[1.1rem] leading-snug text-ink">{vibe.tagline}</p>
 
         {personalized && (
           <fieldset className="mt-5 rounded-2xl border-2 border-violet bg-white p-4 sm:p-5">
@@ -608,14 +629,15 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
               {T.pickSize}
             </p>
           )}
-          <p className="mt-2 text-[0.95rem] text-ink-soft">{gt.fit}</p>
-          {locale === 'en' && (
-            <p className="mt-2 text-[0.95rem]">
-              {SIZE_HELP.note}{' '}
+          {locale === 'en' ? (
+            <p className="mt-2 text-[1rem]">
+              {SIZE_HELP.short}{' '}
               <Link href={ROUTES.en.returns} className="font-bold text-violet">
                 How swaps work
               </Link>
             </p>
+          ) : (
+            <p className="mt-2 text-[0.95rem] text-ink-soft">{gt.fit}</p>
           )}
         </div>
 
@@ -654,7 +676,38 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
               );
             })}
           </div>
-          <p className="mt-2 text-[0.92rem] text-ink-soft">{T.tierNote}</p>
+          {qty > 1 && size && (
+            <div className="mt-3 space-y-2 rounded-2xl bg-lilac p-3">
+              {Array.from({ length: qty - 1 }, (_, i) => (
+                <label key={i} className="flex items-center justify-between gap-3">
+                  <span className="font-bold">{T.shirtNSize(i + 2, garment)}</span>
+                  <select
+                    value={moreSizes[i] ?? size}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setMoreSizes((m) => m.map((x, j) => (j === i ? v : x)));
+                      setAdded(null);
+                      trackEvent('BundleSizeSelected', { product: slug, shirt: i + 2, size: v });
+                    }}
+                    className="min-h-12 rounded-xl border-2 border-lilac-line bg-white px-3 text-[1rem] font-bold"
+                  >
+                    {g.sizes
+                      .filter((s) => isAvailable(garment, color, s, locale))
+                      .map((s) => {
+                        const extra = sizeExtraCents(garment, s, locale);
+                        return (
+                          <option key={s} value={s}>
+                            {s}
+                            {extra ? ` (+${fmt(extra)})` : ''}
+                          </option>
+                        );
+                      })}
+                  </select>
+                </label>
+              ))}
+              <p className="text-[0.95rem]">{T.mixSizes}</p>
+            </div>
+          )}
         </fieldset>
         )}
 
@@ -705,43 +758,32 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             </p>
           )}
           {dates?.holiday && (
-            <p className="font-bold text-red">
+            <p className="font-bold text-violet">
               {T.holiday(dates.holiday.label, dates.holiday.name)}
             </p>
           )}
         </div>
-        {locale === 'en' && (
-          <>
-            <PromiseNote className="mt-4" />
-            <PaymentLogos center className="mt-4" />
-          </>
-        )}
-
-        <ul className="mt-8 space-y-2.5">
+        {/* One calm panel for the reasons to trust it, instead of five separate blocks (Nov 22) */}
+        <div className="mt-5 rounded-[1.5rem] bg-lilac p-4 sm:p-5">
+        {locale === 'en' && <PromiseNote onLilac />}
+        <ul className={`${locale === 'en' ? 'mt-4' : ''} space-y-2.5`}>
           {benefits.map((b) => (
             <li key={b} className="flex gap-3">
-              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red text-white">
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-violet text-white">
                 <IconCheck className="h-3.5 w-3.5" />
               </span>
               <span>{b}</span>
             </li>
           ))}
         </ul>
+        {locale === 'en' && <PaymentLogos center className="mt-4" />}
+        </div>
 
-        <ul className="mt-5 grid grid-cols-4 gap-2 rounded-2xl bg-lilac p-3 text-center">
-          {features.map(({ Icon, label }) => (
-            <li key={label} className="flex flex-col items-center gap-1.5">
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-violet">
-                <Icon className="h-6 w-6" />
-              </span>
-              <span className="text-[0.85rem] font-bold leading-tight sm:text-[0.9rem]">{label}</span>
-            </li>
-          ))}
-        </ul>
-
+        {/* The US store already shows the promise and payment logos under the button, so this grid
+            only repeated them there (Nov 22). The German store keeps it. */}
+        {locale !== 'en' && (
         <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-4 border-y border-lilac-line py-5 text-[0.9rem]">
           {T.trust(fmt(store.freeShippingFromCents))
-            .map((x, i) => (i === 1 && locale === 'en' && garment === 'hoodie' ? { ...x, text: 'On every hoodie' } : x))
             .map((x, i) => (
             <Trust
               key={x.title}
@@ -759,6 +801,41 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             />
           ))}
         </ul>
+        )}
+
+
+        <div className="mt-8 divide-y divide-lilac-line border-y border-lilac-line">
+          <Details title={T.about} open>
+            <p>{design.blurb}</p>
+          </Details>
+          <Details title={T.fabric}>
+            <p>
+              {gt.model}. {gt.material}.
+            </p>
+            <p className="mt-2">{gt.fit}</p>
+          </Details>
+          <Details title={T.care}>
+            <ul className="list-disc pl-5">
+              {gt.care.map((c) => (
+                <li key={c}>{c}</li>
+              ))}
+            </ul>
+          </Details>
+          <Details title={T.shipping}>
+            <p>{T.shippingText(store.deliveryMinDays, store.deliveryMaxDays)}</p>
+          </Details>
+          {locale === 'en' && (
+            <Details title="What happens after you order">
+              <OrderSteps />
+            </Details>
+          )}
+          <Details title={T.returns}>
+            <p>
+              {T.returnsText} <Link href={ROUTES[locale].returns}>{T.returnsLink}</Link>
+            </p>
+          </Details>
+          {locale === 'de' && <SafetyInfo design={design} model={gt.model} />}
+        </div>
 
         {setItems.length === 2 && (
           <section className="mt-7 rounded-[1.5rem] bg-lilac p-4 sm:p-5" aria-labelledby="set-title">
@@ -802,39 +879,6 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             {setMsg && <p className="mt-2 font-bold text-red">{setMsg}</p>}
           </section>
         )}
-
-        <div className="mt-8 divide-y divide-lilac-line border-y border-lilac-line">
-          <Details title={T.about} open>
-            <p>{design.blurb}</p>
-          </Details>
-          <Details title={T.fabric}>
-            <p>
-              {gt.model}. {gt.material}.
-            </p>
-            <p className="mt-2">{gt.fit}</p>
-          </Details>
-          <Details title={T.care}>
-            <ul className="list-disc pl-5">
-              {gt.care.map((c) => (
-                <li key={c}>{c}</li>
-              ))}
-            </ul>
-          </Details>
-          <Details title={T.shipping}>
-            <p>{T.shippingText(store.deliveryMinDays, store.deliveryMaxDays)}</p>
-          </Details>
-          {locale === 'en' && (
-            <Details title="What happens after you order">
-              <OrderSteps />
-            </Details>
-          )}
-          <Details title={T.returns}>
-            <p>
-              {T.returnsText} <Link href={ROUTES[locale].returns}>{T.returnsLink}</Link>
-            </p>
-          </Details>
-          {locale === 'de' && <SafetyInfo design={design} model={gt.model} />}
-        </div>
       </div>
 
       {/* ── Sticky add-to-cart on phones ───────────────────── */}

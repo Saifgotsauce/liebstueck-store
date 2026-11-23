@@ -21,6 +21,7 @@ export const PROMISE = {
 // and the emails after she's bought). Not on the homepage: a price on a problem she hasn't had reads as a penalty.
 export const SIZE_HELP = {
   note: `Wrong size when it arrives? We send the right one for ${swap} and you keep the first.`,
+  short: `Relaxed fit: take your usual size. Wrong size? We send the right one for ${swap}, you keep the first.`,
 };
 
 export const ORDER_STEPS = [

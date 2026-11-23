@@ -50,9 +50,9 @@ export function PaymentLogos({ className = '', center }: { className?: string; c
 }
 
 /** One-line promise for next to the Add to cart and checkout buttons. */
-export function PromiseNote({ className = '' }: { className?: string }) {
+export function PromiseNote({ className = '', onLilac = false }: { className?: string; onLilac?: boolean }) {
   return (
-    <div className={`flex gap-3 rounded-2xl bg-lilac p-4 ${className}`}>
+    <div className={`flex gap-3 rounded-2xl p-4 ${onLilac ? 'bg-white' : 'bg-lilac'} ${className}`}>
       <IconShield className="mt-0.5 h-6 w-6 shrink-0 text-violet" />
       <p className="text-[1rem] leading-snug">
         <strong>Our promise:</strong> {PROMISE.short}{' '}
