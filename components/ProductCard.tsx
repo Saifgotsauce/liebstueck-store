@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { colorLabel, defaultColor, GARMENTS, unitPriceCents } from '@/lib/catalog';
-import { formatPrice } from '@/lib/config';
+import { formatPrice, stores } from '@/lib/config';
 import { designLocale, isPersonalized, type Design } from '@/lib/designs';
 import { defaultValues, getTemplate } from '@/lib/design/templates';
 import { productPath } from '@/lib/locale';
@@ -38,6 +38,13 @@ export default function ProductCard({ design, eager = false }: { design: Design;
         <h3 className="mt-3 font-sans text-[1.02rem] font-bold leading-snug tracking-normal text-ink group-hover:text-violet">{design.title}</h3>
         <p className="mt-1 text-[0.98rem] text-ink-soft">
           {t.common.from && `${t.common.from} `}<span className="font-bold text-ink">{formatPrice(unitPriceCents('tee', undefined, locale, design.slug), locale)}</span>
+          {/* Holiday sale: the price after the holidays, explained on the product page */}
+          {!stores[locale].sale && stores[locale].holidayPrice && (
+            <s className="ml-2">
+              <span className="sr-only">Price after the holidays: </span>
+              {formatPrice(stores[locale].holidayPrice!.teeCents, locale)}
+            </s>
+          )}
         </p>
       </Link>
     </li>
