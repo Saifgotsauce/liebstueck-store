@@ -24,11 +24,14 @@ export const MODEL_PHOTOS: Record<string, number> = {
   // 1 lifestyle, woman in the black tee (main), 2 flat lay (hover), 3 flat lay with coffee and jeans,
   // 4 hoodie with coffee
   'good-grandmas-bad-words': 4,
+  // 1 lifestyle in maroon (main), 2 maroon flat lay (hover), 3 black flat lay, 4 navy flat lay
+  'the-grandma-they-warned-you-about': 4,
 };
 
 /** Photos that aren't the design's default colour on a tee. Index = photo number − 1. */
 const PHOTO_OF: Record<string, Record<number, { garment?: GarmentKey; color?: string }>> = {
   'good-grandmas-bad-words': { 3: { garment: 'hoodie', color: 'black' } },
+  'the-grandma-they-warned-you-about': { 2: { color: 'black' }, 3: { color: 'navy' } },
 };
 
 export type ModelPhoto = { src: string; title: string; srcSet?: string; garment?: GarmentKey; color?: string };

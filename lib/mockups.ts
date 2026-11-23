@@ -13,6 +13,7 @@ export type MockupColor = {
   bgColor: string | null;
   overlay: string | null;
   overlayOnTop: boolean;
+  printOpacity?: number;
 };
 
 type MockupFile = {

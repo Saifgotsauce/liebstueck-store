@@ -60,6 +60,26 @@
       800,
       1200
     ],
+    "/photos/the-grandma-they-warned-you-about-1.jpg": [
+      480,
+      800,
+      1200
+    ],
+    "/photos/the-grandma-they-warned-you-about-2.jpg": [
+      480,
+      800,
+      1200
+    ],
+    "/photos/the-grandma-they-warned-you-about-3.jpg": [
+      480,
+      800,
+      1200
+    ],
+    "/photos/the-grandma-they-warned-you-about-4.jpg": [
+      480,
+      800,
+      1200
+    ],
     "/photos/too-old-for-drama-1.jpg": [
       480,
       800,
@@ -82,6 +102,9 @@
       "/mockups/tee/150954-overlay.webp": "/mockups/tee/150919-overlay.webp"
     },
     "small": {
+      "/mockups/designs/the-grandma-they-warned-you-about-tee-black.webp": "/mockups/designs/the-grandma-they-warned-you-about-tee-black-560.webp",
+      "/mockups/designs/the-grandma-they-warned-you-about-tee-maroon.webp": "/mockups/designs/the-grandma-they-warned-you-about-tee-maroon-560.webp",
+      "/mockups/designs/the-grandma-they-warned-you-about-tee-navy.webp": "/mockups/designs/the-grandma-they-warned-you-about-tee-navy-560.webp",
       "/mockups/hoodie/149880-overlay.webp": "/mockups/hoodie/149880-overlay-560.webp",
       "/mockups/hoodie/149891-bg.webp": "/mockups/hoodie/149891-bg-560.webp",
       "/mockups/tee/150915-bg.webp": "/mockups/tee/150915-bg-560.webp",
@@ -102,9 +125,16 @@
     "/photos/peaked-honey-1.jpg": "ce6f2a187de6cfd3055360c2281669d9",
     "/photos/say-what-im-thinking-1.jpg": "2b2b2ef64c0744e7b76175768ce91c0b",
     "/photos/status-report-1.jpg": "a695afe0ad80c88482796d93f3b17d3e",
+    "/photos/the-grandma-they-warned-you-about-1.jpg": "8359f197f34c881bb4f9a90f50332c7f",
+    "/photos/the-grandma-they-warned-you-about-2.jpg": "fa7043d75ff255de9186abb2d7558dc4",
+    "/photos/the-grandma-they-warned-you-about-3.jpg": "3e4d96f0f96f8d7162aa4aa87c76952e",
+    "/photos/the-grandma-they-warned-you-about-4.jpg": "dbe12aef20dd126fff8abe693fcb6c16",
     "/photos/too-old-for-drama-1.jpg": "3fc6bd513655d7598af090642cbfeef1",
     "/photos/too-old-for-drama-2.jpg": "0bd5a5ac9c231c2d2384e25e85bc99f3",
     "/photos/vintage-knees-1.jpg": "aa83d0da94023802ea1508787d1b14d4",
+    "/mockups/designs/the-grandma-they-warned-you-about-tee-black.webp": "16712652d1b2784476becee747b7c105",
+    "/mockups/designs/the-grandma-they-warned-you-about-tee-maroon.webp": "c8afc13de6db65893eb18d9283f228c3",
+    "/mockups/designs/the-grandma-they-warned-you-about-tee-navy.webp": "2928f6dbd19bc4e7a1d7d7a36378a63a",
     "/mockups/hoodie/149880-overlay.webp": "608d2ec0fed68f3137dab3658f1f8cca",
     "/mockups/hoodie/149888-overlay.webp": "608d2ec0fed68f3137dab3658f1f8cca",
     "/mockups/hoodie/149891-bg.webp": "33500d6742cd79017ec3a23de269bc87",
