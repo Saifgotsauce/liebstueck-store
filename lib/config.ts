@@ -50,6 +50,8 @@ export type Store = {
   maxQuantityPerItem: number;
   maxItemsPerOrder: number;
   holiday: { name: string; orderBy: string };
+  /** The business day to promise as "get it by" on product pages (US). Inside min–max. */
+  deliveryByDays?: number;
   /**
    * Store-wide sale. Off (null) until you run a real one, e.g. { percent: 20, label: 'Black Friday', ends: 'Monday' }.
    * When on, every price drops by `percent` at checkout too, and the regular price shows crossed out.
@@ -82,6 +84,7 @@ export const stores: Record<Locale, Store> = {
     bundles: BUNDLES,
     deliveryMinDays: 5,
     deliveryMaxDays: 9,
+    deliveryByDays: 8,
     shipToCountries: ['US'],
     fulfilmentRegion: 'US',
     maxQuantityPerItem: 10,
