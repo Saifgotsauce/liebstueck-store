@@ -159,7 +159,7 @@ const en = {
     shipPaid: (cost: string, free: string, twoShipFree: boolean) => `Shipping ${cost}. ${twoShipFree ? 'Free when you buy 2.' : `Free over ${free}.`}`,
     arrives: (w: string): ReactNode => (
       <>
-        Order today, arrives <strong>about {w}</strong>
+        Order today, get it by <strong>{w}</strong>
       </>
     ),
     holiday: (label: string, name: string) => `Order by ${label} for ${name} delivery`,
