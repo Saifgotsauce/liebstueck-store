@@ -35,6 +35,11 @@ export type ModelPhoto = { src: string; title: string; srcSet?: string; garment?
 
 // Small WebP copies made by scripts/optimize-images.ts (480, 800 and 1200px wide).
 const sizes = (variants as unknown as { photos: Record<string, number[]> }).photos;
+// Photos get replaced under the same file name and browsers keep them for a day or more, so every
+// URL carries a short hash of the source file: a new photo is a new URL (Nov 22, old thumbnails
+// showed next to new big photos).
+const hashes = (variants as unknown as { sources: Record<string, string> }).sources;
+const v = (src: string) => (hashes[src] ? `?v=${hashes[src].slice(0, 8)}` : '');
 
 /** All photos of a design. `color` undefined = the design's default colour. */
 export function modelPhotos(slug: string): ModelPhoto[] {
@@ -44,9 +49,9 @@ export function modelPhotos(slug: string): ModelPhoto[] {
     const widths = sizes[src];
     const of = PHOTO_OF[slug]?.[i];
     return {
-      src,
+      src: src + v(src),
       title: '',
-      srcSet: widths?.map((w) => `${src.replace(/\.jpe?g$/, '')}-${w}.webp ${w}w`).join(', '),
+      srcSet: widths?.map((w) => `${src.replace(/\.jpe?g$/, '')}-${w}.webp${v(src)} ${w}w`).join(', '),
       garment: of?.garment ?? 'tee',
       color: of?.color,
     };

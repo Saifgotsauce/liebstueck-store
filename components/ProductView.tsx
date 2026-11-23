@@ -30,7 +30,7 @@ import { track } from '@/lib/pixel';
 import { productPhotos } from '@/lib/mockups';
 import { modelPhotos, photosFor, type ModelPhoto } from '@/lib/model-photos';
 import ShirtPreview from './ShirtPreview';
-import { IconBrush, IconCalendar, IconCheck, IconFeather, IconLock, IconShield, IconShirt, IconTruck, IconWash, Stars } from './Icons';
+import { IconCalendar, IconCheck, IconLock, IconShield, IconTruck, Stars } from './Icons';
 
 type Rating = { average: number; count: number } | null;
 type SlideKey = 'hero' | 'front' | 'zoom' | 'alt' | number;
@@ -209,7 +209,11 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const modelIdx = model.map((_, i) => i);
   const otherIdx = others.map((_, i) => model.length + i);
   const extra = photos.map((_, i) => i).filter((i) => i >= model.length + others.length);
-  const slides: SlideKey[] = [...modelIdx, 'hero', ...otherIdx, 'front', 'zoom', 'alt', ...extra];
+  // With real photos of her choice, the gallery is just photos plus one close-up of the print:
+  // the drawn headline, front and other-garment slides repeated the photos (Nov 22).
+  const slides: SlideKey[] = model.length
+    ? [...modelIdx, ...otherIdx, 'zoom', ...extra]
+    : ['hero', ...otherIdx, 'front', 'zoom', 'alt', ...extra];
 
   function goTo(i: number) {
     const el = trackRef.current;
@@ -352,8 +356,6 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
     locale === 'en' && garment === 'hoodie' ? 'Free US shipping on every hoodie' : T.benefitShipping(fmt(store.freeShippingFromCents)),
   ];
 
-  const featureText = T.features(garment);
-  const features = [IconFeather, IconShirt, IconBrush, IconWash].map((Icon, i) => ({ Icon, label: featureText[i] }));
 
   const sticker = personalized ? T.stickerName : T.stickerBundle(twoFor);
   const cLabel = colorLabel(colorObj, locale);
@@ -460,7 +462,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             </span>
           </button>
         ) : (
-          <p className="mt-2 hidden px-[1.1rem] text-[0.95rem] text-ink-soft md:block md:px-0">{T.previewNote}</p>
+          !model.length && <p className="mt-2 hidden px-[1.1rem] text-[0.95rem] text-ink-soft md:block md:px-0">{T.previewNote}</p>
         )}
       </div>
 
@@ -506,7 +508,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             inkl. MwSt., zzgl. <Link href={ROUTES.de.shipping}>Versand</Link>
           </p>
         )}
-        <p className="mt-2.5 text-[1.1rem] font-bold leading-snug text-red">{vibe.tagline}</p>
+        <p className="mt-2.5 text-[1.1rem] leading-snug text-ink">{vibe.tagline}</p>
 
         {personalized && (
           <fieldset className="mt-5 rounded-2xl border-2 border-violet bg-white p-4 sm:p-5">
@@ -705,7 +707,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             </p>
           )}
           {dates?.holiday && (
-            <p className="font-bold text-red">
+            <p className="font-bold text-violet">
               {T.holiday(dates.holiday.label, dates.holiday.name)}
             </p>
           )}
@@ -717,10 +719,10 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
           </>
         )}
 
-        <ul className="mt-8 space-y-2.5">
+        <ul className="mt-7 space-y-2.5">
           {benefits.map((b) => (
             <li key={b} className="flex gap-3">
-              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red text-white">
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-violet text-white">
                 <IconCheck className="h-3.5 w-3.5" />
               </span>
               <span>{b}</span>
@@ -728,20 +730,11 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
           ))}
         </ul>
 
-        <ul className="mt-5 grid grid-cols-4 gap-2 rounded-2xl bg-lilac p-3 text-center">
-          {features.map(({ Icon, label }) => (
-            <li key={label} className="flex flex-col items-center gap-1.5">
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-violet">
-                <Icon className="h-6 w-6" />
-              </span>
-              <span className="text-[0.85rem] font-bold leading-tight sm:text-[0.9rem]">{label}</span>
-            </li>
-          ))}
-        </ul>
-
+        {/* The US store already shows the promise and payment logos under the button, so this grid
+            only repeated them there (Nov 22). The German store keeps it. */}
+        {locale !== 'en' && (
         <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-4 border-y border-lilac-line py-5 text-[0.9rem]">
           {T.trust(fmt(store.freeShippingFromCents))
-            .map((x, i) => (i === 1 && locale === 'en' && garment === 'hoodie' ? { ...x, text: 'On every hoodie' } : x))
             .map((x, i) => (
             <Trust
               key={x.title}
@@ -759,6 +752,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             />
           ))}
         </ul>
+        )}
 
         {setItems.length === 2 && (
           <section className="mt-7 rounded-[1.5rem] bg-lilac p-4 sm:p-5" aria-labelledby="set-title">
