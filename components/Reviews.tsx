@@ -16,7 +16,13 @@ const dateText = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('en
 
 export function ReviewCard({ r, showDesign = false }: { r: ShownReview; showDesign?: boolean }) {
   return (
-    <li className="rounded-2xl bg-white p-5 ring-1 ring-lilac-line">
+    <li className={`rounded-2xl bg-white p-5 ring-1 ring-lilac-line ${r.photo ? 'sm:grid sm:grid-cols-[minmax(0,15rem)_1fr] sm:gap-5' : ''}`}>
+      {r.photo && (
+        // Her photo first and big: it's the strongest proof on the page
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={r.photo} alt={`Photo from ${r.name}`} loading="lazy" className="mb-4 max-h-96 w-full rounded-xl object-cover sm:mb-0 sm:h-full sm:max-h-none" />
+      )}
+      <div>
       <Stars value={r.rating} className="text-[#E8A317]" />
       <span className="sr-only">{r.rating} out of 5 stars</span>
       {showDesign && r.design && r.designTitle && (
@@ -27,16 +33,13 @@ export function ReviewCard({ r, showDesign = false }: { r: ShownReview; showDesi
           </Link>
         </p>
       )}
-      <p className="mt-2 whitespace-pre-line">{r.text}</p>
-      {r.photo && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={r.photo} alt={`Photo from ${r.name}`} loading="lazy" className="mt-3 max-h-80 w-auto rounded-xl object-cover" />
-      )}
+      <p className="mt-2 whitespace-pre-line text-[1.1rem]">{r.text}</p>
       <p className="mt-3 text-[0.95rem] font-bold">
         {r.name}
         {r.verified && <span className="ml-2 inline-block rounded-full bg-lilac px-2.5 py-0.5 text-[0.9rem] font-bold text-violet">Verified buyer</span>}{' '}
         <span className="font-medium text-ink-soft">· {dateText(r.date)}</span>
       </p>
+      </div>
     </li>
   );
 }
@@ -201,7 +204,8 @@ export default function Reviews({ design, designTitle, initial, rating }: { desi
   const live = list.length ? { average: Math.round((list.reduce((s, r) => s + r.rating, 0) / list.length) * 10) / 10, count: list.length } : rating;
 
   return (
-    <section id="reviews" className="mt-16 scroll-mt-24" aria-labelledby="reviews-title">
+    // A lilac band breaks up the white page and makes the reviews easy to find (Nov 22)
+    <section id="reviews" className="-mx-[1.1rem] mt-16 scroll-mt-24 bg-lilac px-[1.1rem] py-10 sm:mx-0 sm:rounded-[2rem] sm:px-10 sm:py-12" aria-labelledby="reviews-title">
       <h2 id="reviews-title" className="text-[2rem] sm:text-[2.4rem]">
         What customers say
       </h2>
@@ -247,7 +251,7 @@ export default function Reviews({ design, designTitle, initial, rating }: { desi
       )}
 
       {list.length > 0 && (
-        <ul className="mt-6 grid gap-4 md:grid-cols-2">
+        <ul className={`mt-6 grid gap-4 ${list.length > 1 ? 'lg:grid-cols-2' : 'max-w-3xl'}`}>
           {shown.map((r) => (
             <ReviewCard key={r.id} r={r} />
           ))}

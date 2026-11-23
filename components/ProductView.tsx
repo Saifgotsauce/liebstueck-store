@@ -67,6 +67,9 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const [color, setColor] = useState(() => defaultColor(design, 'tee', locale));
   const [size, setSize] = useState<string | null>(null);
   const [qty, setQty] = useState(1);
+  // Sizes of shirt 2 and 3 in a bundle (null = same as the first). She asked for one size for
+  // herself and another for her sister: the bundle saving counts either way (Nov 22).
+  const [moreSizes, setMoreSizes] = useState<(string | null)[]>([null, null]);
   const [values, setValues] = useState<FieldValues>(() => defaultValues(template));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [sizeError, setSizeError] = useState(false);
@@ -195,7 +198,9 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const check = useMemo(() => validateValues(template, values, locale), [template, values, locale]);
   const price = unitPriceCents(garment, size ?? undefined, locale, slug);
   const regular = regularPriceCents(garment, size ?? undefined, locale, slug);
-  const total = tierTotal(price, qty, locale);
+  const bundleSizes = size ? [size, ...moreSizes.slice(0, qty - 1).map((s) => s ?? size)] : [];
+  const bundleSub = size ? bundleSizes.reduce((sum, s) => sum + unitPriceCents(garment, s, locale, slug), 0) : price * qty;
+  const total = bundleSub - Math.round((bundleSub * bundlePercent(qty, locale)) / 100);
   const ship = shippingFor(total, locale, garment === 'hoodie');
   const gt = garmentText(garment, locale);
   const colorObj = g.colors.find((c) => c.key === color) ?? g.colors[0];
@@ -316,7 +321,9 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
       router.push(ROUTES[locale].cart);
       return;
     }
-    add({ design: slug, garment, color, size, values: check.values, qty });
+    const counts = new Map<string, number>();
+    for (const s of bundleSizes) counts.set(s, (counts.get(s) ?? 0) + 1);
+    for (const [s, n] of counts) add({ design: slug, garment, color, size: s, values: check.values, qty: n });
     track('AddToCart', { content_ids: [slug], content_type: 'product', value: total / 100, currency: store.currency });
     showAdded('one', from);
   }
@@ -610,14 +617,15 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
               {T.pickSize}
             </p>
           )}
-          <p className="mt-2 text-[0.95rem] text-ink-soft">{gt.fit}</p>
-          {locale === 'en' && (
-            <p className="mt-2 text-[0.95rem]">
-              {SIZE_HELP.note}{' '}
+          {locale === 'en' ? (
+            <p className="mt-2 text-[1rem]">
+              {SIZE_HELP.short}{' '}
               <Link href={ROUTES.en.returns} className="font-bold text-violet">
                 How swaps work
               </Link>
             </p>
+          ) : (
+            <p className="mt-2 text-[0.95rem] text-ink-soft">{gt.fit}</p>
           )}
         </div>
 
@@ -656,7 +664,38 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
               );
             })}
           </div>
-          <p className="mt-2 text-[0.92rem] text-ink-soft">{T.tierNote}</p>
+          {qty > 1 && size && (
+            <div className="mt-3 space-y-2 rounded-2xl bg-lilac p-3">
+              {Array.from({ length: qty - 1 }, (_, i) => (
+                <label key={i} className="flex items-center justify-between gap-3">
+                  <span className="font-bold">{T.shirtNSize(i + 2, garment)}</span>
+                  <select
+                    value={moreSizes[i] ?? size}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setMoreSizes((m) => m.map((x, j) => (j === i ? v : x)));
+                      setAdded(null);
+                      trackEvent('BundleSizeSelected', { product: slug, shirt: i + 2, size: v });
+                    }}
+                    className="min-h-12 rounded-xl border-2 border-lilac-line bg-white px-3 text-[1rem] font-bold"
+                  >
+                    {g.sizes
+                      .filter((s) => isAvailable(garment, color, s, locale))
+                      .map((s) => {
+                        const extra = sizeExtraCents(garment, s, locale);
+                        return (
+                          <option key={s} value={s}>
+                            {s}
+                            {extra ? ` (+${fmt(extra)})` : ''}
+                          </option>
+                        );
+                      })}
+                  </select>
+                </label>
+              ))}
+              <p className="text-[0.95rem]">{T.mixSizes}</p>
+            </div>
+          )}
         </fieldset>
         )}
 
@@ -712,14 +751,10 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             </p>
           )}
         </div>
-        {locale === 'en' && (
-          <>
-            <PromiseNote className="mt-4" />
-            <PaymentLogos center className="mt-4" />
-          </>
-        )}
-
-        <ul className="mt-7 space-y-2.5">
+        {/* One calm panel for the reasons to trust it, instead of five separate blocks (Nov 22) */}
+        <div className="mt-5 rounded-[1.5rem] bg-lilac p-4 sm:p-5">
+        {locale === 'en' && <PromiseNote onLilac />}
+        <ul className={`${locale === 'en' ? 'mt-4' : ''} space-y-2.5`}>
           {benefits.map((b) => (
             <li key={b} className="flex gap-3">
               <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-violet text-white">
@@ -729,6 +764,8 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             </li>
           ))}
         </ul>
+        {locale === 'en' && <PaymentLogos center className="mt-4" />}
+        </div>
 
         {/* The US store already shows the promise and payment logos under the button, so this grid
             only repeated them there (Nov 22). The German store keeps it. */}
@@ -753,6 +790,40 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
           ))}
         </ul>
         )}
+
+
+        <div className="mt-8 divide-y divide-lilac-line border-y border-lilac-line">
+          <Details title={T.about} open>
+            <p>{design.blurb}</p>
+          </Details>
+          <Details title={T.fabric}>
+            <p>
+              {gt.model}. {gt.material}.
+            </p>
+            <p className="mt-2">{gt.fit}</p>
+          </Details>
+          <Details title={T.care}>
+            <ul className="list-disc pl-5">
+              {gt.care.map((c) => (
+                <li key={c}>{c}</li>
+              ))}
+            </ul>
+          </Details>
+          <Details title={T.shipping}>
+            <p>{T.shippingText(store.deliveryMinDays, store.deliveryMaxDays)}</p>
+          </Details>
+          {locale === 'en' && (
+            <Details title="What happens after you order">
+              <OrderSteps />
+            </Details>
+          )}
+          <Details title={T.returns}>
+            <p>
+              {T.returnsText} <Link href={ROUTES[locale].returns}>{T.returnsLink}</Link>
+            </p>
+          </Details>
+          {locale === 'de' && <SafetyInfo design={design} model={gt.model} />}
+        </div>
 
         {setItems.length === 2 && (
           <section className="mt-7 rounded-[1.5rem] bg-lilac p-4 sm:p-5" aria-labelledby="set-title">
@@ -796,39 +867,6 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             {setMsg && <p className="mt-2 font-bold text-red">{setMsg}</p>}
           </section>
         )}
-
-        <div className="mt-8 divide-y divide-lilac-line border-y border-lilac-line">
-          <Details title={T.about} open>
-            <p>{design.blurb}</p>
-          </Details>
-          <Details title={T.fabric}>
-            <p>
-              {gt.model}. {gt.material}.
-            </p>
-            <p className="mt-2">{gt.fit}</p>
-          </Details>
-          <Details title={T.care}>
-            <ul className="list-disc pl-5">
-              {gt.care.map((c) => (
-                <li key={c}>{c}</li>
-              ))}
-            </ul>
-          </Details>
-          <Details title={T.shipping}>
-            <p>{T.shippingText(store.deliveryMinDays, store.deliveryMaxDays)}</p>
-          </Details>
-          {locale === 'en' && (
-            <Details title="What happens after you order">
-              <OrderSteps />
-            </Details>
-          )}
-          <Details title={T.returns}>
-            <p>
-              {T.returnsText} <Link href={ROUTES[locale].returns}>{T.returnsLink}</Link>
-            </p>
-          </Details>
-          {locale === 'de' && <SafetyInfo design={design} model={gt.model} />}
-        </div>
       </div>
 
       {/* ── Sticky add-to-cart on phones ───────────────────── */}
