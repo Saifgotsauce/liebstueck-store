@@ -198,6 +198,7 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
   const check = useMemo(() => validateValues(template, values, locale), [template, values, locale]);
   const price = unitPriceCents(garment, size ?? undefined, locale, slug);
   const regular = regularPriceCents(garment, size ?? undefined, locale, slug);
+  const holidayLater = !store.sale && store.holidayPrice && garment === 'tee' ? store.holidayPrice.teeCents + (size ? sizeExtraCents('tee', size, locale) : 0) : 0;
   const bundleSizes = size ? [size, ...moreSizes.slice(0, qty - 1).map((s) => s ?? size)] : [];
   const bundleSub = size ? bundleSizes.reduce((sum, s) => sum + unitPriceCents(garment, s, locale, slug), 0) : price * qty;
   const total = bundleSub - Math.round((bundleSub * bundlePercent(qty, locale)) / 100);
@@ -497,23 +498,29 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
 
         <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
           <span className="text-[2rem] font-black leading-none">
-            {store.sale && <span className="sr-only">{T.salePrice}</span>}
+            {(store.sale || holidayLater > 0) && <span className="sr-only">{T.salePrice}</span>}
             {fmt(price)}
           </span>
-          {store.sale && (
+          {store.sale ? (
             <s className="text-[1.15rem] text-ink-soft">
               <span className="sr-only">{T.regularPrice}</span>
               {fmt(regular)}
             </s>
+          ) : (
+            holidayLater > 0 && (
+              <s className="text-[1.15rem] text-ink-soft">
+                <span className="sr-only">{T.holidayRegular}</span>
+                {fmt(holidayLater)}
+              </s>
+            )
           )}
           <span className="rounded-full bg-red px-3 py-1 text-[0.92rem] font-bold text-white">
-            {store.sale ? T.saleBadge(store.sale.label, store.sale.percent, store.sale.ends) : T.buy2Badge(twoFor)}
+            {store.sale ? T.saleBadge(store.sale.label, store.sale.percent, store.sale.ends) : holidayLater > 0 ? T.holidayBadge : T.buy2Badge(twoFor)}
           </span>
         </div>
-        {store.holidayPrice && garment === 'tee' && (
-          <p className="mt-2 font-bold text-violet">
-            {T.holidayPrice(fmt(store.holidayPrice.teeCents + (size ? sizeExtraCents('tee', size, locale) : 0)), store.holidayPrice.from)}
-          </p>
+        {/* The crossed-out price is the price from the date below, said in plain words next to it */}
+        {holidayLater > 0 && store.holidayPrice && (
+          <p className="mt-2 text-[1rem]">{T.holidayPrice(fmt(holidayLater), store.holidayPrice.from)}</p>
         )}
         {store.vatIncluded && (
           <p className="mt-2 text-[0.92rem] text-ink-soft">
