@@ -8,6 +8,8 @@
 // Stars and crossed-out prices only appear when they are real (data/reviews.json, the store's
 // sale switch in lib/config.ts).
 
+import { REFERRAL, FRIEND, REWARD } from '@/lib/referral';
+import type { ShownReview } from './Reviews';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -51,7 +53,19 @@ function companionsFor(design: Design, locale: Locale): Design[] {
   return [...same, ...other].slice(0, 2);
 }
 
-export default function ProductView({ slug, rating = null }: { slug: string; rating?: Rating }) {
+export default function ProductView({
+  slug,
+  rating = null,
+  topReview = null,
+  reviewsSlot = null,
+}: {
+  slug: string;
+  rating?: Rating;
+  /** One real review shown under the price (this shirt's best, or the store's with its shirt named) */
+  topReview?: ShownReview | null;
+  /** The reviews section, placed right after the buy box so she doesn't have to hunt for it (Nov 23) */
+  reviewsSlot?: React.ReactNode;
+}) {
   const design = getDesign(slug)!;
   const vibe = getVibe(design.vibe)!;
   const template = getTemplate(slug);
@@ -522,6 +536,24 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
         {holidayLater > 0 && store.holidayPrice && (
           <p className="mt-2 text-[1rem]">{T.holidayPrice(fmt(holidayLater), store.holidayPrice.from)}</p>
         )}
+        {topReview && (
+          <a href="#reviews" className="mt-3 flex items-center gap-3 rounded-2xl bg-lilac p-3 text-ink no-underline">
+            {topReview.photo && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={topReview.photo} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" />
+            )}
+            <span className="min-w-0">
+              <Stars value={topReview.rating} className="text-[#E8A317]" />
+              <span className="sr-only">{topReview.rating} out of 5 stars</span>
+              <span className="line-clamp-2 block">“{topReview.text}”</span>
+              <span className="block text-[0.95rem] text-ink-soft">
+                {topReview.name}
+                {topReview.design !== slug && topReview.designTitle ? ` · on ${topReview.designTitle}` : ''} ·{' '}
+                <span className="font-bold text-violet underline">Read reviews</span>
+              </span>
+            </span>
+          </a>
+        )}
         {store.vatIncluded && (
           <p className="mt-2 text-[0.92rem] text-ink-soft">
             inkl. MwSt., zzgl. <Link href={ROUTES.de.shipping}>Versand</Link>
@@ -778,6 +810,18 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
         </ul>
         {locale === 'en' && <PaymentLogos center className="mt-4" />}
         </div>
+
+        {reviewsSlot}
+
+        {locale === 'en' && (
+          <Link href={REFERRAL.path} className="mt-6 block rounded-2xl p-4 text-ink no-underline ring-1 ring-lilac-line">
+            <span className="block font-bold">Give {FRIEND}, get {REWARD}</span>
+            <span className="block text-[1rem]">
+              Send a friend {FRIEND} off her first shirt. When she orders, you get {REWARD} off your next one.{' '}
+              <span className="font-bold text-violet underline">Get your code</span>
+            </span>
+          </Link>
+        )}
 
         {/* The US store already shows the promise and payment logos under the button, so this grid
             only repeated them there (Nov 22). The German store keeps it. */}

@@ -55,7 +55,13 @@ export default async function ProductPage({ slug, locale }: { slug: string; loca
   const t = MESSAGES[locale];
   const c = COPY[locale];
   const more = designsInVibe(d.vibe).filter((x) => x.slug !== slug).slice(0, 4);
-  const reviews = (await allReviews(locale)).filter((r) => r.design === slug);
+  const everyReview = await allReviews(locale);
+  const reviews = everyReview.filter((r) => r.design === slug);
+  // While this shirt has no reviews, show the store's best ones, each labelled with its shirt
+  const best = (list: typeof everyReview) => [...list].sort((a, b) => b.rating - a.rating || Number(!!b.photo) - Number(!!a.photo) || a.text.length - b.text.length);
+  const withTitle = (r: (typeof everyReview)[number]) => ({ ...r, designTitle: r.design ? getDesign(r.design)?.title : undefined });
+  const storeWide = reviews.length ? [] : best(everyReview).slice(0, 3).map(withTitle);
+  const topReview = locale === 'en' ? (reviews.length ? withTitle(best(reviews)[0]) : storeWide[0] ?? null) : null;
   const rating = summarize(reviews);
   // Product data for search engines
   const jsonLd = {
@@ -78,10 +84,13 @@ export default async function ProductPage({ slug, locale }: { slug: string; loca
   return (
     <div className="wrap pt-0 md:pt-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <ProductView slug={slug} rating={rating} />
-      {locale === 'en' ? (
-        <Reviews design={slug} designTitle={d.title} initial={reviews} rating={rating} />
-      ) : (
+      <ProductView
+        slug={slug}
+        rating={rating}
+        topReview={topReview}
+        reviewsSlot={locale === 'en' ? <Reviews design={slug} designTitle={d.title} initial={reviews} rating={rating} storeWide={storeWide} /> : null}
+      />
+      {locale === 'en' ? null : (
         reviews.length > 0 && rating && (
         <section id="reviews" className="mt-16 scroll-mt-24" aria-labelledby="reviews-title">
           <h2 id="reviews-title" className="text-[2rem] sm:text-[2.4rem]">
