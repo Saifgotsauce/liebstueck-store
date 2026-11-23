@@ -57,6 +57,12 @@ export type Store = {
    * Germany (§ 11 PAngV): the crossed-out price must be your lowest price of the last 30 days.
    */
   sale: null | { percent: number; label: string; ends?: string };
+  /**
+   * Holiday pricing (US tees): today's prices are the holiday price, and the tee price goes up to
+   * `teeCents` on `from`. Shown as a future price, never crossed out: $44.99 hasn't been charged yet.
+   * Only say it if you really raise the price on that day (lib/catalog.ts + lib/prices.ts).
+   */
+  holidayPrice: null | { teeCents: number; from: string };
 };
 
 const BUNDLES: Bundle[] = [
@@ -82,6 +88,7 @@ export const stores: Record<Locale, Store> = {
     maxItemsPerOrder: 20,
     holiday: { name: 'Christmas', orderBy: '2026-12-11' },
     sale: null,
+    holidayPrice: { teeCents: 4499, from: 'January 2' },
   },
   de: {
     locale: 'de',
@@ -101,6 +108,7 @@ export const stores: Record<Locale, Store> = {
     maxItemsPerOrder: 20,
     holiday: { name: 'Weihnachten', orderBy: '2026-12-10' },
     sale: null,
+    holidayPrice: null,
   },
 };
 

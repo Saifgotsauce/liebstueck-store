@@ -510,6 +510,11 @@ export default function ProductView({ slug, rating = null }: { slug: string; rat
             {store.sale ? T.saleBadge(store.sale.label, store.sale.percent, store.sale.ends) : T.buy2Badge(twoFor)}
           </span>
         </div>
+        {store.holidayPrice && garment === 'tee' && (
+          <p className="mt-2 font-bold text-violet">
+            {T.holidayPrice(fmt(store.holidayPrice.teeCents + (size ? sizeExtraCents('tee', size, locale) : 0)), store.holidayPrice.from)}
+          </p>
+        )}
         {store.vatIncluded && (
           <p className="mt-2 text-[0.92rem] text-ink-soft">
             inkl. MwSt., zzgl. <Link href={ROUTES.de.shipping}>Versand</Link>
