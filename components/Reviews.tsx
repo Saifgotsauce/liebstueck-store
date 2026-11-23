@@ -16,7 +16,7 @@ const dateText = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('en
 
 export function ReviewCard({ r, showDesign = false }: { r: ShownReview; showDesign?: boolean }) {
   return (
-    <li className={`rounded-2xl bg-white p-5 ring-1 ring-lilac-line ${r.photo ? 'sm:grid sm:grid-cols-[minmax(0,15rem)_1fr] sm:gap-5' : ''}`}>
+    <li className={`rounded-2xl bg-white p-5 ring-1 ring-lilac-line ${r.photo ? 'sm:grid sm:grid-cols-[minmax(0,11rem)_1fr] sm:gap-4' : ''}`}>
       {r.photo && (
         // Her photo first and big: it's the strongest proof on the page
         // eslint-disable-next-line @next/next/no-img-element
@@ -195,19 +195,33 @@ function ReviewForm({ design, onPosted }: { design: string; onPosted: (r: ShownR
   );
 }
 
-export default function Reviews({ design, designTitle, initial, rating }: { design: string; designTitle: string; initial: ShownReview[]; rating: Rating | null }) {
+export default function Reviews({
+  design,
+  designTitle,
+  initial,
+  rating,
+  storeWide = [],
+}: {
+  design: string;
+  designTitle: string;
+  initial: ShownReview[];
+  rating: Rating | null;
+  /** Reviews of the store's other shirts, shown (labelled with their shirt) while this one has none */
+  storeWide?: ShownReview[];
+}) {
   const [list, setList] = useState(initial);
   const [open, setOpen] = useState(false);
   const [posted, setPosted] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
-  const shown = showAll ? list : list.slice(0, 6);
+  const shown = showAll ? list : list.slice(0, 3);
+  const others = list.length ? [] : storeWide.slice(0, 3);
   const live = list.length ? { average: Math.round((list.reduce((s, r) => s + r.rating, 0) / list.length) * 10) / 10, count: list.length } : rating;
 
   return (
-    // A lilac band breaks up the white page and makes the reviews easy to find (Nov 22)
-    <section id="reviews" className="-mx-[1.1rem] mt-16 scroll-mt-24 bg-lilac px-[1.1rem] py-10 sm:mx-0 sm:rounded-[2rem] sm:px-10 sm:py-12" aria-labelledby="reviews-title">
-      <h2 id="reviews-title" className="text-[2rem] sm:text-[2.4rem]">
-        What customers say
+    // Right after the buy box, in a lilac panel, so the proof is one scroll from the button (Nov 23)
+    <section id="reviews" className="mt-7 scroll-mt-24 rounded-[1.5rem] bg-lilac p-4 sm:p-5" aria-labelledby="reviews-title">
+      <h2 id="reviews-title" className="text-[1.6rem] sm:text-[1.9rem]">
+        {list.length || !others.length ? 'What customers say' : 'What customers say about Seasoned'}
       </h2>
       {live ? (
         <p className="mt-2 flex flex-wrap items-center gap-2">
@@ -218,7 +232,9 @@ export default function Reviews({ design, designTitle, initial, rating }: { desi
           </span>
         </p>
       ) : (
-        <p className="mt-2 max-w-xl">No reviews on this one yet. Got it? Tell the next woman what you think.</p>
+        <p className="mt-2 max-w-xl">
+          {others.length ? 'No reviews on this shirt yet. Here’s what women said about our others.' : 'No reviews on this one yet. Got it? Tell the next woman what you think.'}
+        </p>
       )}
 
       {posted && (
@@ -251,13 +267,20 @@ export default function Reviews({ design, designTitle, initial, rating }: { desi
       )}
 
       {list.length > 0 && (
-        <ul className={`mt-6 grid gap-4 ${list.length > 1 ? 'lg:grid-cols-2' : 'max-w-3xl'}`}>
+        <ul className="mt-4 grid gap-3">
           {shown.map((r) => (
             <ReviewCard key={r.id} r={r} />
           ))}
         </ul>
       )}
-      {list.length > 6 && !showAll && (
+      {others.length > 0 && (
+        <ul className="mt-4 grid gap-3">
+          {others.map((r) => (
+            <ReviewCard key={r.id} r={r} showDesign />
+          ))}
+        </ul>
+      )}
+      {list.length > 3 && !showAll && (
         <button type="button" className="btn btn-line mt-5" onClick={() => setShowAll(true)}>
           Show all {list.length} reviews
         </button>
