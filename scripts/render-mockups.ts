@@ -14,6 +14,7 @@ import { ALL_DESIGNS as DESIGNS, designLocale, isPersonalized, type Design } fro
 import { defaultValues, designPalette, getTemplate } from '../lib/design/templates';
 import { esc } from '../lib/design/text';
 import { garmentPhoto, mockupGeometry, type MockupView } from '../lib/mockups';
+import { designBase } from '../lib/design-bases';
 import { FONT_FILES } from '../lib/print/render';
 
 const ROOT = process.cwd();
@@ -39,7 +40,7 @@ async function asDataUri(publicPath: string) {
 async function shirt(d: Design, garment: GarmentKey, view: MockupView, px: number) {
   const colorKey = defaultColor(d, garment);
   const color = getColor(GARMENTS[garment], colorKey)!;
-  const photo = garmentPhoto(garment, colorKey);
+  const photo = designBase(d.slug, garment, colorKey) ?? garmentPhoto(garment, colorKey);
   if (!photo) throw new Error(`No garment photo for ${garment}/${colorKey} – run the Printful sync first.`);
   const t = getTemplate(d.slug);
   const design = t.render(defaultValues(t), designPalette(d.slug, color));

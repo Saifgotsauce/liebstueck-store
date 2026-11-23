@@ -4,6 +4,7 @@ import { getTemplate, designPalette } from '@/lib/design/templates';
 import type { FieldValues } from '@/lib/design/types';
 import { GARMENTS, getColor, type GarmentKey } from '@/lib/catalog';
 import { garmentPhoto, mockupGeometry, tilePhoto, type MockupColor, type MockupView } from '@/lib/mockups';
+import { designBase } from '@/lib/design-bases';
 
 type Props = {
   design: string;
@@ -22,7 +23,7 @@ export default function ShirtPreview({ design, garment, colorKey, values, label,
   const t = getTemplate(design);
   const color = getColor(GARMENTS[garment], colorKey) ?? GARMENTS[garment].colors[0];
   const markup = t.render(values, designPalette(design, color));
-  const photo = garmentPhoto(garment, color.key);
+  const photo = designBase(design, garment, color.key) ?? garmentPhoto(garment, color.key);
   // Grid tiles show at about a third of the photo's size: they get the small file.
   if (photo) return <PhotoPreview photo={small ? tilePhoto(photo) : photo} garment={garment} design={markup} label={label} className={className} view={view} />;
   return <DrawnPreview garment={garment} hex={color.hex} light={color.ink === 'dark'} design={markup} label={label} className={className} />;
@@ -40,7 +41,7 @@ function PhotoPreview({ photo, garment, design, label, className, view = 'full' 
       {photo.bg && <image href={photo.bg} x="0" y="0" width={w} height={h} />}
       {!photo.overlayOnTop && overlay}
       <svg x={d.x} y={d.y} width={d.w} height={d.h} viewBox="0 0 1200 1600">
-        <g dangerouslySetInnerHTML={{ __html: design }} />
+        <g opacity={photo.printOpacity} dangerouslySetInnerHTML={{ __html: design }} />
       </svg>
       {photo.overlayOnTop && overlay}
     </svg>
